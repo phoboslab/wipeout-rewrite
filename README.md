@@ -34,7 +34,7 @@ make sokol
 Currently only the SDL2 backend works. macOS is very picky about the GLSL shader version when compiling with Sokol and OpenGL3.3; it shouldn't be too difficult to get it working, but will probably require a bunch of `#ifdefs` for SDL and WASM. PRs welcome!
 
 ```
-brew install sdl2
+brew install sdl2 glew
 make sdl
 ```
 
