@@ -19,7 +19,7 @@ The game currently supports two different platform-backends: [SDL2](https://gith
 
 ```
 # for SDL2 backend
-apt install libsdl2-dev
+apt install libsdl2-dev libglew-dev
 make sdl
 ```
 
