@@ -489,10 +489,19 @@ static game_scene_t scene_next = GAME_SCENE_NONE;
 static int global_textures_len = 0;
 static void *global_mem_mark = 0;
 
+char save_file_path[PATH_MAX] = "save.dat";
+
+__attribute__((weak)) void set_save_path() {
+	/* No-op */
+	return;
+}
+
 void game_init() {
-	if (file_exists("save.dat")) {
+	set_save_path();
+
+	if (file_exists(save_file_path)) {
 		uint32_t size;
-		save_t *save_file = (save_t *)file_load("save.dat", &size);
+		save_t *save_file = (save_t *)file_load(save_file_path, &size);
 		if (size == sizeof(save_t) && save_file->magic == SAVE_DATA_MAGIC) {
 			printf("load save data success\n");
 			memcpy(&save, save_file, sizeof(save_t));
@@ -636,8 +645,8 @@ void game_update() {
 		// FIXME: use a text based format?
 		// FIXME: this should probably run async somewhere
 		save.is_dirty = false;
-		file_store("save.dat", &save, sizeof(save_t)); 
-		printf("wrote save.dat\n");
+		file_store(save_file_path, &save, sizeof(save_t)); 
+		printf("wrote '%s'\n", save_file_path);
 	}
 
 	double now = platform_now();
