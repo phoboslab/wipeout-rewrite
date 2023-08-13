@@ -518,7 +518,7 @@ static mat4_t render_setup_2d_projection_mat(vec2i_t size) {
 static mat4_t render_setup_3d_projection_mat(vec2i_t size) {
 	// wipeout has a horizontal fov of 90deg, but we want the fov to be fixed 
 	// for the vertical axis, so that widescreen displays just have a wider 
-	// view. For the original 4/3 aspect ratio this equates to a vertial fov
+	// view. For the original 4/3 aspect ratio this equates to a vertical fov
 	// of 73.75deg.
 	float aspect = (float)size.x / (float)size.y;
 	float fov = (73.75 / 180.0) * 3.14159265358;
