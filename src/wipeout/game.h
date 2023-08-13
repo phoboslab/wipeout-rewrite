@@ -242,6 +242,8 @@ typedef struct {
 	uint8_t ui_scale;
 	bool show_fps;
 	bool fullscreen;
+	int screen_res;
+	int post_effect;
 
 	uint32_t has_rapier_class;
 	uint32_t has_bonus_circuts;

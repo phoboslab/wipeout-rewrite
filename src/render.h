@@ -8,6 +8,18 @@ typedef enum {
 	RENDER_BLEND_LIGHTER
 } render_blend_mode_t;
 
+typedef enum {
+	RENDER_RES_NATIVE,
+	RENDER_RES_240P,
+	RENDER_RES_480P,
+} render_resolution_t;
+
+typedef enum {
+	RENDER_POST_NONE,
+	RENDER_POST_CRT,
+	NUM_RENDER_POST_EFFCTS,
+} render_post_effect_t;
+
 #define RENDER_USE_MIPMAPS 1
 
 #define RENDER_FADEOUT_NEAR 48000.0
@@ -15,10 +27,12 @@ typedef enum {
 
 extern uint16_t RENDER_NO_TEXTURE;
 
-void render_init(vec2i_t size);
+void render_init(vec2i_t screen_size);
 void render_cleanup();
 
-void render_resize(vec2i_t size);
+void render_set_screen_size(vec2i_t size);
+void render_set_resolution(render_resolution_t res);
+void render_set_post_effect(render_post_effect_t post);
 vec2i_t render_size();
 
 void render_frame_prepare();

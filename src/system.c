@@ -57,7 +57,7 @@ void system_reset_cycle_time() {
 }
 
 void system_resize(vec2i_t size) {
-	render_resize(size);
+	render_set_screen_size(size);
 }
 
 double system_time_scale_get() {

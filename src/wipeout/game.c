@@ -399,6 +399,8 @@ save_t save = {
 	.ui_scale = 0,
 	.show_fps = false,
 	.fullscreen = false,
+	.screen_res = 0,
+	.post_effect = 0,
 
 	.has_rapier_class = true,  // for testing; should be false in prod
 	.has_bonus_circuts = true, // for testing; should be false in prod
@@ -488,6 +490,20 @@ static int global_textures_len = 0;
 static void *global_mem_mark = 0;
 
 void game_init() {
+	if (file_exists("save.dat")) {
+		uint32_t size;
+		save_t *save_file = (save_t *)file_load("save.dat", &size);
+		if (size == sizeof(save_t) && save_file->magic == SAVE_DATA_MAGIC) {
+			printf("load save data success\n");
+			memcpy(&save, save_file, sizeof(save_t));
+		}
+		mem_temp_free(save_file);
+	}
+
+	platform_set_fullscreen(save.fullscreen);
+	render_set_resolution(save.screen_res);
+	render_set_post_effect(save.post_effect);
+
 	srand((int)(platform_now() * 100));
 	
 	ui_load();
@@ -574,16 +590,6 @@ void game_init() {
 
 
 	game_set_scene(GAME_SCENE_INTRO);
-
-	if (file_exists("save.dat")) {
-		uint32_t size;
-		save_t *save_file = (save_t *)file_load("save.dat", &size);
-		if (size == sizeof(save_t) && save_file->magic == SAVE_DATA_MAGIC) {
-			printf("load save data success\n");
-			memcpy(&save, save_file, sizeof(save_t));
-		}
-		mem_temp_free(save_file);
-	}
 }
 
 void game_set_scene(game_scene_t scene) {

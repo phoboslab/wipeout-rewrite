@@ -19,6 +19,10 @@
 		void glCreateTextures(GLuint ignored, GLsizei n, GLuint *name) {
 			glGenTextures(1, name);
 		}
+
+		void glFramebufferTexture(GLenum target, GLenum attachment, GLuint texture, GLint level) {
+			glFramebufferTexture2D(target, attachment, GL_TEXTURE_2D, texture, level);
+		}
 	#endif
 
 // WINDOWS
@@ -37,13 +41,11 @@
 
 #include "libs/stb_image_write.h"
 
+#include "system.h"
 #include "render.h"
 #include "mem.h"
 #include "utils.h"
 
-
-#define NEAR_PLANE 16.0
-#define FAR_PLANE 262144.0
 
 #define ATLAS_SIZE 64
 #define ATLAS_GRID 32
@@ -52,12 +54,24 @@
 #define RENDER_TRIS_BUFFER_CAPACITY 2048
 #define TEXTURES_MAX 1024
 
-// WebGL (GLES) needs the `precision` to be set, OpenGL 2.something 
-// doesn't like that...
+
 #ifdef __EMSCRIPTEN__
+	// WebGL (GLES) needs the `precision` to be set, wheras OpenGL 2 
+	// doesn't like that...
 	#define SHADER_SOURCE(...) "precision highp float;" #__VA_ARGS__
+
+	// WebGL1 only allows for a 16 bit depth buffer attachment, so 
+	// we sacrifice a bit of the near plane to get more precision
+	// further out
+	#define NEAR_PLANE 128.0
+	#define FAR_PLANE (RENDER_FADEOUT_FAR)
+	#define RENDER_DEPTH_BUFFER_INTERNAL_FORMAT GL_DEPTH_COMPONENT16
 #else
 	#define SHADER_SOURCE(...) #__VA_ARGS__
+
+	#define NEAR_PLANE 16.0
+	#define FAR_PLANE (RENDER_FADEOUT_FAR)
+	#define RENDER_DEPTH_BUFFER_INTERNAL_FORMAT GL_DEPTH_COMPONENT24
 #endif
 	
 
@@ -68,98 +82,24 @@ typedef struct {
 
 uint16_t RENDER_NO_TEXTURE;
 
-static GLuint u_color;
-static GLuint u_view;
-static GLuint u_model;
-static GLuint u_projection;
-static GLuint u_screen;
-static GLuint u_camera_pos;
-static GLuint u_fade;
+#define use_program(SHADER) \
+	glUseProgram((SHADER)->program); \
+	glBindVertexArray((SHADER)->vao);
 
-static GLuint a_pos;
-static GLuint a_uv;
-static GLuint a_color;
-
-static GLuint vbo;
-
-static tris_t tris_buffer[RENDER_TRIS_BUFFER_CAPACITY];
-static uint32_t tris_len = 0;
-
-static vec2i_t screen_size;
-
-static uint32_t atlas_map[ATLAS_SIZE] = {0};
-static GLuint atlas_texture = 0;
-static render_blend_mode_t blend_mode = RENDER_BLEND_NORMAL;
-
-static mat4_t projection_mat_2d = mat4_identity();
-static mat4_t projection_mat_3d = mat4_identity();
-static mat4_t sprite_mat = mat4_identity();
-static mat4_t view_mat = mat4_identity();
-
-
-static render_texture_t textures[TEXTURES_MAX];
-static uint32_t textures_len = 0;
-static bool texture_mipmap_is_dirty = false;
-
-static const char * const VERTEX_SHADER = SHADER_SOURCE(
-	attribute vec3 pos;
-	attribute vec2 uv;
-	attribute vec4 color;
-
-	varying vec4 v_color;
-	varying vec2 v_uv;
-	uniform mat4 view;
-	uniform mat4 model;
-	uniform mat4 projection;
-	uniform vec2 screen;
-	uniform vec3 camera_pos;
-	uniform vec2 fade;
-	
-	void main() {
-		gl_Position = projection * view * model * vec4(pos, 1.0);
-		gl_Position.xy += screen.xy * gl_Position.w;
-		v_color = color;
-		v_color.a *= smoothstep(
-			fade.y, fade.x, // fadeout far, near
-			length(vec4(camera_pos, 1.0) - model * vec4(pos, 1.0))
-		);
-		v_uv = uv;
-		v_uv = uv / 2048.0; // ATLAS_GRID * ATLAS_SIZE
-	}
-);
-
-static const char * const FRAGMENT_SHADER_YCRCB = SHADER_SOURCE(
-	varying vec4 v_color;
-	varying vec2 v_uv;
-	uniform sampler2D texture;
-	void main() {
-		vec4 tex_color = texture2D(texture, v_uv);
-		vec4 color = tex_color * v_color;
-		if (color.a == 0.0) {
-			discard;
-		}
-		color.rgb = color.rgb * 2.0;
-		gl_FragColor = color;
-	}
-);
-
-
-#define render_bind_va_f(index, container, member, start) \
+#define bind_va_f(index, container, member, start) \
 	glVertexAttribPointer( \
 		index, member_size(container, member)/sizeof(float), GL_FLOAT, false, \
 		sizeof(container), \
 		(GLvoid*)(offsetof(container, member) + start) \
 	)
 
-#define render_bind_va_color(index, container, member, start) \
+#define bind_va_color(index, container, member, start) \
 	glVertexAttribPointer( \
 		index, 4,  GL_UNSIGNED_BYTE, true, \
 		sizeof(container), \
 		(GLvoid*)(offsetof(container, member) + start) \
 	)
 
-static void render_flush();
-static GLuint compile_shader(GLenum type, const char *source);
 
 static GLuint compile_shader(GLenum type, const char *source) {
 	GLuint shader = glCreateShader(type);
@@ -177,11 +117,308 @@ static GLuint compile_shader(GLenum type, const char *source) {
 	return shader;
 }
 
+static GLuint create_program(const char *vs_source, const char *fs_source) {
+	GLuint vs = compile_shader(GL_VERTEX_SHADER, vs_source);
+	GLuint fs = compile_shader(GL_FRAGMENT_SHADER, fs_source);
+
+	GLuint program = glCreateProgram();
+	glAttachShader(program, vs);
+	glAttachShader(program, fs);
+	glLinkProgram(program);
+
+	GLint linked;
+    glGetProgramiv(program, GL_LINK_STATUS, &linked);
+    if (!linked) {
+        #ifdef CRTEMU_REPORT_SHADER_ERRORS
+            char error_message[256];
+            strcpy(error_message, prefix);
+            int len = 0, written = 0;
+            glGetShaderiv(vs, GL_INFO_LOG_LENGTH, &len);
+            glGetShaderInfoLog(programm, (GLsizei)( sizeof(error_message)), &written, error_message);
+            die("Shader Link Error: %s" error_message);
+        #endif
+        return 0;
+    }
+
+	glUseProgram(program);
+	return program;
+}
+
+
+
+// -----------------------------------------------------------------------------
+// Main game shaders
+
+static const char * const SHADER_GAME_VS = SHADER_SOURCE(
+	attribute vec3 pos;
+	attribute vec2 uv;
+	attribute vec4 color;
+
+	varying vec4 v_color;
+	varying vec2 v_uv;
+	uniform mat4 view;
+	uniform mat4 model;
+	uniform mat4 projection;
+	uniform vec2 screen;
+	uniform vec3 camera_pos;
+	uniform vec2 fade;
+	uniform float time;
+	
+	void main() {
+		gl_Position = projection * view * model * vec4(pos, 1.0);
+		gl_Position.xy += screen.xy * gl_Position.w;
+		v_color = color;
+		v_color.a *= smoothstep(
+			fade.y, fade.x, // fadeout far, near
+			length(vec4(camera_pos, 1.0) - model * vec4(pos, 1.0))
+		);
+		v_uv = uv;
+		v_uv = uv / 2048.0; // ATLAS_GRID * ATLAS_SIZE
+	}
+);
+
+static const char * const SHADER_GAME_FS = SHADER_SOURCE(
+	varying vec4 v_color;
+	varying vec2 v_uv;
+	uniform sampler2D texture;
+
+	void main() {
+		vec4 tex_color = texture2D(texture, v_uv);
+		vec4 color = tex_color * v_color;
+		if (color.a == 0.0) {
+			discard;
+		}
+		color.rgb = color.rgb * 2.0;
+		gl_FragColor = color;
+	}
+);
+
+typedef struct {
+	GLuint program;
+	GLuint vao;
+	struct {
+		GLuint view;
+		GLuint model;
+		GLuint projection;
+		GLuint screen;
+		GLuint camera_pos;
+		GLuint fade;
+		GLuint time;
+	} uniform;
+	struct {
+		GLuint pos;
+		GLuint uv;
+		GLuint color;
+	} attribute;
+} prg_game_t;
+
+prg_game_t *shader_game_init() {
+	prg_game_t *s = mem_bump(sizeof(prg_game_t));
+	
+	s->program = create_program(SHADER_GAME_VS, SHADER_GAME_FS);
+
+	s->uniform.view = glGetUniformLocation(s->program, "view");
+	s->uniform.model = glGetUniformLocation(s->program, "model");
+	s->uniform.projection = glGetUniformLocation(s->program, "projection");
+	s->uniform.screen = glGetUniformLocation(s->program, "screen");
+	s->uniform.camera_pos = glGetUniformLocation(s->program, "camera_pos");
+	s->uniform.fade = glGetUniformLocation(s->program, "fade");
+
+	s->attribute.pos = glGetAttribLocation(s->program, "pos");
+	s->attribute.uv = glGetAttribLocation(s->program, "uv");
+	s->attribute.color = glGetAttribLocation(s->program, "color");
+
+	glGenVertexArrays(1, &s->vao);
+	glBindVertexArray(s->vao);
+
+	glEnableVertexAttribArray(s->attribute.pos);
+	glEnableVertexAttribArray(s->attribute.uv);
+	glEnableVertexAttribArray(s->attribute.color);
+
+	bind_va_f(s->attribute.pos, vertex_t, pos, 0);
+	bind_va_f(s->attribute.uv, vertex_t, uv, 0);
+	bind_va_color(s->attribute.color, vertex_t, color, 0);
+
+	return s;
+}
+
+
+// -----------------------------------------------------------------------------
+// POST Effect shaders
+
+static const char * const SHADER_POST_VS = SHADER_SOURCE(
+	attribute vec3 pos;
+	attribute vec2 uv;
+
+	varying vec2 v_uv;
+
+	uniform mat4 projection;
+	uniform vec2 screen_size;
+	uniform float time;
+	
+	void main() {
+		gl_Position = projection * vec4(pos, 1.0);
+		v_uv = uv;
+	}
+);
+
+static const char * const SHADER_POST_FS_DEFAULT = SHADER_SOURCE(
+	varying vec2 v_uv;
+
+	uniform sampler2D texture;
+	uniform vec2 screen_size;
+
+	void main() {
+		gl_FragColor = texture2D(texture, v_uv);
+	}
+);
+
+// CRT effect based on https://www.shadertoy.com/view/Ms23DR 
+// by https://github.com/mattiasgustavsson/
+static const char * const SHADER_POST_FS_CRT = SHADER_SOURCE(
+	varying vec2 v_uv;
+
+	uniform float time;
+	uniform sampler2D texture;
+	uniform vec2 screen_size;
+
+	vec2 curve(vec2 uv) {
+		uv = (uv - 0.5) * 2.0;
+		uv *= 1.1;	
+		uv.x *= 1.0 + pow((abs(uv.y) / 5.0), 2.0);
+		uv.y *= 1.0 + pow((abs(uv.x) / 4.0), 2.0);
+		uv  = (uv / 2.0) + 0.5;
+		uv =  uv *0.92 + 0.04;
+		return uv;
+	}
+
+	void main(){
+		vec2 uv = curve(gl_FragCoord.xy / screen_size);
+		vec3 color;
+		float x =  sin(0.3*time+uv.y*21.0)*sin(0.7*time+uv.y*29.0)*sin(0.3+0.33*time+uv.y*31.0)*0.0017;
+
+		color.r = texture2D(texture, vec2(x+uv.x+0.001,uv.y+0.001)).x+0.05;
+		color.g = texture2D(texture, vec2(x+uv.x+0.000,uv.y-0.002)).y+0.05;
+		color.b = texture2D(texture, vec2(x+uv.x-0.002,uv.y+0.000)).z+0.05;
+		color.r += 0.08*texture2D(texture, 0.75*vec2(x+0.025, -0.027)+vec2(uv.x+0.001,uv.y+0.001)).x;
+		color.g += 0.05*texture2D(texture, 0.75*vec2(x+-0.022, -0.02)+vec2(uv.x+0.000,uv.y-0.002)).y;
+		color.b += 0.08*texture2D(texture, 0.75*vec2(x+-0.02, -0.018)+vec2(uv.x-0.002,uv.y+0.000)).z;
+
+		color = clamp(color*0.6+0.4*color*color*1.0,0.0,1.0);
+
+		float vignette = (0.0 + 1.0*16.0*uv.x*uv.y*(1.0-uv.x)*(1.0-uv.y));
+		color *= vec3(pow(vignette, 0.25));
+
+		color *= vec3(0.95,1.05,0.95);
+		color *= 2.8;
+
+		float scanlines = clamp( 0.35+0.35*sin(3.5*time+uv.y*screen_size.y*1.5), 0.0, 1.0);
+		
+		float s = pow(scanlines,1.7);
+		color = color * vec3(0.4+0.7*s);
+
+		color *= 1.0+0.01*sin(110.0*time);
+		if (uv.x < 0.0 || uv.x > 1.0)
+			color *= 0.0;
+		if (uv.y < 0.0 || uv.y > 1.0)
+			color *= 0.0;
+		
+		color*=1.0-0.65*vec3(clamp((mod(gl_FragCoord.x, 2.0)-1.0)*2.0,0.0,1.0));
+		gl_FragColor = vec4(color,1.0);
+	}
+);
+
+typedef struct {
+	GLuint program;
+	GLuint vao;
+	struct {
+		GLuint projection;
+		GLuint screen_size;
+		GLuint time;
+	} uniform;
+	struct {
+		GLuint pos;
+		GLuint uv;
+	} attribute;
+} prg_post_t;
+
+void shader_post_general_init(prg_post_t *s) {
+	s->uniform.projection = glGetUniformLocation(s->program, "projection");
+	s->uniform.screen_size = glGetUniformLocation(s->program, "screen_size");
+	s->uniform.time = glGetUniformLocation(s->program, "time");
+
+	s->attribute.pos = glGetAttribLocation(s->program, "pos");
+	s->attribute.uv = glGetAttribLocation(s->program, "uv");
+
+	glGenVertexArrays(1, &s->vao);
+	glBindVertexArray(s->vao);
+
+	glEnableVertexAttribArray(s->attribute.pos);
+	glEnableVertexAttribArray(s->attribute.uv);
+
+	bind_va_f(s->attribute.pos, vertex_t, pos, 0);
+	bind_va_f(s->attribute.uv, vertex_t, uv, 0);
+}
+
+prg_post_t *shader_post_default_init() {
+	prg_post_t *s = mem_bump(sizeof(prg_post_t));
+	s->program = create_program(SHADER_POST_VS, SHADER_POST_FS_DEFAULT);	
+	shader_post_general_init(s);
+	return s;
+}
+
+prg_post_t *shader_post_crt_init() {
+	prg_post_t *s = mem_bump(sizeof(prg_post_t));
+	s->program = create_program(SHADER_POST_VS, SHADER_POST_FS_CRT);	
+	shader_post_general_init(s);
+	return s;
+}
+
+
+
+// -----------------------------------------------------------------------------
+
+static GLuint vbo;
+
+static tris_t tris_buffer[RENDER_TRIS_BUFFER_CAPACITY];
+static uint32_t tris_len = 0;
+
+static vec2i_t screen_size;
+static vec2i_t backbuffer_size;
+
+static uint32_t atlas_map[ATLAS_SIZE] = {0};
+static GLuint atlas_texture = 0;
+static render_blend_mode_t blend_mode = RENDER_BLEND_NORMAL;
+
+static mat4_t projection_mat_2d = mat4_identity();
+static mat4_t projection_mat_bb = mat4_identity();
+static mat4_t projection_mat_3d = mat4_identity();
+static mat4_t sprite_mat = mat4_identity();
+static mat4_t view_mat = mat4_identity();
+
+
+static render_texture_t textures[TEXTURES_MAX];
+static uint32_t textures_len = 0;
+static bool texture_mipmap_is_dirty = false;
+
+static render_resolution_t render_res;
+static GLuint backbuffer = 0;
+static GLuint backbuffer_texture = 0;
+static GLuint backbuffer_depth_buffer = 0;
+
+prg_game_t *prg_game;
+prg_post_t *prg_post;
+prg_post_t *prg_post_effects[NUM_RENDER_POST_EFFCTS] = {};
+
+
+static void render_flush();
+
+
 // static void gl_message_callback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *userParam) {
 // 	puts(message);
 // }
 
-void render_init(vec2i_t size) {	
+void render_init(vec2i_t screen_size) {	
 	#if defined(__APPLE__) && defined(__MACH__)
 		// OSX
 		// (nothing to do here)
@@ -213,52 +450,25 @@ void render_init(vec2i_t size) {
 	uint32_t th = ATLAS_SIZE * ATLAS_GRID;
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tw, th, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 	printf("atlas texture %5d\n", atlas_texture);
-
-
-	// Shaders
-
-	GLuint fragment_shader = compile_shader(GL_FRAGMENT_SHADER, FRAGMENT_SHADER_YCRCB);
-	GLuint vertex_shader = compile_shader(GL_VERTEX_SHADER, VERTEX_SHADER);
-	GLuint shader_program = glCreateProgram();
-
-	glAttachShader(shader_program, vertex_shader);
-	glAttachShader(shader_program, fragment_shader);
-	glLinkProgram(shader_program);
-	glUseProgram(shader_program);
-
-	u_color = glGetUniformLocation(shader_program, "color");
-	u_view = glGetUniformLocation(shader_program, "view");
-	u_model = glGetUniformLocation(shader_program, "model");
-	u_projection = glGetUniformLocation(shader_program, "projection");
-	u_screen = glGetUniformLocation(shader_program, "screen");
-	u_camera_pos = glGetUniformLocation(shader_program, "camera_pos");
-	u_fade = glGetUniformLocation(shader_program, "fade");
-
-	a_pos = glGetAttribLocation(shader_program, "pos");
-	a_uv = glGetAttribLocation(shader_program, "uv");
-	a_color = glGetAttribLocation(shader_program, "color");
+	
 
 	// Tris buffer
 
 	glGenBuffers(1, &vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
-	GLuint va;
-	glGenVertexArrays(1, &va);
-	glBindVertexArray(va);
 
+	// Post Shaders
 
-	// Defaults
+	prg_post_effects[RENDER_POST_NONE] = shader_post_default_init();
+	prg_post_effects[RENDER_POST_CRT] = shader_post_crt_init();
+	render_set_post_effect(RENDER_POST_NONE);
 
-	glEnableVertexAttribArray(a_pos);
-	glEnableVertexAttribArray(a_uv);
-	glEnableVertexAttribArray(a_color);
+	// Game shader
 
-	render_bind_va_f(a_pos, vertex_t, pos, 0);
-	render_bind_va_f(a_uv, vertex_t, uv, 0);
-	render_bind_va_color(a_color, vertex_t, color, 0);
+	prg_game = shader_game_init();
+	use_program(prg_game);
 
-	render_resize(size);
 	render_set_view(vec3(0, 0, 0), vec3(0, 0, 0));
 	render_set_model_mat(&mat4_identity());
 
@@ -274,6 +484,12 @@ void render_init(vec2i_t size) {
 		rgba(128,128,128,255), rgba(128,128,128,255)
 	};
 	RENDER_NO_TEXTURE = render_texture_create(2, 2, white_pixels);
+
+
+	// Backbuffer
+
+	render_res = RENDER_RES_NATIVE;
+	render_set_screen_size(screen_size);
 }
 
 void render_cleanup() {
@@ -281,17 +497,17 @@ void render_cleanup() {
 }
 
 
-static void render_setup_2d_projection_mat() {
+static mat4_t render_setup_2d_projection_mat(vec2i_t size) {
 	float near = -1;
 	float far = 1;
 	float left = 0;
-	float right = screen_size.x;
-	float bottom = screen_size.y;
+	float right = size.x;
+	float bottom = size.y;
 	float top = 0;
 	float lr = 1 / (left - right);
 	float bt = 1 / (bottom - top);
 	float nf = 1 / (near - far);
-  	projection_mat_2d = mat4(
+	return mat4(
 		-2 * lr,  0,  0,  0,
 		0,  -2 * bt,  0,  0,
 		0,        0,  2 * nf,    0, 
@@ -299,16 +515,16 @@ static void render_setup_2d_projection_mat() {
 	);
 }
 
-static void render_setup_3d_projection_mat() {
+static mat4_t render_setup_3d_projection_mat(vec2i_t size) {
 	// wipeout has a horizontal fov of 90deg, but we want the fov to be fixed 
 	// for the vertical axis, so that widescreen displays just have a wider 
 	// view. For the original 4/3 aspect ratio this equates to a vertial fov
 	// of 73.75deg.
-	float aspect = (float)screen_size.x / (float)screen_size.y;
+	float aspect = (float)size.x / (float)size.y;
 	float fov = (73.75 / 180.0) * 3.14159265358;
 	float f = 1.0 / tan(fov / 2);
 	float nf = 1.0 / (NEAR_PLANE - FAR_PLANE);
-	projection_mat_3d = mat4(
+	return mat4(
 		f / aspect, 0, 0, 0,
 		0, f, 0, 0, 
 		0, 0, (FAR_PLANE + NEAR_PLANE) * nf, -1, 
@@ -316,20 +532,85 @@ static void render_setup_3d_projection_mat() {
 	);
 }
 
-void render_resize(vec2i_t size) {
-	glViewport(0, 0, size.x, size.y);
+void render_set_screen_size(vec2i_t size) {
 	screen_size = size;
+	projection_mat_bb = render_setup_2d_projection_mat(screen_size);
 
-	render_setup_2d_projection_mat();
-	render_setup_3d_projection_mat();
+	render_set_resolution(render_res);
+}
+
+
+void render_set_resolution(render_resolution_t res) {
+	render_res = res;
+
+	if (res == RENDER_RES_NATIVE) {
+		backbuffer_size = screen_size;
+	}
+	else {
+		float aspect = (float)screen_size.x / (float)screen_size.y;
+		if (res == RENDER_RES_240P) {
+			backbuffer_size = vec2i(240.0 * aspect, 240);
+		}
+		else if (res == RENDER_RES_480P) {
+			backbuffer_size = vec2i(480.0 * aspect, 480);	
+		}
+		else {
+			die("Invalid resolution: %d", res);
+		}
+	}
+
+	if (!backbuffer) {
+		glGenTextures(1, &backbuffer_texture);	
+		glGenFramebuffers(1, &backbuffer);
+		glGenRenderbuffers(1, &backbuffer_depth_buffer);
+	}
+	
+	glBindTexture(GL_TEXTURE_2D, backbuffer_texture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, backbuffer_size.x, backbuffer_size.y, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	
+	glBindFramebuffer(GL_FRAMEBUFFER, backbuffer);
+	glBindRenderbuffer(GL_RENDERBUFFER, backbuffer_depth_buffer);	
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, backbuffer_depth_buffer);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, backbuffer_texture, 0);
+	
+	glBindRenderbuffer(GL_RENDERBUFFER, backbuffer_depth_buffer);
+	glRenderbufferStorage(GL_RENDERBUFFER, RENDER_DEPTH_BUFFER_INTERNAL_FORMAT, backbuffer_size.x, backbuffer_size.y);
+
+	projection_mat_2d = render_setup_2d_projection_mat(backbuffer_size);
+	projection_mat_3d = render_setup_3d_projection_mat(backbuffer_size);
+
+
+	// Use nearest texture min filter for 240p and 480p
+	glBindTexture(GL_TEXTURE_2D, atlas_texture);
+	if (res == RENDER_RES_NATIVE) {
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, RENDER_USE_MIPMAPS ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
+	}
+	else {
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	}
+	glViewport(0, 0, backbuffer_size.x, backbuffer_size.y);
+}
+
+void render_set_post_effect(render_post_effect_t post) {
+	error_if(post < 0 || post > NUM_RENDER_POST_EFFCTS, "Invalid post effect %d", post);
+	prg_post = prg_post_effects[post];
 }
 
 vec2i_t render_size() {
-	return screen_size;
+	return backbuffer_size;
 }
 
 void render_frame_prepare() {
-	glUniform2f(u_screen, 0, 0);
+	use_program(prg_game);
+	glBindFramebuffer(GL_FRAMEBUFFER, backbuffer);
+	glViewport(0, 0, backbuffer_size.x, backbuffer_size.y);
+
+	glBindTexture(GL_TEXTURE_2D, atlas_texture);
+	glUniform2f(prg_game->uniform.screen, 0, 0);
 	glEnable(GL_DEPTH_TEST);
 	glDepthMask(true);
 	glDisable(GL_POLYGON_OFFSET_FILL);
@@ -338,7 +619,37 @@ void render_frame_prepare() {
 	glEnable(GL_DEPTH_TEST); 
 }
 
-void render_frame_end() {	
+void render_frame_end() {
+	render_flush();
+
+	use_program(prg_post);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glViewport(0, 0, screen_size.x, screen_size.y);
+	glBindTexture(GL_TEXTURE_2D, backbuffer_texture);
+	glUniformMatrix4fv(prg_post->uniform.projection, 1, false, projection_mat_bb.m);
+	glUniform1f(prg_post->uniform.time, system_cycle_time());
+	glUniform2f(prg_post->uniform.screen_size, screen_size.x, screen_size.y);
+
+	glClearColor(0, 0, 0, 1);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	rgba_t white = rgba(128,128,128,255);
+	tris_buffer[tris_len++] = (tris_t){
+		.vertices = {
+			{.pos = {0, screen_size.y, 0}, .uv = {0, 0}, .color = white},
+			{.pos = {screen_size.x, 0, 0}, .uv = {1, 1}, .color = white},
+			{.pos = {0, 0, 0}, .uv = {0, 1}, .color = white},
+		}
+	};
+	tris_buffer[tris_len++] = (tris_t){
+		.vertices = {
+			{.pos = {screen_size.x, screen_size.y, 0}, .uv = {1, 0}, .color = white},
+			{.pos = {screen_size.x, 0, 0}, .uv = {1, 1}, .color = white},
+			{.pos = {0, screen_size.y, 0}, .uv = {0, 0}, .color = white},
+		}
+	};
+
 	render_flush();
 }
 
@@ -373,10 +684,10 @@ void render_set_view(vec3_t pos, vec3_t angles) {
 	render_set_model_mat(&mat4_identity());
 
 	render_flush();
-	glUniformMatrix4fv(u_view, 1, false, view_mat.m);
-	glUniformMatrix4fv(u_projection, 1, false, projection_mat_3d.m);
-	glUniform3f(u_camera_pos, pos.x, pos.y, pos.z);
-	glUniform2f(u_fade, RENDER_FADEOUT_NEAR, RENDER_FADEOUT_FAR);
+	glUniformMatrix4fv(prg_game->uniform.view, 1, false, view_mat.m);
+	glUniformMatrix4fv(prg_game->uniform.projection, 1, false, projection_mat_3d.m);
+	glUniform3f(prg_game->uniform.camera_pos, pos.x, pos.y, pos.z);
+	glUniform2f(prg_game->uniform.fade, RENDER_FADEOUT_NEAR, RENDER_FADEOUT_FAR);
 }
 
 void render_set_view_2d() {
@@ -385,14 +696,14 @@ void render_set_view_2d() {
 	render_set_depth_write(false);
 
 	render_set_model_mat(&mat4_identity());
-	glUniform3f(u_camera_pos, 0, 0, 0);
-	glUniformMatrix4fv(u_view, 1, false, mat4_identity().m);
-	glUniformMatrix4fv(u_projection, 1, false, projection_mat_2d.m);
+	glUniform3f(prg_game->uniform.camera_pos, 0, 0, 0);
+	glUniformMatrix4fv(prg_game->uniform.view, 1, false, mat4_identity().m);
+	glUniformMatrix4fv(prg_game->uniform.projection, 1, false, projection_mat_2d.m);
 }
 
 void render_set_model_mat(mat4_t *m) {
 	render_flush();
-	glUniformMatrix4fv(u_model, 1, false, m->m);
+	glUniformMatrix4fv(prg_game->uniform.model, 1, false, m->m);
 }
 
 void render_set_depth_write(bool enabled) {
@@ -423,7 +734,7 @@ void render_set_depth_offset(float offset) {
 
 void render_set_screen_position(vec2_t pos) {
 	render_flush();
-	glUniform2f(u_screen, pos.x, -pos.y);
+	glUniform2f(prg_game->uniform.screen, pos.x, -pos.y);
 }
 
 void render_set_blend_mode(render_blend_mode_t new_mode) {
