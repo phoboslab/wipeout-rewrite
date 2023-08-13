@@ -5,7 +5,7 @@
 
 #if defined(RENDERER_GL)
 	#ifdef __EMSCRIPTEN__
-		#define SOKOL_GLES2
+		#define SOKOL_GLES3
 	#else
 		#define SOKOL_GLCORE33
 	#endif
