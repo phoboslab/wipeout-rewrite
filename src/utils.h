@@ -4,6 +4,20 @@
 #include <string.h>
 #include "types.h"
 
+#if defined(__linux__)
+#	include <linux/limits.h>
+#elif defined(_WIN32)
+#	include <windows.h>
+#	define PATH_MAX MAX_PATH
+#elif defined(__APPLE__)
+#	include <sys/syslimits.h>
+#endif
+
+/* Fallback */
+#ifndef PATH_MAX
+#	define PATH_MAX 1024
+#endif
+
 
 #if !defined(offsetof)
 	#define offsetof(TYPE, ELEMENT) ((size_t)&(((TYPE *)0)->ELEMENT))

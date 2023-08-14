@@ -5,7 +5,7 @@
 #include "utils.h"
 #include "mem.h"
 
-char temp_path[64];
+char temp_path[PATH_MAX];
 char *get_path(const char *dir, const char *file) {
 	strcpy(temp_path, dir);
 	strcpy(temp_path + strlen(dir), file);
