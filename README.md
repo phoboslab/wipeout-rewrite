@@ -17,6 +17,8 @@ The game currently supports two different platform-backends: [SDL2](https://gith
 
 ### Linux
 
+#### Ubuntu
+
 ```
 # for SDL2 backend
 apt install libsdl2-dev libglew-dev
@@ -26,6 +28,20 @@ make sdl
 ```
 # for Sokol backend
 apt install libx11-dev libxcursor-dev libxi-dev libasound2-dev
+make sokol
+```
+
+#### Fedora
+
+```
+# for SDL2 backend
+dnf install SDL2-devel glew-devel
+make sdl
+```
+
+```
+# for Sokol backend
+dnf install libX11-devel libXi-devel alsa-lib-devel glew-devel libXcursor-devel
 make sokol
 ```
 
