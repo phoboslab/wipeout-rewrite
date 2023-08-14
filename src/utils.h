@@ -86,8 +86,19 @@ float rand_float(float min, float max);
 int32_t rand_int(int32_t min, int32_t max); 
 
 bool file_exists(char *path);
+/**
+ * Generic function handling any file load.
+ *
+ * NOTE: Use `asset_load` to load a game asset.
+ */
 uint8_t *file_load(char *path, uint32_t *bytes_read);
 uint32_t file_store(char *path, void *bytes, int32_t len);
+/**
+ * Specialization of `file_load` which will prepend the appropriate asset path prefix.
+ *
+ * This can be used by platform-specific code to redirect asset location to the appropriate location.
+ */
+uint8_t *asset_load(char *path, uint32_t *bytes_read);
 
 
 #define sort(LIST, LEN, COMPARE_FUNC) \

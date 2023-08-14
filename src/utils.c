@@ -43,6 +43,10 @@ uint8_t *file_load(char *path, uint32_t *bytes_read) {
 	return bytes;
 }
 
+__attribute__((weak)) uint8_t *asset_load(char *path, uint32_t *bytes_read) {
+	return file_load(path, bytes_read);
+}
+
 uint32_t file_store(char *path, void *bytes, int32_t len) {
 	FILE *f = fopen(path, "wb");
 	error_if(!f, "Could not open file for writing: %s", path);
