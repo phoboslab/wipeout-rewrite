@@ -250,6 +250,25 @@ void set_save_path() {
 
 	SDL_free(base_path);
 }
+
+#if !defined(__APPLE__)
+uint8_t *asset_load(char *path, uint32_t *bytes_read) {
+	static char* base_path = NULL;
+	static char temp_path[PATH_MAX] = "";
+
+	if (base_path == NULL) {
+		// This is not necessarily a fast call, so you should call this once near startup and save the string if you need it.
+		// The pointer returned is owned by the caller.
+		base_path = SDL_GetBasePath();
+	}
+
+	memset(temp_path, 0, PATH_MAX);
+	strcpy(temp_path, base_path);
+	strcpy(temp_path + strlen(base_path), path);
+
+	return file_load(temp_path, bytes_read);
+}
+#endif
 #endif
 
 
