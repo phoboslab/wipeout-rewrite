@@ -3,6 +3,9 @@
 #include "platform.h"
 #include "input.h"
 #include "system.h"
+#include "utils.h"
+
+extern char save_file_path[PATH_MAX];
 
 static uint64_t perf_freq = 0;
 static bool wants_to_exit = false;
@@ -238,6 +241,16 @@ void platform_set_audio_mix_cb(void (*cb)(float *buffer, uint32_t len)) {
 	#error "Unsupported renderer for platform SDL"
 #endif
 
+#if !defined(__EMSCRIPTEN__)
+void set_save_path() {
+	char * base_path = SDL_GetPrefPath("PhobosLab", "wipEout");
+	memset(save_file_path, 0, PATH_MAX);
+	strcpy(save_file_path, base_path);
+	strcpy(save_file_path + strlen(base_path), "save.dat");
+
+	SDL_free(base_path);
+}
+#endif
 
 
 int main(int argc, char *argv[]) {
