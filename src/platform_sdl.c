@@ -261,6 +261,8 @@ int main(int argc, char *argv[]) {
 
 	perf_freq = SDL_GetPerformanceFrequency();
 
+        SDL_ShowCursor(SDL_DISABLE);
+
 	window = SDL_CreateWindow(
 		SYSTEM_WINDOW_NAME,
 		SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
