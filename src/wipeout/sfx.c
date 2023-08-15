@@ -320,7 +320,6 @@ void sfx_stero_mix(float *buffer, uint32_t len) {
 	// Find currently active nodes: those that play and have volume > 0
 	sfx_t *active_nodes[SFX_MAX_ACTIVE];
 	int active_nodes_len = 0;
-	int total_on = 0;
 	for (int n = 0; n < SFX_MAX; n++) {
 		sfx_t *sfx = &nodes[n];
 		if (flags_is(sfx->flags, SFX_PLAY) && (sfx->volume > 0 || sfx->current_volume > 0.01)) {
@@ -328,9 +327,6 @@ void sfx_stero_mix(float *buffer, uint32_t len) {
 			if (active_nodes_len >= SFX_MAX_ACTIVE) {
 				break;
 			}
-		}
-		if (flags_is(sfx->flags, SFX_PLAY)) {
-			total_on++;
 		}
 	}
 

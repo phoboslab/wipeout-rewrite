@@ -552,10 +552,6 @@ void weapon_fire_shield(ship_t *ship) {
 void weapon_update_shield(weapon_t *self) {
 	if (self->timer <= 0) {
 		self->active = false;
-
-		if (self->owner->pilot == g.pilot) {
-			// KillNote(SHIELDS);
-		}
 		flags_rm(self->owner->flags, SHIP_SHIELDED);
 		return;
 	}

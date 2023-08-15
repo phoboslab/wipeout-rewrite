@@ -125,21 +125,6 @@ static GLuint create_program(const char *vs_source, const char *fs_source) {
 	glAttachShader(program, vs);
 	glAttachShader(program, fs);
 	glLinkProgram(program);
-
-	GLint linked;
-    glGetProgramiv(program, GL_LINK_STATUS, &linked);
-    if (!linked) {
-        #ifdef CRTEMU_REPORT_SHADER_ERRORS
-            char error_message[256];
-            strcpy(error_message, prefix);
-            int len = 0, written = 0;
-            glGetShaderiv(vs, GL_INFO_LOG_LENGTH, &len);
-            glGetShaderInfoLog(programm, (GLsizei)( sizeof(error_message)), &written, error_message);
-            die("Shader Link Error: %s" error_message);
-        #endif
-        return 0;
-    }
-
 	glUseProgram(program);
 	return program;
 }
@@ -172,7 +157,6 @@ static const char * const SHADER_GAME_VS = SHADER_SOURCE(
 			fade.y, fade.x, // fadeout far, near
 			length(vec4(camera_pos, 1.0) - model * vec4(pos, 1.0))
 		);
-		v_uv = uv;
 		v_uv = uv / 2048.0; // ATLAS_GRID * ATLAS_SIZE
 	}
 );
