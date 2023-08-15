@@ -2,6 +2,7 @@ CC ?= gcc
 EMCC ?= emcc
 UNAME_S := $(shell uname -s)
 RENDERER ?= GL
+USE_GLX ?= false
 DEBUG ?= false
 
 L_FLAGS ?= -lm -rdynamic
@@ -23,6 +24,9 @@ else
 $(error Unknown RENDERER)
 endif
 
+ifeq ($(GL_VERSION), GLES2)
+	C_FLAGS := $(C_FLAGS) -DUSE_GLES2
+endif
 
 
 
@@ -44,7 +48,14 @@ ifeq ($(UNAME_S), Darwin)
 
 else ifeq ($(UNAME_S), Linux)
 	ifeq ($(RENDERER), GL)
-		L_FLAGS := $(L_FLAGS) -lGLEW -lGL
+		L_FLAGS := $(L_FLAGS) -lGLEW
+
+		# Prefer modern GLVND instead of legacy X11-only GLX
+		ifeq ($(USE_GLX), true)
+			L_FLAGS := $(L_FLAGS) -lGL
+		else
+			L_FLAGS := $(L_FLAGS) -lOpenGL
+		endif
 	endif
 
 	L_FLAGS_SDL = -lSDL2

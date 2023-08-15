@@ -55,7 +55,7 @@
 #define TEXTURES_MAX 1024
 
 
-#ifdef __EMSCRIPTEN__
+#if defined(__EMSCRIPTEN__) || defined(USE_GLES2)
 	// WebGL (GLES) needs the `precision` to be set, wheras OpenGL 2 
 	// doesn't like that...
 	#define SHADER_SOURCE(...) "precision highp float;" #__VA_ARGS__

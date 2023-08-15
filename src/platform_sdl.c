@@ -219,6 +219,12 @@ void platform_set_audio_mix_cb(void (*cb)(float *buffer, uint32_t len)) {
 	SDL_GLContext platform_gl;
 
 	void platform_video_init() {
+                #if defined(USE_GLES2)
+                SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+                SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+                SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+                #endif
+
 		platform_gl = SDL_GL_CreateContext(window);
 		SDL_GL_SetSwapInterval(1);
 	}
