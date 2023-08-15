@@ -7,6 +7,10 @@
 	void glCreateTextures(GLuint ignored, GLsizei n, GLuint *name) {
 		glGenTextures(1, name);
 	}
+	void glFramebufferTexture(GLenum target, GLenum attachment, GLuint texture, GLint level) {
+		glFramebufferTexture2D(target, attachment, GL_TEXTURE_2D, texture, level);
+	}
+
 	#define glGenVertexArrays glGenVertexArraysAPPLE
 	#define glBindVertexArray glBindVertexArrayAPPLE
 	#define glDeleteVertexArrays glDeleteVertexArraysAPPLE
