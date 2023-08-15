@@ -200,15 +200,14 @@ void input_set_layer_button_state(input_layer_t layer, button_t button, float st
 void input_set_button_state(button_t button, float state) {
 	error_if(button < 0 || button >= INPUT_BUTTON_MAX, "Invalid input button %d", button);
 
-	if (capture_callback) {
-		if (state) {
-			capture_callback(capture_user, button, 0);
-		}
-		return;
-	}
-
 	input_set_layer_button_state(INPUT_LAYER_SYSTEM, button, state);
 	input_set_layer_button_state(INPUT_LAYER_USER, button, state);
+
+	if (capture_callback) {
+		if (state > INPUT_DEADZONE_CAPTURE) {
+			capture_callback(capture_user, button, 0);
+		}
+	}
 }
 
 void input_set_mouse_pos(int32_t x, int32_t y) {
@@ -219,12 +218,12 @@ void input_set_mouse_pos(int32_t x, int32_t y) {
 void input_capture(input_capture_callback_t cb, void *user) {
 	capture_callback = cb;
 	capture_user = user;
-	clear(actions_state);
+	input_clear();
 }
 
 void input_textinput(int32_t ascii_char) {
 	if (capture_callback) {
-		capture_callback(capture_user, 0, ascii_char);
+		capture_callback(capture_user, INPUT_INVALID, ascii_char);
 	}
 }
 
@@ -233,6 +232,7 @@ void input_bind(input_layer_t layer, button_t button, uint8_t action) {
 	error_if(action < 0 || action >= INPUT_ACTION_MAX, "Invalid input action %d", action);
 	error_if(layer < 0 || layer >= INPUT_LAYER_MAX, "Invalid input layer %d", layer);
 
+	actions_state[action] = 0;
 	bindings[layer][button] = action;
 }
 

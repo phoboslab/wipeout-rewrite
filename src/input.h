@@ -184,6 +184,7 @@ const char *input_button_to_name(button_t button);
 #define INPUT_ACTION_COMMAND 31
 #define INPUT_ACTION_MAX 32
 #define INPUT_DEADZONE 0.1
+#define INPUT_DEADZONE_CAPTURE 0.5
 #define INPUT_ACTION_NONE 255
 #define INPUT_BUTTON_NONE 0
 
