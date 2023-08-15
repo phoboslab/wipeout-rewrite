@@ -188,14 +188,16 @@ double platform_now() {
 void platform_set_fullscreen(bool fullscreen) {
 	if (fullscreen) {
 		int32_t display = SDL_GetWindowDisplayIndex(window);
-		
+
 		SDL_DisplayMode mode;
 		SDL_GetDesktopDisplayMode(display, &mode);
 		SDL_SetWindowDisplayMode(window, &mode);
 		SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
+                SDL_ShowCursor(SDL_DISABLE);		
 	}
 	else {
 		SDL_SetWindowFullscreen(window, 0);	
+                SDL_ShowCursor(SDL_ENABLE);		
 	}
 }
 
@@ -260,8 +262,6 @@ int main(int argc, char *argv[]) {
 	gamepad = platform_find_gamepad();
 
 	perf_freq = SDL_GetPerformanceFrequency();
-
-        SDL_ShowCursor(SDL_DISABLE);
 
 	window = SDL_CreateWindow(
 		SYSTEM_WINDOW_NAME,
