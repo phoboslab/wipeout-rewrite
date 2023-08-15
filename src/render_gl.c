@@ -3,10 +3,7 @@
 #if defined(__APPLE__) && defined(__MACH__)
 	#include <OpenGL/gl.h>
 	#include <OpenGL/glext.h>
-
-	void glCreateTextures(GLuint ignored, GLsizei n, GLuint *name) {
-		glGenTextures(1, name);
-	}
+	
 	#define glGenVertexArrays glGenVertexArraysAPPLE
 	#define glBindVertexArray glBindVertexArrayAPPLE
 	#define glDeleteVertexArrays glDeleteVertexArraysAPPLE
@@ -15,16 +12,6 @@
 #elif defined(__unix__)
 	#include <GL/glew.h>
 	
-	#ifdef __EMSCRIPTEN__
-		void glCreateTextures(GLuint ignored, GLsizei n, GLuint *name) {
-			glGenTextures(1, name);
-		}
-
-		void glFramebufferTexture(GLenum target, GLenum attachment, GLuint texture, GLint level) {
-			glFramebufferTexture2D(target, attachment, GL_TEXTURE_2D, texture, level);
-		}
-	#endif
-
 // WINDOWS
 #else
 	#include <windows.h>
@@ -419,7 +406,7 @@ void render_init(vec2i_t screen_size) {
 
 	// Atlas Texture
 
-	glCreateTextures(GL_TEXTURE_2D, 1, &atlas_texture);
+	glGenTextures(1, &atlas_texture);
 	glBindTexture(GL_TEXTURE_2D, atlas_texture);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, RENDER_USE_MIPMAPS ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
@@ -559,7 +546,7 @@ void render_set_resolution(render_resolution_t res) {
 	glBindFramebuffer(GL_FRAMEBUFFER, backbuffer);
 	glBindRenderbuffer(GL_RENDERBUFFER, backbuffer_depth_buffer);	
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, backbuffer_depth_buffer);
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, backbuffer_texture, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, backbuffer_texture, 0);
 	
 	glBindRenderbuffer(GL_RENDERBUFFER, backbuffer_depth_buffer);
 	glRenderbufferStorage(GL_RENDERBUFFER, RENDER_DEPTH_BUFFER_INTERNAL_FORMAT, backbuffer_size.x, backbuffer_size.y);
