@@ -237,7 +237,7 @@ sapp_desc sokol_main(int argc, char* argv[]) {
 
 	saudio_setup(&(saudio_desc){
 		.sample_rate = 44100,
-		.buffer_frames = 4096,
+		.buffer_frames = 1024,
 		.num_packets = 256,
 		.num_channels = 2,
 		.stream_cb = platform_audio_callback,
