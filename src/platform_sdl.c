@@ -253,7 +253,7 @@ int main(int argc, char *argv[]) {
 		.freq = 44100,
 		.format = AUDIO_F32,
 		.channels = 2,
-		.samples = 4096,
+		.samples = 1024,
 		.callback = platform_audio_callback
 	}, NULL, 0);
 
