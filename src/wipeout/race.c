@@ -68,7 +68,15 @@ void race_init() {
 }
 
 void race_update() {
-	if (!is_paused) {
+	if (is_paused) {
+		if (!active_menu) {
+			active_menu = pause_menu_init();
+		}
+		if (input_pressed(A_MENU_QUIT)) {
+			race_unpause();
+		}
+	}
+	else {
 		ships_update();
 		droid_update(&g.droid, &g.ships[g.pilot]);
 		camera_update(&g.camera, &g.ships[g.pilot], &g.droid);
@@ -88,13 +96,9 @@ void race_update() {
 				game_set_scene(GAME_SCENE_TITLE);
 			}
 		}
-		else if (active_menu == NULL && input_pressed(A_MENU_START)) {
+		else if (active_menu == NULL && (input_pressed(A_MENU_START) || input_pressed(A_MENU_QUIT))) {
 			race_pause();
-
 		}
-	}
-	else if (input_pressed(A_MENU_START)) {
-		race_unpause();
 	}
 
 
@@ -259,7 +263,6 @@ void race_release_control() {
 void race_pause() {
 	sfx_pause();
 	is_paused = true;
-	active_menu = pause_menu_init();
 }
 
 void race_unpause() {

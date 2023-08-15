@@ -182,14 +182,14 @@ void menu_update(menu_t *menu) {
 			if (entry->type == MENU_ENTRY_TOGGLE) {
 				vec2i_t toggle_pos = items_pos;
 				toggle_pos.x += page->block_width - ui_text_width(entry->options[entry->data], UI_SIZE_8);
-				ui_draw_text(entry->options[entry->data], ui_scaled_pos(page->items_anchor, toggle_pos), UI_SIZE_8, text_color);	
+				ui_draw_text(entry->options[entry->data], ui_scaled_pos(page->items_anchor, toggle_pos), UI_SIZE_8, text_color);
 			}
 			items_pos.y += 12;
 		}
 	}
 
 	// Handle back buttons
-	if (input_pressed(A_MENU_BACK)) {
+	if (input_pressed(A_MENU_BACK) || input_pressed(A_MENU_QUIT)) {
 		if (menu->index != 0) {
 			menu_pop(menu);
 			sfx_play(SFX_MENU_SELECT);
@@ -216,7 +216,7 @@ void menu_update(menu_t *menu) {
 				entry->select_func(menu, entry->data);
 			}
 		}
-		else if (input_pressed(A_MENU_RIGHT) || input_pressed(A_MENU_SELECT)) {
+		else if (input_pressed(A_MENU_RIGHT) || input_pressed(A_MENU_SELECT) || input_pressed(A_MENU_START)) {
 			sfx_play(SFX_MENU_SELECT);
 			entry->data = (entry->data + 1) % entry->options_len;
 			if (entry->select_func) {
@@ -227,7 +227,7 @@ void menu_update(menu_t *menu) {
 
 	// Handle buttons
 	else {
-		if (input_pressed(A_MENU_SELECT)) {
+		if (input_pressed(A_MENU_SELECT) || input_pressed(A_MENU_START)) {
 			if (entry->select_func) {
 				sfx_play(SFX_MENU_SELECT);
 				if (entry->type == MENU_ENTRY_TOGGLE) {
