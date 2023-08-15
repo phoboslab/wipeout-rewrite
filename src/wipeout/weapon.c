@@ -168,7 +168,7 @@ void weapons_update() {
 		(weapon->update_func)(weapon);
 
 		// Handle projectiles
-		if (weapon->acceleration.x != 0 && weapon->acceleration.z != 0) {
+		if (weapon->acceleration.x != 0 || weapon->acceleration.z != 0) {
 			weapon->velocity = vec3_add(weapon->velocity, vec3_mulf(weapon->acceleration, 30 * system_tick()));
 			weapon->velocity = vec3_sub(weapon->velocity, vec3_mulf(weapon->velocity, weapon->drag * 30 * system_tick()));
 			weapon->position = vec3_add(weapon->position, vec3_mulf(weapon->velocity, 30 * system_tick()));
