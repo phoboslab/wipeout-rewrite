@@ -14,8 +14,8 @@ char *get_path(const char *dir, const char *file) {
 
 
 bool file_exists(char *path) {
-  struct stat s;   
-  return (stat(path, &s) == 0);
+	struct stat s;
+	return (stat(path, &s) == 0);
 }
 
 uint8_t *file_load(char *path, uint32_t *bytes_read) {
@@ -50,7 +50,7 @@ uint32_t file_store(char *path, void *bytes, int32_t len) {
 	if (fwrite(bytes, 1, len, f) != len) {
 		die("Could not write file file %s", path);
 	}
-   
+	
 	fclose(f);
 	return len;
 }

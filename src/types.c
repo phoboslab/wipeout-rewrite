@@ -53,11 +53,11 @@ void mat4_set_translation(mat4_t *mat, vec3_t pos) {
 
 void mat4_set_yaw_pitch_roll(mat4_t *mat, vec3_t rot) {
 	float sx = sin( rot.x);
-    float sy = sin(-rot.y);
-    float sz = sin(-rot.z);
-    float cx = cos( rot.x);
-    float cy = cos(-rot.y);
-    float cz = cos(-rot.z);
+	float sy = sin(-rot.y);
+	float sz = sin(-rot.z);
+	float cx = cos( rot.x);
+	float cy = cos(-rot.y);
+	float cz = cos(-rot.z);
 
 	mat->cols[0][0] = cy * cz + sx * sy * sz;
 	mat->cols[1][0] = cz * sx * sy - cy * sz;
@@ -72,11 +72,11 @@ void mat4_set_yaw_pitch_roll(mat4_t *mat, vec3_t rot) {
 
 void mat4_set_roll_pitch_yaw(mat4_t *mat, vec3_t rot) {
 	float sx = sin( rot.x);
-    float sy = sin(-rot.y);
-    float sz = sin(-rot.z);
-    float cx = cos( rot.x);
-    float cy = cos(-rot.y);
-    float cz = cos(-rot.z);
+	float sy = sin(-rot.y);
+	float sz = sin(-rot.z);
+	float cx = cos( rot.x);
+	float cy = cos(-rot.y);
+	float cz = cos(-rot.z);
 
 	mat->cols[0][0] = cy * cz - sx * sy * sz;
 	mat->cols[1][0] = -cx * sz;

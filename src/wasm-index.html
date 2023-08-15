@@ -151,13 +151,13 @@
 				ev.preventDefault();
 
 				// Hide select-version, show loader
-  				document.getElementById('select-version').style.display = 'none';
-  				document.getElementById('loading').style.display = 'block';
+				document.getElementById('select-version').style.display = 'none';
+				document.getElementById('loading').style.display = 'block';
 
-  				// Load the requested script
-  				var s = document.createElement('script');
-  				s.setAttribute('src', src);
-  				document.head.appendChild(s);
+				// Load the requested script
+				var s = document.createElement('script');
+				s.setAttribute('src', src);
+				document.head.appendChild(s);
 
 				// Attemp to unlock Audio :(
 				var audioCtx = new AudioContext();

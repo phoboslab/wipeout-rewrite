@@ -51,8 +51,8 @@ image_t *image_load_from_bytes(uint8_t *bytes, bool transparent) {
 	uint16_t *palette = NULL;
 
 	if (
-	    type == TIM_TYPE_PALETTED_4_BPP ||
-	    type == TIM_TYPE_PALETTED_8_BPP
+		type == TIM_TYPE_PALETTED_4_BPP ||
+		type == TIM_TYPE_PALETTED_8_BPP
 	) {
 		uint32_t header_length = get_i32_le(bytes, &p);
 		uint16_t palette_x = get_i16_le(bytes, &p);
