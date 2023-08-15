@@ -161,6 +161,7 @@ void platform_set_fullscreen(bool fullscreen) {
 	}
 
 	sapp_toggle_fullscreen();
+	sapp_show_mouse(!fullscreen);
 }
 
 void platform_handle_event(const sapp_event* ev) {
