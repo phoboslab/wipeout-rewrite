@@ -4,9 +4,9 @@
 #include "utils.h"
 
 static const char *button_names[] = {
-	NULL, 
-	NULL, 
-	NULL, 
+	NULL,
+	NULL,
+	NULL,
 	NULL,
 	[INPUT_KEY_A] = "A",
 	[INPUT_KEY_B] = "B",

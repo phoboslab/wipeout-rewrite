@@ -404,8 +404,20 @@ save_t save = {
 
 	.has_rapier_class = true,  // for testing; should be false in prod
 	.has_bonus_circuts = true, // for testing; should be false in prod
-	.highscores_name = {0,0,0,0},
 
+	.buttons = {
+		[A_UP] = {INPUT_KEY_UP, INPUT_GAMEPAD_DPAD_UP},
+		[A_DOWN] = {INPUT_KEY_DOWN, INPUT_GAMEPAD_DPAD_DOWN},
+		[A_LEFT] = {INPUT_KEY_LEFT, INPUT_GAMEPAD_DPAD_LEFT},
+		[A_RIGHT] = {INPUT_KEY_RIGHT, INPUT_GAMEPAD_DPAD_RIGHT},
+		[A_BRAKE_LEFT] = {INPUT_KEY_C, INPUT_GAMEPAD_L_SHOULDER},
+		[A_BRAKE_RIGHT] = {INPUT_KEY_V, INPUT_GAMEPAD_R_SHOULDER},
+		[A_THRUST] = {INPUT_KEY_X, INPUT_GAMEPAD_A},
+		[A_FIRE] = {INPUT_KEY_Z, INPUT_GAMEPAD_X},
+		[A_CHANGE_VIEW] = {INPUT_KEY_A, INPUT_GAMEPAD_Y},
+	},
+
+	.highscores_name = {0,0,0,0},
 	.highscores = {
 		[RACE_CLASS_VENOM] = {
 			{
@@ -534,7 +546,7 @@ void game_init() {
 
 	input_bind(INPUT_LAYER_SYSTEM, INPUT_KEY_X, A_MENU_SELECT);
 	input_bind(INPUT_LAYER_SYSTEM, INPUT_KEY_RETURN, A_MENU_START);
-	input_bind(INPUT_LAYER_SYSTEM, INPUT_KEY_ESCAPE, A_MENU_START);
+	input_bind(INPUT_LAYER_SYSTEM, INPUT_KEY_ESCAPE, A_MENU_QUIT);
 
 	// Gamepad
 	input_bind(INPUT_LAYER_SYSTEM, INPUT_GAMEPAD_DPAD_UP, A_MENU_UP);
@@ -552,41 +564,17 @@ void game_init() {
 
 	input_bind(INPUT_LAYER_SYSTEM, INPUT_GAMEPAD_A, A_MENU_SELECT);
 	input_bind(INPUT_LAYER_SYSTEM, INPUT_GAMEPAD_START, A_MENU_START);
+	
 
-
-
-	// User defined
-	// TODO: these should be configurable and stored in the save struct
-	// Keyboard
-	input_bind(INPUT_LAYER_USER, INPUT_KEY_UP, A_UP);
-	input_bind(INPUT_LAYER_USER, INPUT_KEY_DOWN, A_DOWN);
-	input_bind(INPUT_LAYER_USER, INPUT_KEY_LEFT, A_LEFT);
-	input_bind(INPUT_LAYER_USER, INPUT_KEY_RIGHT, A_RIGHT);
-	input_bind(INPUT_LAYER_USER, INPUT_KEY_C, A_BRAKE_LEFT);
-	input_bind(INPUT_LAYER_USER, INPUT_KEY_V, A_BRAKE_RIGHT);
-
-	input_bind(INPUT_LAYER_USER, INPUT_KEY_X, A_THRUST);
-	input_bind(INPUT_LAYER_USER, INPUT_KEY_Z, A_FIRE);
-	input_bind(INPUT_LAYER_USER, INPUT_KEY_A, A_CHANGE_VIEW);
-
-	// Gamepad
-	input_bind(INPUT_LAYER_USER, INPUT_GAMEPAD_DPAD_UP, A_UP);
-	input_bind(INPUT_LAYER_USER, INPUT_GAMEPAD_DPAD_DOWN, A_DOWN);
-	input_bind(INPUT_LAYER_USER, INPUT_GAMEPAD_DPAD_LEFT, A_LEFT);
-	input_bind(INPUT_LAYER_USER, INPUT_GAMEPAD_DPAD_RIGHT, A_RIGHT);
-	input_bind(INPUT_LAYER_USER, INPUT_GAMEPAD_L_STICK_UP, A_UP);
-	input_bind(INPUT_LAYER_USER, INPUT_GAMEPAD_L_STICK_DOWN, A_DOWN);
-	input_bind(INPUT_LAYER_USER, INPUT_GAMEPAD_L_STICK_LEFT, A_LEFT);
-	input_bind(INPUT_LAYER_USER, INPUT_GAMEPAD_L_STICK_RIGHT, A_RIGHT);
-	input_bind(INPUT_LAYER_USER, INPUT_GAMEPAD_L_TRIGGER, A_BRAKE_LEFT);
-	input_bind(INPUT_LAYER_USER, INPUT_GAMEPAD_R_TRIGGER, A_BRAKE_RIGHT);
-	input_bind(INPUT_LAYER_USER, INPUT_GAMEPAD_L_SHOULDER, A_BRAKE_LEFT);
-	input_bind(INPUT_LAYER_USER, INPUT_GAMEPAD_R_SHOULDER, A_BRAKE_RIGHT);
-
-	input_bind(INPUT_LAYER_USER, INPUT_GAMEPAD_A, A_THRUST);
-	input_bind(INPUT_LAYER_USER, INPUT_GAMEPAD_X, A_FIRE);
-	input_bind(INPUT_LAYER_USER, INPUT_GAMEPAD_Y, A_CHANGE_VIEW);
-	input_bind(INPUT_LAYER_USER, INPUT_GAMEPAD_SELECT, A_CHANGE_VIEW);
+	// User defined, loaded from the save struct
+	for (int action = 0; action < len(save.buttons); action++) {
+		if (save.buttons[action][0] != INPUT_INVALID) {
+			input_bind(INPUT_LAYER_USER, save.buttons[action][0], action);
+		}
+		if (save.buttons[action][1] != INPUT_INVALID) {
+			input_bind(INPUT_LAYER_USER, save.buttons[action][1], action);
+		}
+	}
 
 
 	game_set_scene(GAME_SCENE_INTRO);

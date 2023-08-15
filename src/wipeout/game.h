@@ -20,15 +20,6 @@
 #define SAVE_DATA_MAGIC 0x64736f77
 
 typedef enum {
-	A_MENU_UP,
-	A_MENU_DOWN,
-	A_MENU_LEFT,
-	A_MENU_RIGHT,
-	A_MENU_BACK,
-	A_MENU_SELECT,
-	A_MENU_START,
-	A_MENU_QUIT,
-
 	A_UP,
 	A_DOWN,
 	A_LEFT,
@@ -38,6 +29,16 @@ typedef enum {
 	A_THRUST,
 	A_FIRE,
 	A_CHANGE_VIEW,
+	NUM_GAME_ACTIONS,
+
+	A_MENU_UP,
+	A_MENU_DOWN,
+	A_MENU_LEFT,
+	A_MENU_RIGHT,
+	A_MENU_BACK,
+	A_MENU_SELECT,
+	A_MENU_START,
+	A_MENU_QUIT,
 } action_t;
 
 
@@ -247,6 +248,9 @@ typedef struct {
 
 	uint32_t has_rapier_class;
 	uint32_t has_bonus_circuts;
+	
+	uint8_t buttons[NUM_GAME_ACTIONS][2];
+
 	char highscores_name[4];
 	highscores_t highscores[NUM_RACE_CLASSES][NUM_CIRCUTS][NUM_HIGHSCORE_TABS];
 } save_t;
