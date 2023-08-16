@@ -73,6 +73,15 @@ make wasm
 This builds the minimal version (no music, no intro) as well as the full version.
 
 
+### Flags
+
+The makefile accepts several flags. You can specify them with `make FLAG=VALUE`
+
+- `DEBUG` – `true` or `fals`, default is `false`. Whether to include debug symbols in the build.
+- `RENDERER` – `GL` or `SOFTWARE`, default is `GL` (the `SOFTWARE` renderer is very much unfinished and only works with SDL)
+- `USE_GLX` – `true` or `false`, default is `false` and uses `GLVND` over `GLX`. Only used for the linux build.
+
+
 ## Running
 
 This repository does not contain the assets (textures, 3d models etc.) required to run the game. This code mostly assumes to have the PSX NTSC data, but some menu models from the PC version are loaded as well. Both of these can be easily found on archive.org and similar sites. The music (optional) needs to be provided in [QOA format](https://github.com/phoboslab/qoa). The intro video as MPEG1.

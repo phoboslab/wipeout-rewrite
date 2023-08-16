@@ -174,12 +174,6 @@ void platform_pump_events() {
 	}
 }
 
-vec2i_t platform_screen_size() {
-	int width, height;
-	SDL_GL_GetDrawableSize(window, &width, &height);
-	return vec2i(width, height);
-}
-
 double platform_now() {
 	uint64_t perf_counter = SDL_GetPerformanceCounter();
 	return (double)perf_counter / (double)perf_freq;
@@ -216,7 +210,7 @@ void platform_set_audio_mix_cb(void (*cb)(float *buffer, uint32_t len)) {
 }
 
 
-#if defined(RENDERER_GL)
+#if defined(RENDERER_GL) // ----------------------------------------------------
 	#define PLATFORM_WINDOW_FLAGS SDL_WINDOW_OPENGL
 	SDL_GLContext platform_gl;
 
@@ -242,6 +236,65 @@ void platform_set_audio_mix_cb(void (*cb)(float *buffer, uint32_t len)) {
 	void platform_end_frame() {
 		SDL_GL_SwapWindow(window);
 	}
+
+	vec2i_t platform_screen_size() {
+		int width, height;
+		SDL_GL_GetDrawableSize(window, &width, &height);
+		return vec2i(width, height);
+	}
+
+
+#elif defined(RENDERER_SOFTWARE) // ----------------------------------------------
+	#define PLATFORM_WINDOW_FLAGS 0
+	static SDL_Renderer *renderer;
+	static SDL_Texture *screenbuffer = NULL;
+	static void *screenbuffer_pixels = NULL;
+	static int screenbuffer_pitch;
+	static vec2i_t screenbuffer_size = vec2i(0, 0);
+	static vec2i_t screen_size = vec2i(0, 0);
+
+
+	void platform_video_init() {
+		renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+	}
+
+	void platform_video_cleanup() {
+		
+	}
+
+	void platform_prepare_frame() {
+		if (screen_size.x != screenbuffer_size.x || screen_size.y != screenbuffer_size.y) {
+			if (screenbuffer) {
+				SDL_DestroyTexture(screenbuffer);
+			}
+			screenbuffer = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, screen_size.x, screen_size.y);
+			screenbuffer_size = screen_size;
+		}
+		SDL_LockTexture(screenbuffer, NULL, &screenbuffer_pixels, &screenbuffer_pitch);
+	}
+
+	void platform_end_frame() {
+		screenbuffer_pixels = NULL;
+		SDL_UnlockTexture(screenbuffer);
+		SDL_RenderCopy(renderer, screenbuffer, NULL, NULL);
+		SDL_RenderPresent(renderer);
+	}
+
+	rgba_t *platform_get_screenbuffer(int32_t *pitch) {
+		*pitch = screenbuffer_pitch;
+		return screenbuffer_pixels;
+	}
+
+	vec2i_t platform_screen_size() {
+		int width, height;
+		SDL_GetWindowSize(window, &width, &height);
+
+		// float aspect = (float)width / (float)height;
+		// screen_size = vec2i(240 * aspect, 240);
+		screen_size = vec2i(width, height);
+		return screen_size;
+	}
+
 #else
 	#error "Unsupported renderer for platform SDL"
 #endif

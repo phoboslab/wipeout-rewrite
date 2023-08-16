@@ -20,6 +20,9 @@ endif
 ifeq ($(RENDERER), GL)
 	RENDERER_SRC = src/render_gl.c
 	C_FLAGS := $(C_FLAGS) -DRENDERER_GL
+else ifeq ($(RENDERER), SOFTWARE)
+	RENDERER_SRC = src/render_software.c
+	C_FLAGS := $(C_FLAGS) -DRENDERER_SOFTWARE
 else
 $(error Unknown RENDERER)
 endif
