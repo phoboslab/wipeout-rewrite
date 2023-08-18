@@ -7,6 +7,11 @@
 #include "ui.h"
 #include "sfx.h"
 
+bool blink() {
+	// blink 30 times per second
+	return fmod(system_cycle_time(), 1.0/15.0) < 1.0/30.0;
+}
+
 void menu_reset(menu_t *menu) {
 	menu->index = -1;
 }
@@ -119,10 +124,10 @@ void menu_update(menu_t *menu) {
 	// Draw Horizontal (confirm)
 	if (flags_is(page->layout_flags, MENU_HORIZONTAL)) {
 		vec2i_t pos = vec2i(0, -20);
-		ui_draw_text_centered(page->title, ui_scaled_pos(page->title_anchor, pos), UI_SIZE_8, UI_COLOR_ACCENT);
+		ui_draw_text_centered(page->title, ui_scaled_pos(page->title_anchor, pos), UI_SIZE_8, UI_COLOR_DEFAULT);
 		if (page->subtitle) {
 			pos.y += 12;
-			ui_draw_text_centered(page->subtitle, ui_scaled_pos(page->title_anchor, pos), UI_SIZE_8, UI_COLOR_ACCENT);
+			ui_draw_text_centered(page->subtitle, ui_scaled_pos(page->title_anchor, pos), UI_SIZE_8, UI_COLOR_DEFAULT);
 		}
 		pos.y += 16;
 
@@ -131,7 +136,7 @@ void menu_update(menu_t *menu) {
 		for (int i = 0; i < page->entries_len; i++) {
 			menu_entry_t *entry = &page->entries[i];
 			rgba_t text_color;
-			if (i == page->index) {
+			if (i == page->index && blink()) {
 				text_color = UI_COLOR_ACCENT;
 			}
 			else {
@@ -165,7 +170,7 @@ void menu_update(menu_t *menu) {
 		for (int i = 0; i < page->entries_len; i++) {
 			menu_entry_t *entry = &page->entries[i];
 			rgba_t text_color;
-			if (i == page->index) {
+			if (i == page->index && blink()) {
 				text_color = UI_COLOR_ACCENT;
 			}
 			else {
