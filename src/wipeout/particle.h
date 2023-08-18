@@ -23,10 +23,10 @@ typedef struct particle_t {
 	uint16_t texture;
 } particle_t;
 
-void particles_load();
-void particles_init();
+void particles_load(void);
+void particles_init(void);
 void particles_spawn(vec3_t position, uint16_t type, vec3_t velocity, int size);
-void particles_draw();
-void particles_update();
+void particles_draw(void);
+void particles_update(void);
 
 #endif

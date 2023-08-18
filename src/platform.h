@@ -3,10 +3,10 @@
 
 #include "types.h"
 
-void platform_exit();
-vec2i_t platform_screen_size();
-double platform_now();
-bool platform_get_fullscreen();
+void platform_exit(void);
+vec2i_t platform_screen_size(void);
+double platform_now(void);
+bool platform_get_fullscreen(void);
 void platform_set_fullscreen(bool fullscreen);
 void platform_set_audio_mix_cb(void (*cb)(float *buffer, uint32_t len));
 

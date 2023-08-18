@@ -161,15 +161,15 @@ static const uint8_t keyboard_map[] = {
 
 static void (*audio_callback)(float *buffer, uint32_t len) = NULL;
 
-void platform_exit() {
+void platform_exit(void) {
 	sapp_quit();
 }
 
-vec2i_t platform_screen_size() {
+vec2i_t platform_screen_size(void) {
 	return vec2i(sapp_width(), sapp_height());
 }
 
-double platform_now() {
+double platform_now(void) {
 	return stm_sec(stm_now());
 }
 

@@ -7,7 +7,7 @@
 #include "ui.h"
 #include "sfx.h"
 
-bool blink() {
+bool blink(void) {
 	// blink 30 times per second
 	return fmod(system_cycle_time(), 1.0/15.0) < 1.0/30.0;
 }

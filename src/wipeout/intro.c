@@ -33,9 +33,9 @@ static int audio_buffer_write_pos;
 static void video_cb(plm_t *plm, plm_frame_t *frame, void *user);
 static void audio_cb(plm_t *plm, plm_samples_t *samples, void *user);
 static void audio_mix(float *samples, uint32_t len);
-static void intro_end();
+static void intro_end(void);
 
-void intro_init() {
+void intro_init(void) {
 	plm = plm_create_with_filename("wipeout/intro.mpeg");
 	if (!plm) {
 		intro_end();
@@ -62,12 +62,12 @@ void intro_init() {
 	audio_buffer_write_pos = 0;
 }
 
-static void intro_end() {
+static void intro_end(void) {
 	sfx_set_external_mix_cb(NULL);
 	game_set_scene(GAME_SCENE_TITLE);
 }
 
-void intro_update() {
+void intro_update(void) {
 	if (!plm) {
 		return;
 	}

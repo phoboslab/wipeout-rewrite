@@ -18,7 +18,7 @@ static uint32_t temp_objects_len;
 // These allocations persist for many frames. The allocator level is reset
 // whenever we load a new race track or menu in game_set_scene()
 
-void *mem_mark() {
+void *mem_mark(void) {
 	return &hunk[bump_len];
 }
 
@@ -76,6 +76,6 @@ void mem_temp_free(void *p) {
 	temp_len = remaining_max;
 }
 
-void mem_temp_check() {
+void mem_temp_check(void) {
 	error_if(temp_len != 0, "Temp memory not free: %d object(s)", temp_objects_len);
 }

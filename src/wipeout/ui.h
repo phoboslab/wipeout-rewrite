@@ -32,13 +32,13 @@ typedef enum {
 	UI_POS_BOTTOM = 1 << 5,
 } ui_pos_t;
 
-void ui_load();
-void ui_cleanup();
+void ui_load(void);
+void ui_cleanup(void);
 
-int ui_get_scale();
+int ui_get_scale(void);
 void ui_set_scale(int scale);
 vec2i_t ui_scaled(vec2i_t v);
-vec2i_t ui_scaled_screen();
+vec2i_t ui_scaled_screen(void);
 vec2i_t ui_scaled_pos(ui_pos_t anchor, vec2i_t offset);
 
 int ui_char_width(char c, ui_text_size_t size);
