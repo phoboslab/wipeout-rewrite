@@ -417,7 +417,8 @@ static void button_team_select(menu_t *menu, int data) {
 }
 
 static void page_team_draw(menu_t *menu, int data) {
-	draw_model(models.teams[data], vec2(0, -0.2), vec3(0, 0, -10000), system_cycle_time());
+	int team_model_index = (data + 3) % 4; // models in the prm are shifted by -1
+	draw_model(models.teams[team_model_index], vec2(0, -0.2), vec3(0, 0, -10000), system_cycle_time());
 	draw_model(g.ships[def.teams[data].pilots[0]].model, vec2(0, -0.3), vec3(-700, -800, -1300), system_cycle_time()*1.1);
 	draw_model(g.ships[def.teams[data].pilots[1]].model, vec2(0, -0.3), vec3( 700, -800, -1300), system_cycle_time()*1.2);
 }
