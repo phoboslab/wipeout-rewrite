@@ -121,6 +121,7 @@ COMMON_SRC = \
 # Targets native ---------------------------------------------------------------
 
 COMMON_OBJ = $(patsubst %.c, $(BUILD_DIR)/%.o, $(COMMON_SRC))
+COMMON_DEPS = $(patsubst %.c, $(BUILD_DIR)/%.d, $(COMMON_SRC))
 
 sdl: $(BUILD_DIR)/src/platform_sdl.o
 sdl: $(COMMON_OBJ)
@@ -135,12 +136,16 @@ $(BUILD_DIR):
 
 $(BUILD_DIR)/%.o: %.c
 	mkdir -p $(dir $@)
-	$(CC) $(C_FLAGS) -c $< -o $@
+	$(CC) $(C_FLAGS) -MMD -MP -c $< -o $@
+
+-include $(COMMON_DEPS)
 
 
 # Targets wasm -----------------------------------------------------------------
 
 COMMON_OBJ_WASM = $(patsubst %.c, $(BUILD_DIR_WASM)/%.o, $(COMMON_SRC))
+COMMON_DEPS_WASM = $(patsubst %.c, $(BUILD_DIR_WASM)/%.d, $(COMMON_SRC))
+
 wasm: wasm_full wasm_minimal
 	cp src/wasm-index.html $(WASM_RELEASE_DIR)/game.html
 
@@ -168,9 +173,9 @@ $(BUILD_DIR_WASM):
 
 $(BUILD_DIR_WASM)/%.o: %.c
 	mkdir -p $(dir $@)
-	$(EMCC) $(C_FLAGS) -c $< -o $@
+	$(EMCC) $(C_FLAGS) -MMD -MP -c $< -o $@
 
-
+-include $(COMMON_DEPS_WASM)
 
 
 
