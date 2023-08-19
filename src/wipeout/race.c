@@ -207,7 +207,14 @@ void race_end() {
 	if (g.race_type == RACE_TYPE_CHAMPIONSHIP) {
 		for (int i = 0; i < len(def.race_points_for_rank); i++) {
 			g.race_ranks[i].points = def.race_points_for_rank[i];
-			g.championship_ranks[g.race_ranks[i].pilot].points += def.race_points_for_rank[i];
+
+			// Find the pilot for this race rank in the championship table
+			for (int j = 0; j < len(g.championship_ranks); j++) {
+				if (g.race_ranks[i].pilot == g.championship_ranks[j].pilot) {
+					g.championship_ranks[j].points += def.race_points_for_rank[i];
+					break;
+				}
+			}
 		}
 		sort(g.championship_ranks, len(g.championship_ranks), sort_points_compare);
 	}
