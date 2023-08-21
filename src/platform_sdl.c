@@ -302,7 +302,15 @@ void platform_set_audio_mix_cb(void (*cb)(float *buffer, uint32_t len)) {
 
 
 int main(int argc, char *argv[]) {
-	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER);
+	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER);
+
+	int gcdb_res = SDL_GameControllerAddMappingsFromFile("gamecontrollerdb.txt");
+	if (gcdb_res < 0) {
+		printf("Failed to load gamecontrollerdb.txt\n");
+	}
+	else {
+		printf("load gamecontrollerdb.txt\n");
+	}
 
 	audio_device = SDL_OpenAudioDevice(NULL, 0, &(SDL_AudioSpec){
 		.freq = 44100,
