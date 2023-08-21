@@ -84,7 +84,7 @@ The makefile accepts several flags. You can specify them with `make FLAG=VALUE`
 
 ## Running
 
-This repository does not contain the assets (textures, 3d models etc.) required to run the game. This code mostly assumes to have the PSX NTSC data, but some menu models from the PC version are loaded as well. Both of these can be easily found on archive.org and similar sites. The music (optional) needs to be provided in [QOA format](https://github.com/phoboslab/qoa). The intro video as MPEG1.
+This repository does not contain the assets (textures, 3d models etc.) required to run the game. This code mostly assumes to have the PSX NTSC data, but some menu models from the PC version are required as well. Both of these can be easily found on archive.org and similar sites. The music (optional) needs to be provided in [QOA format](https://github.com/phoboslab/qoa). The intro video as MPEG1.
 
 The directory structure is assumed to be as follows
 
@@ -113,7 +113,6 @@ Some things from the original game are not yet implemented in this rewrite. This
 - screen shake effect
 - game-end animations, formerly `Spline.cpp` (the end messages are just shown over the attract mode cameras)
 - viewing highscores in options menu
-- controller options menu
 - reverb for sfx and music when there's more than 4 track faces (tunnels and such)
 - some more? grep the source for `TODO` and `FIXME`
 
@@ -125,7 +124,6 @@ Some things from the original game are not yet implemented in this rewrite. This
 - add option to lessen the roll in the internal view
 - add additional external view that behaves more like in modern racing games
 - dynamic lighting on ships
-- allow lower resolutions and a drawing mode that resembles the PSX original
 - the scene geometry could use some touch-ups to make an infinite draw distance option less awkward
 - increase FOV when going over a boost
 - better menu models for game exit and video options
