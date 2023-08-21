@@ -11,7 +11,8 @@
 // Linux
 #elif defined(__unix__)
 	#include <GL/glew.h>
-	
+#elif defined(__MSYS__)
+	#include <GL/glew.h>
 // WINDOWS
 #else
 	#include <windows.h>

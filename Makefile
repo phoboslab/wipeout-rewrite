@@ -1,11 +1,13 @@
 CC ?= gcc
 EMCC ?= emcc
 UNAME_S := $(shell uname -s)
+UNAME_O := $(shell uname -o)
 RENDERER ?= GL
 USE_GLX ?= false
 DEBUG ?= false
 
-L_FLAGS ?= -lm -rdynamic
+#L_FLAGS ?= -lm -rdynamic
+L_FLAGS ?= -lm
 C_FLAGS ?= -std=gnu99 -Wall -Wno-unused-variable
 
 ifeq ($(DEBUG), true)
@@ -36,6 +38,7 @@ endif
 # macOS ------------------------------------------------------------------------
 
 ifeq ($(UNAME_S), Darwin)
+	C_FLAGS := $(C_FLAGS) -rdynamic
 	C_FLAGS := $(C_FLAGS) -x objective-c -I/opt/homebrew/include -D_THREAD_SAFE -w
 	L_FLAGS := $(L_FLAGS) -L/opt/homebrew/lib -framework Foundation
 
@@ -50,6 +53,7 @@ ifeq ($(UNAME_S), Darwin)
 # Linux ------------------------------------------------------------------------
 
 else ifeq ($(UNAME_S), Linux)
+	C_FLAGS := $(C_FLAGS) -rdynamic
 	ifeq ($(RENDERER), GL)
 		L_FLAGS := $(L_FLAGS) -lGLEW
 
@@ -65,12 +69,21 @@ else ifeq ($(UNAME_S), Linux)
 	L_FLAGS_SOKOL = -lX11 -lXcursor -pthread -lXi -ldl -lasound
 
 
-# Windows ----------------------------------------------------------------------
+# Windows MSYS ------------------------------------------------------------------
+else ifeq ($(UNAME_O), Msys)
+	# MSYS2 enviroment
+	ifeq ($(RENDERER), GL)
+		L_FLAGS := $(L_FLAGS) -lglew32 -lopengl32
+	endif
 
+	C_FLAGS := $(C_FLAGS) -DSDL_MAIN_HANDLED -D__MSYS__
+	L_FLAGS_SDL = -lSDL2 -lSDL2main
+	L_FLAGS_SOKOL = --pthread -ldl -lasound
+
+
+# Windows NON-MSYS ---------------------------------------------------------------
 else ifeq ($(OS), Windows_NT)
-$(error TODO: FLAGS for windows have not been set up. Please modify this makefile and send a PR!)
-
-
+	$(error TODO: FLAGS for windows have not been set up. Please modify this makefile and send a PR!)
 
 else
 $(error Unknown environment)
@@ -167,7 +180,7 @@ wasm_minimal: $(COMMON_OBJ_WASM)
 		--preload-file wipeout \
 		--exclude-file wipeout/music \
 		--exclude-file wipeout/intro.mpeg
-	
+
 $(BUILD_DIR_WASM):
 	mkdir -p $(BUILD_DIR_WASM)
 
