@@ -6,7 +6,6 @@ RENDERER ?= GL
 USE_GLX ?= false
 DEBUG ?= false
 
-#L_FLAGS ?= -lm -rdynamic
 L_FLAGS ?= -lm
 C_FLAGS ?= -std=gnu99 -Wall -Wno-unused-variable
 
@@ -38,7 +37,6 @@ endif
 # macOS ------------------------------------------------------------------------
 
 ifeq ($(UNAME_S), Darwin)
-	C_FLAGS := $(C_FLAGS) -rdynamic
 	C_FLAGS := $(C_FLAGS) -x objective-c -I/opt/homebrew/include -D_THREAD_SAFE -w
 	L_FLAGS := $(L_FLAGS) -L/opt/homebrew/lib -framework Foundation
 
@@ -53,7 +51,6 @@ ifeq ($(UNAME_S), Darwin)
 # Linux ------------------------------------------------------------------------
 
 else ifeq ($(UNAME_S), Linux)
-	C_FLAGS := $(C_FLAGS) -rdynamic
 	ifeq ($(RENDERER), GL)
 		L_FLAGS := $(L_FLAGS) -lGLEW
 
@@ -71,7 +68,6 @@ else ifeq ($(UNAME_S), Linux)
 
 # Windows MSYS ------------------------------------------------------------------
 else ifeq ($(UNAME_O), Msys)
-	# MSYS2 enviroment
 	ifeq ($(RENDERER), GL)
 		L_FLAGS := $(L_FLAGS) -lglew32 -lopengl32
 	endif
