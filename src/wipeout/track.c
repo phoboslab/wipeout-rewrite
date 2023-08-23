@@ -271,28 +271,14 @@ void track_draw(camera_t *camera) {
 	vec3_t cam_pos = camera->position;
 
 	section_t *s = g.track.sections;
-	section_t *j = NULL;
-	do {
+	for(int32_t i = 0; i < g.track.section_count; ++i, ++s)
+	{
 		vec3_t d = vec3_sub(cam_pos, s->center);
 		float dist_sq = d.x * d.x + d.y * d.y + d.z * d.z;
 		if (dist_sq <  max_dist_sq) {
 			track_draw_section(s);
 		}
-
-		if (s->junction) { // start junction
-			j = s->junction;
-			do {
-				vec3_t d = vec3_sub(cam_pos, j->center);
-				float dist_sq = d.x * d.x + d.y * d.y + d.z * d.z;
-				if (dist_sq <  max_dist_sq) {
-					track_draw_section(j);
-				}
-				j = j->next;
-			} while (!j->junction); // end junction
-		}
-		s = s->next;
-	} while (s != g.track.sections);
-	
+	}
 }
 
 void track_cycle_pickups() {
