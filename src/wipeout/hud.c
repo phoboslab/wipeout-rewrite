@@ -170,6 +170,15 @@ static void hud_draw_target_icon(vec3_t position) {
 	vec2i_t size = ui_scaled(render_texture_size(target_reticle));
 	vec3_t projected = render_transform(position);
 
+	// Not on screen?
+	if (
+		projected.x < -1 || projected.x > 1 ||
+		projected.y < -1 || projected.y > 1 ||
+		projected.z >= 1
+	) {
+		return;
+	}
+
 	vec2i_t pos = vec2i(
 		(( projected.x + 1.0) / 2.0) * screen_size.x - size.x / 2,
 		((-projected.y + 1.0) / 2.0) * screen_size.y - size.y / 2
