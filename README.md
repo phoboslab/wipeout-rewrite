@@ -34,10 +34,12 @@ make sokol
 #### Fedora
 
 ```
-# for SDL2 backend
+# for SDL2 backenddfsdfff
 dnf install SDL2-devel glew-devel
-make sdl
+make sdlsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdf
 ```
+
+Helllo My name is soze
 
 ```
 # for Sokol backend
