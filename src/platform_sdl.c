@@ -61,8 +61,17 @@ SDL_GameController *platform_find_gamepad() {
 void platform_pump_events() {
 	SDL_Event ev;
 	while (SDL_PollEvent(&ev)) {
+		// Detect ALT+Enter press to toggle fullscreen
+		if (
+			ev.type == SDL_KEYDOWN && 
+			ev.key.keysym.scancode == SDL_SCANCODE_RETURN &&
+			(ev.key.keysym.mod & (KMOD_LALT | KMOD_RALT))
+		) {
+			platform_set_fullscreen(!platform_get_fullscreen());
+		}
+
 		// Input Keyboard
-		if (ev.type == SDL_KEYDOWN || ev.type == SDL_KEYUP) {
+		else if (ev.type == SDL_KEYDOWN || ev.type == SDL_KEYUP) {
 			int code = ev.key.keysym.scancode;
 			float state = ev.type == SDL_KEYDOWN ? 1.0 : 0.0;
 			if (code >= SDL_SCANCODE_LCTRL && code <= SDL_SCANCODE_RALT) {
@@ -177,6 +186,10 @@ void platform_pump_events() {
 double platform_now() {
 	uint64_t perf_counter = SDL_GetPerformanceCounter();
 	return (double)perf_counter / (double)perf_freq;
+}
+
+bool platform_get_fullscreen() {
+	return SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN;
 }
 
 void platform_set_fullscreen(bool fullscreen) {

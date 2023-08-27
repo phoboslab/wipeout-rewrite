@@ -155,6 +155,10 @@ double platform_now() {
 	return stm_sec(stm_now());
 }
 
+bool platform_get_fullscreen() {
+	return sapp_is_fullscreen();
+}
+
 void platform_set_fullscreen(bool fullscreen) {
 	if (fullscreen == sapp_is_fullscreen()) {
 		return;
@@ -165,8 +169,17 @@ void platform_set_fullscreen(bool fullscreen) {
 }
 
 void platform_handle_event(const sapp_event* ev) {
+	// Detect ALT+Enter press to toggle fullscreen
+	if (
+		ev->type == SAPP_EVENTTYPE_KEY_DOWN && 
+		ev->key_code == SAPP_KEYCODE_ENTER &&
+		(ev->modifiers & SAPP_MODIFIER_ALT)
+	) {
+		platform_set_fullscreen(!sapp_is_fullscreen());
+	}
+
 	// Input Keyboard
-	if (ev->type == SAPP_EVENTTYPE_KEY_DOWN || ev->type == SAPP_EVENTTYPE_KEY_UP) {
+	else if (ev->type == SAPP_EVENTTYPE_KEY_DOWN || ev->type == SAPP_EVENTTYPE_KEY_UP) {
 		float state = ev->type == SAPP_EVENTTYPE_KEY_DOWN ? 1.0 : 0.0;
 		if (ev->key_code > 0 && ev->key_code < sizeof(keyboard_map)) {
 			int code = keyboard_map[ev->key_code];

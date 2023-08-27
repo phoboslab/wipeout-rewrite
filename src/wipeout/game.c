@@ -620,6 +620,13 @@ void game_update() {
 		game_scenes[scene_current].update();
 	}
 
+	// Fullscreen might have been toggled through alt+enter
+	bool fullscreen = platform_get_fullscreen();
+	if (fullscreen != save.fullscreen) {
+		save.fullscreen = fullscreen;
+		save.is_dirty = true;
+	}
+
 	if (save.is_dirty) {
 		// FIXME: use a text based format?
 		// FIXME: this should probably run async somewhere
