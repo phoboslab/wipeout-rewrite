@@ -49,7 +49,7 @@ image_t *image_load_from_bytes(uint8_t *bytes, bool transparent) {
 
 	uint32_t magic = get_i32_le(bytes, &p);
 	uint32_t type = get_i32_le(bytes, &p);
-	uint16_t *palette = NULL;
+	uint16_t palette[256];
 
 	if (
 		type == TIM_TYPE_PALETTED_4_BPP ||
@@ -60,8 +60,6 @@ image_t *image_load_from_bytes(uint8_t *bytes, bool transparent) {
 		uint16_t palette_y = get_i16_le(bytes, &p);
 		uint16_t palette_colors = get_i16_le(bytes, &p);
 		uint16_t palettes = get_i16_le(bytes, &p);
-
-		palette = (uint16_t *)(bytes + p);
 		for (int i = 0; i < palette_colors; i++) {
 			palette[i] = get_u16_le(bytes, &p);
 		}
