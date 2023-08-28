@@ -49,7 +49,7 @@ image_t *image_load_from_bytes(uint8_t *bytes, bool transparent) {
 
 	uint32_t magic = get_i32_le(bytes, &p);
 	uint32_t type = get_i32_le(bytes, &p);
-	uint16_t palette[256];
+	rgba_t palette[256];
 
 	if (
 		type == TIM_TYPE_PALETTED_4_BPP ||
@@ -61,7 +61,7 @@ image_t *image_load_from_bytes(uint8_t *bytes, bool transparent) {
 		uint16_t palette_colors = get_i16_le(bytes, &p);
 		uint16_t palettes = get_i16_le(bytes, &p);
 		for (int i = 0; i < palette_colors; i++) {
-			palette[i] = get_u16_le(bytes, &p);
+			palette[i] = tim_16bit_to_rgba(get_u16_le(bytes, &p), transparent);
 		}
 	}
 
@@ -95,17 +95,17 @@ image_t *image_load_from_bytes(uint8_t *bytes, bool transparent) {
 	else if (type == TIM_TYPE_PALETTED_8_BPP) {
 		for (int i = 0; i < entries; i++) {
 			int32_t palette_pos = get_i16_le(bytes, &p);
-			image->pixels[pixel_pos++] = tim_16bit_to_rgba(palette[(palette_pos >> 0) & 0xff], transparent);
-			image->pixels[pixel_pos++] = tim_16bit_to_rgba(palette[(palette_pos >> 8) & 0xff], transparent);
+			image->pixels[pixel_pos++] = palette[(palette_pos >> 0) & 0xff];
+			image->pixels[pixel_pos++] = palette[(palette_pos >> 8) & 0xff];
 		}
 	}
 	else if (type == TIM_TYPE_PALETTED_4_BPP) {
 		for (int i = 0; i < entries; i++) {
 			int32_t palette_pos = get_i16_le(bytes, &p);
-			image->pixels[pixel_pos++] = tim_16bit_to_rgba(palette[(palette_pos >>  0) & 0xf], transparent);
-			image->pixels[pixel_pos++] = tim_16bit_to_rgba(palette[(palette_pos >>  4) & 0xf], transparent);
-			image->pixels[pixel_pos++] = tim_16bit_to_rgba(palette[(palette_pos >>  8) & 0xf], transparent);
-			image->pixels[pixel_pos++] = tim_16bit_to_rgba(palette[(palette_pos >> 12) & 0xf], transparent);
+			image->pixels[pixel_pos++] = palette[(palette_pos >>  0) & 0xf];
+			image->pixels[pixel_pos++] = palette[(palette_pos >>  4) & 0xf];
+			image->pixels[pixel_pos++] = palette[(palette_pos >>  8) & 0xf];
+			image->pixels[pixel_pos++] = palette[(palette_pos >> 12) & 0xf];
 		}
 	}
 
