@@ -71,9 +71,9 @@ bool str_starts_with(const char *haystack, const char *needle);
 float rand_float(float min, float max);
 int32_t rand_int(int32_t min, int32_t max); 
 
-bool file_exists(char *path);
-uint8_t *file_load(char *path, uint32_t *bytes_read);
-uint32_t file_store(char *path, void *bytes, int32_t len);
+bool file_exists(const char *path);
+uint8_t *file_load(const char *path, uint32_t *bytes_read);
+uint32_t file_store(const char *path, void *bytes, int32_t len);
 
 
 #define sort(LIST, LEN, COMPARE_FUNC) \

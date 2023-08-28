@@ -502,12 +502,16 @@ static int global_textures_len = 0;
 static void *global_mem_mark = 0;
 
 void game_init() {
-	if (file_exists("save.dat")) {
-		uint32_t size;
-		save_t *save_file = (save_t *)file_load("save.dat", &size);
+	
+	uint32_t size;
+	save_t *save_file = (save_t *)platform_load_userdata("save.dat", &size);
+	if (save_file) {
 		if (size == sizeof(save_t) && save_file->magic == SAVE_DATA_MAGIC) {
 			printf("load save data success\n");
 			memcpy(&save, save_file, sizeof(save_t));
+		}
+		else {
+			printf("unexpected size/magic for save data");
 		}
 		mem_temp_free(save_file);
 	}
@@ -631,7 +635,7 @@ void game_update() {
 		// FIXME: use a text based format?
 		// FIXME: this should probably run async somewhere
 		save.is_dirty = false;
-		file_store("save.dat", &save, sizeof(save_t)); 
+		platform_store_userdata("save.dat", &save, sizeof(save_t)); 
 		printf("wrote save.dat\n");
 	}
 

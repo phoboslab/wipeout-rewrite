@@ -2,6 +2,7 @@
 #include "../mem.h"
 #include "../render.h"
 #include "../utils.h"
+#include "../platform.h"
 
 #include "object.h"
 #include "track.h"
@@ -26,7 +27,7 @@ static rgba_t int32_to_rgba(uint32_t v) {
 
 Object *objects_load(char *name, texture_list_t tl) {
 	uint32_t length = 0;
-	uint8_t *bytes = file_load(name, &length);
+	uint8_t *bytes = platform_load_asset(name, &length);
 	if (!bytes) {
 		die("Failed to load file %s\n", name);
 	}

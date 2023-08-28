@@ -3,6 +3,8 @@
 #include "platform.h"
 #include "input.h"
 #include "system.h"
+#include "utils.h"
+#include "mem.h"
 
 static uint64_t perf_freq = 0;
 static bool wants_to_exit = false;
@@ -10,6 +12,9 @@ static SDL_Window *window;
 static SDL_AudioDeviceID audio_device;
 static SDL_GameController *gamepad;
 static void (*audio_callback)(float *buffer, uint32_t len) = NULL;
+static char *path_assets = NULL;
+static char *path_userdata = NULL;
+static char *temp_path = NULL;
 
 
 uint8_t platform_sdl_gamepad_map[] = {
@@ -223,6 +228,28 @@ void platform_set_audio_mix_cb(void (*cb)(float *buffer, uint32_t len)) {
 }
 
 
+uint8_t *platform_load_asset(const char *name, uint32_t *bytes_read) {
+	char *path = strcat(strcpy(temp_path, path_assets), name);
+	return file_load(path, bytes_read);
+}
+
+uint8_t *platform_load_userdata(const char *name, uint32_t *bytes_read) {
+	char *path = strcat(strcpy(temp_path, path_userdata), name);
+	if (!file_exists(path)) {
+		*bytes_read = 0;
+		return NULL;
+	}
+	return file_load(path, bytes_read);
+}
+
+uint32_t platform_store_userdata(const char *name, void *bytes, int32_t len) {
+	char *path = strcat(strcpy(temp_path, path_userdata), name);
+	return file_store(path, bytes, len);
+}
+
+
+
+
 #if defined(RENDERER_GL) // ----------------------------------------------------
 	#define PLATFORM_WINDOW_FLAGS SDL_WINDOW_OPENGL
 	SDL_GLContext platform_gl;
@@ -317,13 +344,49 @@ void platform_set_audio_mix_cb(void (*cb)(float *buffer, uint32_t len)) {
 int main(int argc, char *argv[]) {
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER);
 
-	int gcdb_res = SDL_GameControllerAddMappingsFromFile("gamecontrollerdb.txt");
+	// Figure out the absolute asset and userdata paths. These may either be
+	// supplied at build time through -DPATH_ASSETS=.. and -DPATH_USERDATA=.. 
+	// or received at runtime from SDL. Note that SDL may return NULL for these.
+	// We fall back to the current directory (i.e. just "") in this case.
+
+	#ifdef PATH_ASSETS
+		path_assets = TOSTRING(PATH_ASSETS);
+	#else
+		path_assets = SDL_GetBasePath();
+		if (path_assets == NULL) {
+			path_assets = "";
+		}
+	#endif
+
+	#ifdef PATH_USERDATA
+		path_userdata = TOSTRING(PATH_USERDATA);
+	#else
+		path_userdata = SDL_GetPrefPath("phoboslab", "wipeout");
+		if (path_userdata == NULL) {
+			path_userdata = "";
+		}
+	#endif
+
+	// Reserve some space for concatenating the asset and userdata paths with
+	// local filenames.
+	temp_path = mem_bump(max(strlen(path_assets), strlen(path_userdata)) + 64);
+
+	// Load gamecontrollerdb.txt if present.
+	// FIXME: Should this load from userdata instead?
+	char *gcdb_path = strcat(strcpy(temp_path, path_assets), "gamecontrollerdb.txt");
+	int gcdb_res = SDL_GameControllerAddMappingsFromFile(gcdb_path);
 	if (gcdb_res < 0) {
 		printf("Failed to load gamecontrollerdb.txt\n");
 	}
 	else {
 		printf("load gamecontrollerdb.txt\n");
 	}
+
+
+
+	gamepad = platform_find_gamepad();
+
+	perf_freq = SDL_GetPerformanceFrequency();
 
 	audio_device = SDL_OpenAudioDevice(NULL, 0, &(SDL_AudioSpec){
 		.freq = 44100,
@@ -332,10 +395,6 @@ int main(int argc, char *argv[]) {
 		.samples = 1024,
 		.callback = platform_audio_callback
 	}, NULL, 0);
-
-	gamepad = platform_find_gamepad();
-
-	perf_freq = SDL_GetPerformanceFrequency();
 
 	window = SDL_CreateWindow(
 		SYSTEM_WINDOW_NAME,
@@ -356,6 +415,9 @@ int main(int argc, char *argv[]) {
 
 	system_cleanup();
 	platform_video_cleanup();
+
+	SDL_free(path_assets);
+	SDL_free(path_userdata);
 
 	SDL_CloseAudioDevice(audio_device);
 	SDL_Quit();

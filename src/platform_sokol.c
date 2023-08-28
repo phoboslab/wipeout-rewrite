@@ -1,5 +1,7 @@
 #include "platform.h"
 #include "system.h"
+#include "utils.h"
+#include "mem.h"
 
 #if defined(RENDERER_GL)
 	#ifdef __EMSCRIPTEN__
@@ -16,6 +18,22 @@
 #include "libs/sokol_time.h"
 #include "libs/sokol_app.h"
 #include "input.h"
+
+// FIXME: we should figure out the actual path where the executabe resides,
+// instead of just assuming it's in the pwd
+#ifdef PATH_ASSETS
+	static const char *path_assets = TOSTRING(PATH_ASSETS);
+#else
+	static const char *path_assets = "";
+#endif
+
+#ifdef PATH_USERDATA
+	static const char *path_userdata = TOSTRING(PATH_USERDATA);
+#else
+	static const char *path_userdata = "";
+#endif
+
+static char *temp_path;
 
 static const uint8_t keyboard_map[] = {
 	[SAPP_KEYCODE_SPACE] = INPUT_KEY_SPACE,
@@ -246,7 +264,28 @@ void platform_set_audio_mix_cb(void (*cb)(float *buffer, uint32_t len)) {
 	audio_callback = cb;
 }
 
+uint8_t *platform_load_asset(const char *name, uint32_t *bytes_read) {
+	char *path = strcat(strcpy(temp_path, path_assets), name);
+	return file_load(path, bytes_read);
+}
+
+uint8_t *platform_load_userdata(const char *name, uint32_t *bytes_read) {
+	char *path = strcat(strcpy(temp_path, path_userdata), name);
+	if (!file_exists(path)) {
+		*bytes_read = 0;
+		return NULL;
+	}
+	return file_load(path, bytes_read);
+}
+
+uint32_t platform_store_userdata(const char *name, void *bytes, int32_t len) {
+	char *path = strcat(strcpy(temp_path, path_userdata), name);
+	return file_store(path, bytes, len);
+}
+
 sapp_desc sokol_main(int argc, char* argv[]) {
+	temp_path = mem_bump(max(strlen(path_assets), strlen(path_userdata)) + 64);
+
 	stm_setup();
 
 	saudio_setup(&(saudio_desc){

@@ -1,6 +1,7 @@
 #include "../types.h"
 #include "../mem.h"
 #include "../utils.h"
+#include "../platform.h"
 
 #include "object.h"
 #include "track.h"
@@ -229,7 +230,7 @@ void lzss_decompress(uint8_t *in_data, uint8_t *out_data) {
 cmp_t *image_load_compressed(char *name) {
 	printf("load cmp %s\n", name);
 	uint32_t compressed_size;
-	uint8_t *compressed_bytes = file_load(name, &compressed_size);
+	uint8_t *compressed_bytes = platform_load_asset(name, &compressed_size);
 
 	uint32_t p = 0;
 	int32_t decompressed_size = 0;
@@ -263,7 +264,7 @@ cmp_t *image_load_compressed(char *name) {
 uint16_t image_get_texture(char *name) {
 	printf("load: %s\n", name);
 	uint32_t size;
-	uint8_t *bytes = file_load(name, &size);
+	uint8_t *bytes = platform_load_asset(name, &size);
 	image_t *image = image_load_from_bytes(bytes, false);
 	uint32_t texture_index = render_texture_create(image->width, image->height, image->pixels);
 	mem_temp_free(image);
@@ -275,7 +276,7 @@ uint16_t image_get_texture(char *name) {
 uint16_t image_get_texture_semi_trans(char *name) {
 	printf("load: %s\n", name);
 	uint32_t size;
-	uint8_t *bytes = file_load(name, &size);
+	uint8_t *bytes = platform_load_asset(name, &size);
 	image_t *image = image_load_from_bytes(bytes, true);
 	uint32_t texture_index = render_texture_create(image->width, image->height, image->pixels);
 	mem_temp_free(image);

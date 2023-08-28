@@ -13,12 +13,12 @@ char *get_path(const char *dir, const char *file) {
 }
 
 
-bool file_exists(char *path) {
+bool file_exists(const char *path) {
 	struct stat s;
 	return (stat(path, &s) == 0);
 }
 
-uint8_t *file_load(char *path, uint32_t *bytes_read) {
+uint8_t *file_load(const char *path, uint32_t *bytes_read) {
 	FILE *f = fopen(path, "rb");
 	error_if(!f, "Could not open file for reading: %s", path);
 
@@ -43,7 +43,7 @@ uint8_t *file_load(char *path, uint32_t *bytes_read) {
 	return bytes;
 }
 
-uint32_t file_store(char *path, void *bytes, int32_t len) {
+uint32_t file_store(const char *path, void *bytes, int32_t len) {
 	FILE *f = fopen(path, "wb");
 	error_if(!f, "Could not open file for writing: %s", path);
 

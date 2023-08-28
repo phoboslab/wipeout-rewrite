@@ -2,6 +2,7 @@
 #include "../utils.h"
 #include "../render.h"
 #include "../system.h"
+#include "../platform.h"
 
 #include "object.h"
 #include "track.h"
@@ -87,7 +88,7 @@ void track_load(const char *base_path) {
 
 ttf_t *track_load_tile_format(char *ttf_name) {
 	uint32_t ttf_size;
-	uint8_t *ttf_bytes = file_load(ttf_name, &ttf_size);
+	uint8_t *ttf_bytes = platform_load_asset(ttf_name, &ttf_size);
 
 	uint32_t p = 0;
 	uint32_t num_tiles = ttf_size / 42;
@@ -123,7 +124,7 @@ bool track_collect_pickups(track_face_t *face) {
 
 vec3_t *track_load_vertices(char *file_name) {
 	uint32_t size;
-	uint8_t *bytes = file_load(file_name, &size);
+	uint8_t *bytes = platform_load_asset(file_name, &size);
 
 	g.track.vertex_count = size / 16; // VECTOR_SIZE
 	vec3_t *vertices = mem_temp_alloc(sizeof(vec3_t) * g.track.vertex_count);
@@ -147,7 +148,7 @@ static const vec2_t track_uv[2][4] = {
 
 void track_load_faces(char *file_name, vec3_t *vertices) {
 	uint32_t size;
-	uint8_t *bytes = file_load(file_name, &size);
+	uint8_t *bytes = platform_load_asset(file_name, &size);
 
 	g.track.face_count = size / 20; // TRACK_FACE_DATA_SIZE
 	g.track.faces = mem_bump(sizeof(track_face_t) * g.track.face_count);
@@ -196,7 +197,7 @@ void track_load_faces(char *file_name, vec3_t *vertices) {
 
 void track_load_sections(char *file_name) {
 	uint32_t size;
-	uint8_t *bytes = file_load(file_name, &size);
+	uint8_t *bytes = platform_load_asset(file_name, &size);
 
 	g.track.section_count = size / 156; // SECTION_DATA_SIZE
 	g.track.sections = mem_bump(sizeof(section_t) * g.track.section_count);
