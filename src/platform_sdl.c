@@ -390,7 +390,7 @@ int main(int argc, char *argv[]) {
 
 	audio_device = SDL_OpenAudioDevice(NULL, 0, &(SDL_AudioSpec){
 		.freq = 44100,
-		.format = AUDIO_F32,
+		.format = AUDIO_F32SYS,
 		.channels = 2,
 		.samples = 1024,
 		.callback = platform_audio_callback
