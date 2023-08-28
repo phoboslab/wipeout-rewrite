@@ -59,8 +59,11 @@ image_t *image_load_from_bytes(uint8_t *bytes, bool transparent) {
 		uint16_t palette_y = get_i16_le(bytes, &p);
 		uint16_t palette_colors = get_i16_le(bytes, &p);
 		uint16_t palettes = get_i16_le(bytes, &p);
+
 		palette = (uint16_t *)(bytes + p);
-		p += palette_colors * 2;
+		for (int i = 0; i < palette_colors; i++) {
+			palette[i] = get_u16_le(bytes, &p);
+		}
 	}
 
 	uint32_t data_size = get_i32_le(bytes, &p);
@@ -87,7 +90,7 @@ image_t *image_load_from_bytes(uint8_t *bytes, bool transparent) {
 
 	if (type == TIM_TYPE_TRUE_COLOR_16_BPP) {
 		for (int i = 0; i < entries; i++) {
-			image->pixels[pixel_pos++] = tim_16bit_to_rgba(get_i16_le(bytes, &p), transparent);
+			image->pixels[pixel_pos++] = tim_16bit_to_rgba(get_u16_le(bytes, &p), transparent);
 		}
 	}
 	else if (type == TIM_TYPE_PALETTED_8_BPP) {
