@@ -5,9 +5,10 @@ UNAME_O := $(shell uname -o)
 RENDERER ?= GL
 USE_GLX ?= false
 DEBUG ?= false
+USER_CFLAGS ?=
 
 L_FLAGS ?= -lm
-C_FLAGS ?= -std=gnu99 -Wall -Wno-unused-variable
+C_FLAGS ?= -std=gnu99 -Wall -Wno-unused-variable $(USER_CFLAGS)
 
 ifeq ($(DEBUG), true)
 	C_FLAGS := $(C_FLAGS) -g
