@@ -12,8 +12,8 @@ static SDL_Window *window;
 static SDL_AudioDeviceID audio_device;
 static SDL_GameController *gamepad;
 static void (*audio_callback)(float *buffer, uint32_t len) = NULL;
-static char *path_assets = NULL;
-static char *path_userdata = NULL;
+static char *path_assets = "";
+static char *path_userdata = "";
 static char *temp_path = NULL;
 
 
@@ -349,21 +349,23 @@ int main(int argc, char *argv[]) {
 	// or received at runtime from SDL. Note that SDL may return NULL for these.
 	// We fall back to the current directory (i.e. just "") in this case.
 
+	char *sdl_path_assets = NULL;
 	#ifdef PATH_ASSETS
 		path_assets = TOSTRING(PATH_ASSETS);
 	#else
-		path_assets = SDL_GetBasePath();
-		if (path_assets == NULL) {
-			path_assets = "";
+		sdl_path_assets = SDL_GetBasePath();
+		if (sdl_path_assets) {
+			path_assets = sdl_path_assets;
 		}
 	#endif
 
+	char *sdl_path_userdata = NULL;
 	#ifdef PATH_USERDATA
 		path_userdata = TOSTRING(PATH_USERDATA);
 	#else
-		path_userdata = SDL_GetPrefPath("phoboslab", "wipeout");
-		if (path_userdata == NULL) {
-			path_userdata = "";
+		sdl_path_userdata = SDL_GetPrefPath("phoboslab", "wipeout");
+		if (sdl_path_userdata) {
+			path_userdata = sdl_path_userdata;
 		}
 	#endif
 
@@ -416,8 +418,12 @@ int main(int argc, char *argv[]) {
 	system_cleanup();
 	platform_video_cleanup();
 
-	SDL_free(path_assets);
-	SDL_free(path_userdata);
+	if (sdl_path_assets) {
+		SDL_free(sdl_path_assets);
+	}
+	if (sdl_path_userdata) {
+		SDL_free(sdl_path_userdata);
+	}
 
 	SDL_CloseAudioDevice(audio_device);
 	SDL_Quit();
