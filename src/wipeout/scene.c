@@ -168,9 +168,9 @@ void scene_set_start_booms(int light_index) {
 
 		for (int j = 0; j < lights_len; j++) {
 			for (int v = 0; v < 4; v++) {
-				libPoly.gt4->colour[v].r = color.r;
-				libPoly.gt4->colour[v].g = color.g;
-				libPoly.gt4->colour[v].b = color.b;
+				libPoly.gt4->color[v].r = color.r;
+				libPoly.gt4->color[v].g = color.g;
+				libPoly.gt4->color[v].b = color.b;
 			}
 			libPoly.gt4 += 1;
 		}
@@ -183,9 +183,9 @@ void scene_pulsate_red_light(Object *obj) {
 	Prm libPoly = {.primitive = obj->primitives};
 
 	for (int v = 0; v < 4; v++) {
-		libPoly.gt4->colour[v].r = r;
-		libPoly.gt4->colour[v].g = 0x00;
-		libPoly.gt4->colour[v].b = 0x00;
+		libPoly.gt4->color[v].r = r;
+		libPoly.gt4->color[v].g = 0x00;
+		libPoly.gt4->color[v].b = 0x00;
 	}
 }
 
@@ -237,25 +237,25 @@ void scene_update_aurora_borealis() {
 		int16_t *coords = aurora_borealis.coords[i];
 
 		if (aurora_borealis.grey_coords[i] != -2) {
-			aurora_borealis.primitives[i]->colour[0].r = (sin(coords[0] * phase) * 64.0) + 190;
-			aurora_borealis.primitives[i]->colour[0].g = (sin(coords[0] * (phase + 0.054)) * 64.0) + 190;
-			aurora_borealis.primitives[i]->colour[0].b = (sin(coords[0] * (phase + 0.039)) * 64.0) + 190;
+			aurora_borealis.primitives[i]->color[0].r = (sin(coords[0] * phase) * 64.0) + 190;
+			aurora_borealis.primitives[i]->color[0].g = (sin(coords[0] * (phase + 0.054)) * 64.0) + 190;
+			aurora_borealis.primitives[i]->color[0].b = (sin(coords[0] * (phase + 0.039)) * 64.0) + 190;
 		}
 		if (aurora_borealis.grey_coords[i] != -2) {
-			aurora_borealis.primitives[i]->colour[1].r = (sin(coords[1] * phase) * 64.0) + 190;
-			aurora_borealis.primitives[i]->colour[1].g = (sin(coords[1] * (phase + 0.054)) * 64.0) + 190;
-			aurora_borealis.primitives[i]->colour[1].b = (sin(coords[1] * (phase + 0.039)) * 64.0) + 190;
+			aurora_borealis.primitives[i]->color[1].r = (sin(coords[1] * phase) * 64.0) + 190;
+			aurora_borealis.primitives[i]->color[1].g = (sin(coords[1] * (phase + 0.054)) * 64.0) + 190;
+			aurora_borealis.primitives[i]->color[1].b = (sin(coords[1] * (phase + 0.039)) * 64.0) + 190;
 		}
 		if (aurora_borealis.grey_coords[i] != -1) {
-			aurora_borealis.primitives[i]->colour[2].r = (sin(coords[2] * phase) * 64.0) + 190;
-			aurora_borealis.primitives[i]->colour[2].g = (sin(coords[2] * (phase + 0.054)) * 64.0) + 190;
-			aurora_borealis.primitives[i]->colour[2].b = (sin(coords[2] * (phase + 0.039)) * 64.0) + 190;
+			aurora_borealis.primitives[i]->color[2].r = (sin(coords[2] * phase) * 64.0) + 190;
+			aurora_borealis.primitives[i]->color[2].g = (sin(coords[2] * (phase + 0.054)) * 64.0) + 190;
+			aurora_borealis.primitives[i]->color[2].b = (sin(coords[2] * (phase + 0.039)) * 64.0) + 190;
 		}
 
 		if (aurora_borealis.grey_coords[i] != -1) {
-			aurora_borealis.primitives[i]->colour[3].r = (sin(coords[3] * phase) * 64.0) + 190;
-			aurora_borealis.primitives[i]->colour[3].g = (sin(coords[3] * (phase + 0.054)) * 64.0) + 190;
-			aurora_borealis.primitives[i]->colour[3].b = (sin(coords[3] * (phase + 0.039)) * 64.0) + 190;
+			aurora_borealis.primitives[i]->color[3].r = (sin(coords[3] * phase) * 64.0) + 190;
+			aurora_borealis.primitives[i]->color[3].g = (sin(coords[3] * (phase + 0.054)) * 64.0) + 190;
+			aurora_borealis.primitives[i]->color[3].b = (sin(coords[3] * (phase + 0.039)) * 64.0) + 190;
 		}
 	}
 }

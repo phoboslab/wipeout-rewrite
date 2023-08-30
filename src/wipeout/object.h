@@ -18,7 +18,7 @@ typedef struct F3 {
 	int16_t flag;
 	int16_t coords[3]; // Indices of the coords
 	int16_t pad1;
-	rgba_t colour;
+	rgba_t color;
 } F3;
 
 typedef struct FT3 {
@@ -35,14 +35,14 @@ typedef struct FT3 {
 	uint8_t u2;
 	uint8_t v2;
 	int16_t pad1;
-	rgba_t colour;
+	rgba_t color;
 } FT3;
 
 typedef struct F4 {
 	int16_t type; // Type of primitive
 	int16_t flag;
 	int16_t coords[4]; // Indices of the coords
-	rgba_t colour;
+	rgba_t color;
 } F4;
 
 typedef struct FT4 {
@@ -61,7 +61,7 @@ typedef struct FT4 {
 	uint8_t u3;
 	uint8_t v3;
 	int16_t pad1;
-	rgba_t colour;
+	rgba_t color;
 } FT4;
 
 typedef struct G3 {
@@ -69,7 +69,7 @@ typedef struct G3 {
 	int16_t flag;
 	int16_t coords[3]; // Indices of the coords
 	int16_t pad1;
-	rgba_t colour[3];
+	rgba_t color[3];
 } G3;
 
 typedef struct GT3 {
@@ -86,14 +86,14 @@ typedef struct GT3 {
 	uint8_t u2;
 	uint8_t v2;
 	int16_t pad1;
-	rgba_t colour[3];
+	rgba_t color[3];
 } GT3;
 
 typedef struct G4 {
 	int16_t type; // Type of primitive
 	int16_t flag;
 	int16_t coords[4]; // Indices of the coords
-	rgba_t colour[4];
+	rgba_t color[4];
 } G4;
 
 typedef struct GT4 {
@@ -112,7 +112,7 @@ typedef struct GT4 {
 	uint8_t u3;
 	uint8_t v3;
 	int16_t pad1;
-	rgba_t colour[4];
+	rgba_t color[4];
 } GT4;
 
 
@@ -126,7 +126,7 @@ typedef struct LSF3 {
 	int16_t flag;
 	int16_t coords[3]; // Indices of the coords
 	int16_t normal; // Indices of the normals
-	rgba_t colour;
+	rgba_t color;
 } LSF3;
 
 typedef struct LSFT3 {
@@ -143,7 +143,7 @@ typedef struct LSFT3 {
 	uint8_t v1;
 	uint8_t u2;
 	uint8_t v2;
-	rgba_t colour;
+	rgba_t color;
 } LSFT3;
 
 typedef struct LSF4 {
@@ -152,7 +152,7 @@ typedef struct LSF4 {
 	int16_t coords[4]; // Indices of the coords
 	int16_t normal; // Indices of the normals
 	int16_t pad1;
-	rgba_t colour;
+	rgba_t color;
 } LSF4;
 
 typedef struct LSFT4 {
@@ -171,7 +171,7 @@ typedef struct LSFT4 {
 	uint8_t v2;
 	uint8_t u3;
 	uint8_t v3;
-	rgba_t colour;
+	rgba_t color;
 } LSFT4;
 
 typedef struct LSG3 {
@@ -179,7 +179,7 @@ typedef struct LSG3 {
 	int16_t flag;
 	int16_t coords[3]; // Indices of the coords
 	int16_t normals[3]; // Indices of the normals
-	rgba_t colour[3];
+	rgba_t color[3];
 } LSG3;
 
 typedef struct LSGT3 {
@@ -196,7 +196,7 @@ typedef struct LSGT3 {
 	uint8_t v1;
 	uint8_t u2;
 	uint8_t v2;
-	rgba_t colour[3];
+	rgba_t color[3];
 } LSGT3;
 
 typedef struct LSG4 {
@@ -204,7 +204,7 @@ typedef struct LSG4 {
 	int16_t flag;
 	int16_t coords[4]; // Indices of the coords
 	int16_t normals[4]; // Indices of the normals
-	rgba_t colour[4];
+	rgba_t color[4];
 } LSG4;
 
 typedef struct LSGT4 {
@@ -224,7 +224,7 @@ typedef struct LSGT4 {
 	uint8_t u3;
 	uint8_t v3;
 	int16_t pad1;
-	rgba_t colour[4];
+	rgba_t color[4];
 } LSGT4;
 
 
@@ -241,7 +241,7 @@ typedef struct SPR {
 	int16_t width;
 	int16_t height;
 	int16_t texture;
-	rgba_t colour;
+	rgba_t color;
 } SPR;
 
 
@@ -251,7 +251,7 @@ typedef struct Spline {
 	vec3_t control1;
 	vec3_t position;
 	vec3_t control2;
-	rgba_t colour;
+	rgba_t color;
 } Spline;
 
 
@@ -259,7 +259,7 @@ typedef struct PointLight {
 	int16_t type;
 	int16_t flag;
 	vec3_t position;
-	rgba_t colour;
+	rgba_t color;
 	int16_t startFalloff;
 	int16_t endFalloff;
 } PointLight;
@@ -270,7 +270,7 @@ typedef struct SpotLight {
 	int16_t flag;
 	vec3_t position;
 	vec3_t direction;
-	rgba_t colour;
+	rgba_t color;
 	int16_t startFalloff;
 	int16_t endFalloff;
 	int16_t coneAngle;
@@ -282,7 +282,7 @@ typedef struct InfiniteLight {
 	int16_t type;
 	int16_t flag;
 	vec3_t direction;
-	rgba_t colour;
+	rgba_t color;
 } InfiniteLight;
 
 
