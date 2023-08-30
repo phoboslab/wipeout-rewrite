@@ -73,36 +73,36 @@ void droid_draw(droid_t *droid) {
 
 		switch (prm.f3->type) {
 			case PRM_TYPE_GT3:
-				prm.gt3->colour[0].as_rgba.r = r;
-				prm.gt3->colour[0].as_rgba.g = g;
-				prm.gt3->colour[0].as_rgba.b = b;
+				prm.gt3->colour[0].r = r;
+				prm.gt3->colour[0].g = g;
+				prm.gt3->colour[0].b = b;
 
-				prm.gt3->colour[1].as_rgba.r = r;
-				prm.gt3->colour[1].as_rgba.g = g;
-				prm.gt3->colour[1].as_rgba.b = b;
+				prm.gt3->colour[1].r = r;
+				prm.gt3->colour[1].g = g;
+				prm.gt3->colour[1].b = b;
 
-				prm.gt3->colour[2].as_rgba.r = r;
-				prm.gt3->colour[2].as_rgba.g = g;
-				prm.gt3->colour[2].as_rgba.b = b;
+				prm.gt3->colour[2].r = r;
+				prm.gt3->colour[2].g = g;
+				prm.gt3->colour[2].b = b;
 				prm.gt3++;
 				break;
 
 			case PRM_TYPE_GT4:
-				prm.gt4->colour[0].as_rgba.r = r;
-				prm.gt4->colour[0].as_rgba.g = g;
-				prm.gt4->colour[0].as_rgba.b = b;
+				prm.gt4->colour[0].r = r;
+				prm.gt4->colour[0].g = g;
+				prm.gt4->colour[0].b = b;
 
-				prm.gt4->colour[1].as_rgba.r = r;
-				prm.gt4->colour[1].as_rgba.g = g;
-				prm.gt4->colour[1].as_rgba.b = b;
+				prm.gt4->colour[1].r = r;
+				prm.gt4->colour[1].g = g;
+				prm.gt4->colour[1].b = b;
 
-				prm.gt4->colour[2].as_rgba.r = r;
-				prm.gt4->colour[2].as_rgba.g = g;
-				prm.gt4->colour[2].as_rgba.b = b;
+				prm.gt4->colour[2].r = r;
+				prm.gt4->colour[2].g = g;
+				prm.gt4->colour[2].b = b;
 
-				prm.gt4->colour[3].as_rgba.r = 40;
-				prm.gt4->colour[3].as_rgba.g = 40;
-				prm.gt4->colour[3].as_rgba.b = 40;
+				prm.gt4->colour[3].r = 40;
+				prm.gt4->colour[3].g = 40;
+				prm.gt4->colour[3].b = 40;
 				prm.gt4++;
 				break;
 		}

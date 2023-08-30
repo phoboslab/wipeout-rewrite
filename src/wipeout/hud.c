@@ -58,17 +58,17 @@ void hud_load() {
 
 static void hud_draw_speedo_bar(vec2i_t *pos, const speedo_bar_t *a, const speedo_bar_t *b, float f, rgba_t color_override) {
 	rgba_t left_color, right_color;
-	if (color_override.as_uint32 > 0) {
+	if (color_override.a > 0) {
 		left_color = color_override;
 		right_color = color_override;
 	}
 	else {
 		left_color = a->color;
 		right_color = rgba(
-			lerp(a->color.as_rgba.r, b->color.as_rgba.r, f),
-			lerp(a->color.as_rgba.g, b->color.as_rgba.g, f),
-			lerp(a->color.as_rgba.b, b->color.as_rgba.b, f),
-			lerp(a->color.as_rgba.a, b->color.as_rgba.a, f)
+			lerp(a->color.r, b->color.r, f),
+			lerp(a->color.g, b->color.g, f),
+			lerp(a->color.b, b->color.b, f),
+			lerp(a->color.a, b->color.a, f)
 		);
 	}
 
