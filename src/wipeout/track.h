@@ -8,11 +8,6 @@
 
 #define TRACK_VERSION 8
 
-#define TRACK_VERTS_MAX    4096
-#define TRACK_FACES_MAX    3072
-#define TRACK_SECTIONS_MAX 1024
-#define TRACK_PICKUPS_MAX    64
-
 #define TRACK_PICKUP_COOLDOWN_TIME 1
 
 #define TRACK_SEARCH_LOOK_BACK 3
@@ -51,9 +46,6 @@ typedef struct section_t {
 	struct section_t *next;
 
 	vec3_t center;
-
-	int16_t high[4];
-	int16_t med[4];
 
 	int16_t face_start;
 	int16_t face_count;

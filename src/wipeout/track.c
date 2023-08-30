@@ -81,8 +81,6 @@ void track_load(const char *base_path) {
 			}
 			face++;
 		}
-		
-		error_if(g.track.pickups_len > TRACK_PICKUPS_MAX-1, "Track %s exceeds TRACK_PICKUPS_MAX", base_path);
 	}
 }
 
@@ -228,12 +226,8 @@ void track_load_sections(char *file_name) {
 		p += 5 * 3 * 4; // view section pointers
 		p += 5 * 3 * 2; // view section counts
 
-		for (int j = 0; j < 4; j++) {
-			ts->high[j] = get_i16(bytes, &p);
-		}
-		for (int j = 0; j < 4; j++) {
-			ts->med[j] = get_i16(bytes, &p);
-		}
+		p += 4 * 2; // high list
+		p += 4 * 2; // med list
 
 		ts->face_start = get_i16(bytes, &p);
 		ts->face_count = get_i16(bytes, &p);
@@ -256,7 +250,6 @@ void track_draw_section(section_t *section) {
 	track_face_t *face = g.track.faces + section->face_start;
 	int16_t face_count = section->face_count;
 	
-
 	for (uint32_t j = 0; j < face_count; j++) {
 		uint16_t tex_index = texture_from_list(g.track.textures, face->texture);
 		render_push_tris(face->tris[0], tex_index);
