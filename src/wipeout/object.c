@@ -15,16 +15,6 @@
 #include "hud.h"
 #include "object.h"
 
-
-static rgba_t int32_to_rgba(uint32_t v) {
-	return rgba(
-		((v >> 24) & 0xff),
-		((v >> 16) & 0xff),
-		((v >> 8) & 0xff),
-		255
-	);
-}
-
 Object *objects_load(char *name, texture_list_t tl) {
 	uint32_t length = 0;
 	uint8_t *bytes = platform_load_asset(name, &length);
@@ -107,7 +97,7 @@ Object *objects_load(char *name, texture_list_t tl) {
 				prm.f3->coords[1] = get_i16(bytes, &p);
 				prm.f3->coords[2] = get_i16(bytes, &p);
 				prm.f3->pad1 = get_i16(bytes, &p);
-				prm.f3->colour = int32_to_rgba(get_i32(bytes, &p));
+				prm.f3->colour = rgba_from_u32(get_u32(bytes, &p));
 				break;
 
 			case PRM_TYPE_F4:
@@ -116,7 +106,7 @@ Object *objects_load(char *name, texture_list_t tl) {
 				prm.f4->coords[1] = get_i16(bytes, &p);
 				prm.f4->coords[2] = get_i16(bytes, &p);
 				prm.f4->coords[3] = get_i16(bytes, &p);
-				prm.f4->colour = int32_to_rgba(get_i32(bytes, &p));
+				prm.f4->colour = rgba_from_u32(get_u32(bytes, &p));
 				break;
 
 			case PRM_TYPE_FT3:
@@ -136,7 +126,7 @@ Object *objects_load(char *name, texture_list_t tl) {
 				prm.ft3->v2 = get_i8(bytes, &p);
 
 				prm.ft3->pad1 = get_i16(bytes, &p);
-				prm.ft3->colour = int32_to_rgba(get_i32(bytes, &p));
+				prm.ft3->colour = rgba_from_u32(get_u32(bytes, &p));
 				break;
 
 			case PRM_TYPE_FT4:
@@ -158,7 +148,7 @@ Object *objects_load(char *name, texture_list_t tl) {
 				prm.ft4->u3 = get_i8(bytes, &p);
 				prm.ft4->v3 = get_i8(bytes, &p);
 				prm.ft4->pad1 = get_i16(bytes, &p);
-				prm.ft4->colour = int32_to_rgba(get_i32(bytes, &p));
+				prm.ft4->colour = rgba_from_u32(get_u32(bytes, &p));
 				break;
 
 			case PRM_TYPE_G3:
@@ -167,9 +157,9 @@ Object *objects_load(char *name, texture_list_t tl) {
 				prm.g3->coords[1] = get_i16(bytes, &p);
 				prm.g3->coords[2] = get_i16(bytes, &p);
 				prm.g3->pad1 = get_i16(bytes, &p);
-				prm.g3->colour[0] = int32_to_rgba(get_i32(bytes, &p));
-				prm.g3->colour[1] = int32_to_rgba(get_i32(bytes, &p));
-				prm.g3->colour[2] = int32_to_rgba(get_i32(bytes, &p));
+				prm.g3->colour[0] = rgba_from_u32(get_u32(bytes, &p));
+				prm.g3->colour[1] = rgba_from_u32(get_u32(bytes, &p));
+				prm.g3->colour[2] = rgba_from_u32(get_u32(bytes, &p));
 				break;
 
 			case PRM_TYPE_G4:
@@ -178,10 +168,10 @@ Object *objects_load(char *name, texture_list_t tl) {
 				prm.g4->coords[1] = get_i16(bytes, &p);
 				prm.g4->coords[2] = get_i16(bytes, &p);
 				prm.g4->coords[3] = get_i16(bytes, &p);
-				prm.g4->colour[0] = int32_to_rgba(get_i32(bytes, &p));
-				prm.g4->colour[1] = int32_to_rgba(get_i32(bytes, &p));
-				prm.g4->colour[2] = int32_to_rgba(get_i32(bytes, &p));
-				prm.g4->colour[3] = int32_to_rgba(get_i32(bytes, &p));
+				prm.g4->colour[0] = rgba_from_u32(get_u32(bytes, &p));
+				prm.g4->colour[1] = rgba_from_u32(get_u32(bytes, &p));
+				prm.g4->colour[2] = rgba_from_u32(get_u32(bytes, &p));
+				prm.g4->colour[3] = rgba_from_u32(get_u32(bytes, &p));
 				break;
 
 			case PRM_TYPE_GT3:
@@ -200,9 +190,9 @@ Object *objects_load(char *name, texture_list_t tl) {
 				prm.gt3->u2 = get_i8(bytes, &p);
 				prm.gt3->v2 = get_i8(bytes, &p);
 				prm.gt3->pad1 = get_i16(bytes, &p);
-				prm.gt3->colour[0] = int32_to_rgba(get_i32(bytes, &p));
-				prm.gt3->colour[1] = int32_to_rgba(get_i32(bytes, &p));
-				prm.gt3->colour[2] = int32_to_rgba(get_i32(bytes, &p));
+				prm.gt3->colour[0] = rgba_from_u32(get_u32(bytes, &p));
+				prm.gt3->colour[1] = rgba_from_u32(get_u32(bytes, &p));
+				prm.gt3->colour[2] = rgba_from_u32(get_u32(bytes, &p));
 				break;
 
 			case PRM_TYPE_GT4:
@@ -224,10 +214,10 @@ Object *objects_load(char *name, texture_list_t tl) {
 				prm.gt4->u3 = get_i8(bytes, &p);
 				prm.gt4->v3 = get_i8(bytes, &p);
 				prm.gt4->pad1 = get_i16(bytes, &p);
-				prm.gt4->colour[0] = int32_to_rgba(get_i32(bytes, &p));
-				prm.gt4->colour[1] = int32_to_rgba(get_i32(bytes, &p));
-				prm.gt4->colour[2] = int32_to_rgba(get_i32(bytes, &p));
-				prm.gt4->colour[3] = int32_to_rgba(get_i32(bytes, &p));
+				prm.gt4->colour[0] = rgba_from_u32(get_u32(bytes, &p));
+				prm.gt4->colour[1] = rgba_from_u32(get_u32(bytes, &p));
+				prm.gt4->colour[2] = rgba_from_u32(get_u32(bytes, &p));
+				prm.gt4->colour[3] = rgba_from_u32(get_u32(bytes, &p));
 				break;
 
 
@@ -237,7 +227,7 @@ Object *objects_load(char *name, texture_list_t tl) {
 				prm.lsf3->coords[1] = get_i16(bytes, &p);
 				prm.lsf3->coords[2] = get_i16(bytes, &p);
 				prm.lsf3->normal = get_i16(bytes, &p);
-				prm.lsf3->colour = int32_to_rgba(get_i32(bytes, &p));
+				prm.lsf3->colour = rgba_from_u32(get_u32(bytes, &p));
 				break;
 
 			case PRM_TYPE_LSF4:
@@ -248,7 +238,7 @@ Object *objects_load(char *name, texture_list_t tl) {
 				prm.lsf4->coords[3] = get_i16(bytes, &p);
 				prm.lsf4->normal = get_i16(bytes, &p);
 				prm.lsf4->pad1 = get_i16(bytes, &p);
-				prm.lsf4->colour = int32_to_rgba(get_i32(bytes, &p));
+				prm.lsf4->colour = rgba_from_u32(get_u32(bytes, &p));
 				break;
 
 			case PRM_TYPE_LSFT3:
@@ -267,7 +257,7 @@ Object *objects_load(char *name, texture_list_t tl) {
 				prm.lsft3->v1 = get_i8(bytes, &p);
 				prm.lsft3->u2 = get_i8(bytes, &p);
 				prm.lsft3->v2 = get_i8(bytes, &p);
-				prm.lsft3->colour = int32_to_rgba(get_i32(bytes, &p));
+				prm.lsft3->colour = rgba_from_u32(get_u32(bytes, &p));
 				break;
 
 			case PRM_TYPE_LSFT4:
@@ -289,7 +279,7 @@ Object *objects_load(char *name, texture_list_t tl) {
 				prm.lsft4->v2 = get_i8(bytes, &p);
 				prm.lsft4->u3 = get_i8(bytes, &p);
 				prm.lsft4->v3 = get_i8(bytes, &p);
-				prm.lsft4->colour = int32_to_rgba(get_i32(bytes, &p));
+				prm.lsft4->colour = rgba_from_u32(get_u32(bytes, &p));
 				break;
 
 			case PRM_TYPE_LSG3:
@@ -300,9 +290,9 @@ Object *objects_load(char *name, texture_list_t tl) {
 				prm.lsg3->normals[0] = get_i16(bytes, &p);
 				prm.lsg3->normals[1] = get_i16(bytes, &p);
 				prm.lsg3->normals[2] = get_i16(bytes, &p);
-				prm.lsg3->colour[0] = int32_to_rgba(get_i32(bytes, &p));
-				prm.lsg3->colour[1] = int32_to_rgba(get_i32(bytes, &p));
-				prm.lsg3->colour[2] = int32_to_rgba(get_i32(bytes, &p));
+				prm.lsg3->colour[0] = rgba_from_u32(get_u32(bytes, &p));
+				prm.lsg3->colour[1] = rgba_from_u32(get_u32(bytes, &p));
+				prm.lsg3->colour[2] = rgba_from_u32(get_u32(bytes, &p));
 				break;
 
 			case PRM_TYPE_LSG4:
@@ -315,10 +305,10 @@ Object *objects_load(char *name, texture_list_t tl) {
 				prm.lsg4->normals[1] = get_i16(bytes, &p);
 				prm.lsg4->normals[2] = get_i16(bytes, &p);
 				prm.lsg4->normals[3] = get_i16(bytes, &p);
-				prm.lsg4->colour[0] = int32_to_rgba(get_i32(bytes, &p));
-				prm.lsg4->colour[1] = int32_to_rgba(get_i32(bytes, &p));
-				prm.lsg4->colour[2] = int32_to_rgba(get_i32(bytes, &p));
-				prm.lsg4->colour[3] = int32_to_rgba(get_i32(bytes, &p));
+				prm.lsg4->colour[0] = rgba_from_u32(get_u32(bytes, &p));
+				prm.lsg4->colour[1] = rgba_from_u32(get_u32(bytes, &p));
+				prm.lsg4->colour[2] = rgba_from_u32(get_u32(bytes, &p));
+				prm.lsg4->colour[3] = rgba_from_u32(get_u32(bytes, &p));
 				break;
 
 			case PRM_TYPE_LSGT3:
@@ -339,9 +329,9 @@ Object *objects_load(char *name, texture_list_t tl) {
 				prm.lsgt3->v1 = get_i8(bytes, &p);
 				prm.lsgt3->u2 = get_i8(bytes, &p);
 				prm.lsgt3->v2 = get_i8(bytes, &p);
-				prm.lsgt3->colour[0] = int32_to_rgba(get_i32(bytes, &p));
-				prm.lsgt3->colour[1] = int32_to_rgba(get_i32(bytes, &p));
-				prm.lsgt3->colour[2] = int32_to_rgba(get_i32(bytes, &p));
+				prm.lsgt3->colour[0] = rgba_from_u32(get_u32(bytes, &p));
+				prm.lsgt3->colour[1] = rgba_from_u32(get_u32(bytes, &p));
+				prm.lsgt3->colour[2] = rgba_from_u32(get_u32(bytes, &p));
 				break;
 
 			case PRM_TYPE_LSGT4:
@@ -365,10 +355,10 @@ Object *objects_load(char *name, texture_list_t tl) {
 				prm.lsgt4->u2 = get_i8(bytes, &p);
 				prm.lsgt4->v2 = get_i8(bytes, &p);
 				prm.lsgt4->pad1 = get_i16(bytes, &p);
-				prm.lsgt4->colour[0] = int32_to_rgba(get_i32(bytes, &p));
-				prm.lsgt4->colour[1] = int32_to_rgba(get_i32(bytes, &p));
-				prm.lsgt4->colour[2] = int32_to_rgba(get_i32(bytes, &p));
-				prm.lsgt4->colour[3] = int32_to_rgba(get_i32(bytes, &p));
+				prm.lsgt4->colour[0] = rgba_from_u32(get_u32(bytes, &p));
+				prm.lsgt4->colour[1] = rgba_from_u32(get_u32(bytes, &p));
+				prm.lsgt4->colour[2] = rgba_from_u32(get_u32(bytes, &p));
+				prm.lsgt4->colour[3] = rgba_from_u32(get_u32(bytes, &p));
 				break;
 
 
@@ -379,7 +369,7 @@ Object *objects_load(char *name, texture_list_t tl) {
 				prm.spr->width = get_i16(bytes, &p);
 				prm.spr->height = get_i16(bytes, &p);
 				prm.spr->texture = texture_from_list(tl, get_i16(bytes, &p));
-				prm.spr->colour = int32_to_rgba(get_i32(bytes, &p));
+				prm.spr->colour = rgba_from_u32(get_u32(bytes, &p));
 				break;
 
 			case PRM_TYPE_SPLINE:
@@ -396,7 +386,7 @@ Object *objects_load(char *name, texture_list_t tl) {
 				prm.spline->control2.y = get_i32(bytes, &p);
 				prm.spline->control2.z = get_i32(bytes, &p);
 				p += 4; // padding
-				prm.spline->colour = int32_to_rgba(get_i32(bytes, &p));
+				prm.spline->colour = rgba_from_u32(get_u32(bytes, &p));
 				break;
 
 			case PRM_TYPE_POINT_LIGHT:
@@ -405,7 +395,7 @@ Object *objects_load(char *name, texture_list_t tl) {
 				prm.pointLight->position.y = get_i32(bytes, &p);
 				prm.pointLight->position.z = get_i32(bytes, &p);
 				p += 4; // padding
-				prm.pointLight->colour = int32_to_rgba(get_i32(bytes, &p));
+				prm.pointLight->colour = rgba_from_u32(get_u32(bytes, &p));
 				prm.pointLight->startFalloff = get_i16(bytes, &p);
 				prm.pointLight->endFalloff = get_i16(bytes, &p);
 				break;
@@ -420,7 +410,7 @@ Object *objects_load(char *name, texture_list_t tl) {
 				prm.spotLight->direction.y = get_i16(bytes, &p);
 				prm.spotLight->direction.z = get_i16(bytes, &p);
 				p += 2; // padding
-				prm.spotLight->colour = int32_to_rgba(get_i32(bytes, &p));
+				prm.spotLight->colour = rgba_from_u32(get_u32(bytes, &p));
 				prm.spotLight->startFalloff = get_i16(bytes, &p);
 				prm.spotLight->endFalloff = get_i16(bytes, &p);
 				prm.spotLight->coneAngle = get_i16(bytes, &p);
@@ -433,7 +423,7 @@ Object *objects_load(char *name, texture_list_t tl) {
 				prm.infiniteLight->direction.y = get_i16(bytes, &p);
 				prm.infiniteLight->direction.z = get_i16(bytes, &p);
 				p += 2; // padding
-				prm.infiniteLight->colour = int32_to_rgba(get_i32(bytes, &p));
+				prm.infiniteLight->colour = rgba_from_u32(get_u32(bytes, &p));
 				break;
 
 

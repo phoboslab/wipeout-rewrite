@@ -165,6 +165,7 @@ static inline float wrap_angle(float a) {
 	return a - M_PI;
 }
 
+rgba_t rgba_from_u32(uint32_t v);
 float vec3_angle(vec3_t a, vec3_t b);
 vec3_t vec3_wrap_angle(vec3_t a);
 vec3_t vec3_normalize(vec3_t a);

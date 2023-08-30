@@ -170,7 +170,7 @@ void track_load_faces(char *file_name, vec3_t *vertices) {
 		tf->texture = get_i8(bytes, &p);
 		tf->flags = get_i8(bytes, &p);
 
-		rgba_t color = {.as_uint32 = get_i32_le(bytes, &p) | 0xff000000};
+		rgba_t color = rgba_from_u32(get_u32(bytes, &p));
 		const vec2_t *uv = track_uv[flags_is(tf->flags, FACE_FLIP_TEXTURE) ? 1 : 0];
 
 		tf->tris[0] = (tris_t){
