@@ -283,6 +283,11 @@ uint32_t platform_store_userdata(const char *name, void *bytes, int32_t len) {
 	return file_store(path, bytes, len);
 }
 
+void platform_cleanup() {
+	system_cleanup();
+	saudio_shutdown();
+}
+
 sapp_desc sokol_main(int argc, char* argv[]) {
 	temp_path = mem_bump(max(strlen(path_assets), strlen(path_userdata)) + 64);
 
@@ -291,7 +296,6 @@ sapp_desc sokol_main(int argc, char* argv[]) {
 	saudio_setup(&(saudio_desc){
 		.sample_rate = 44100,
 		.buffer_frames = 1024,
-		.num_packets = 256,
 		.num_channels = 2,
 		.stream_cb = platform_audio_callback,
 	});
@@ -301,7 +305,7 @@ sapp_desc sokol_main(int argc, char* argv[]) {
 		.height = SYSTEM_WINDOW_HEIGHT,
 		.init_cb = system_init,
 		.frame_cb = system_update,
-		.cleanup_cb = system_cleanup,
+		.cleanup_cb = platform_cleanup,
 		.event_cb = platform_handle_event,
 		.win32_console_attach = true
 	};
