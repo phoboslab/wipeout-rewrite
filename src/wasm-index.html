@@ -3,6 +3,9 @@
 	<head>
 		<meta charset="utf-8">
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+		<meta name="viewport" content="viewport-fit=cover, user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
 		<title>wipEout</title>
 		<style>
 			html, body {
@@ -103,6 +106,132 @@
 				padding: 1px 2px;
 				white-space: nowrap;
 			}
+
+
+			.button {
+				display: none;
+				position: absolute;
+				cursor: pointer;
+				user-select: none;
+				touch-callout: none;
+				user-drag: none;
+				-webkit-user-select: none;
+				-webkit-touch-callout: none;
+				-webkit-user-drag: none;
+				opacity: 0.2;
+			}
+			body.touch .button {
+				display: block;
+			}
+			body.touch #head {
+				display: none;
+			}
+			body.touch {
+				user-select: none;
+				touch-callout: none;
+				user-drag: none;
+				-webkit-user-select: none;
+				-webkit-touch-callout: none;
+				-webkit-user-drag: none;
+			}
+			.button.active {
+				opacity: 0.6;
+			}
+			.button div {
+				position: absolute;
+				left: 0;
+				right: 0;
+				top: 0;
+				bottom: 0;
+				margin: auto;
+				color: #000;
+				background-color: #ffff;
+				text-align: center;
+			}
+			.button-round {
+				width: 12vw;
+				height: 12vw;
+			}
+			.button-round div {
+				width: 7vw;
+				height: 7vw;
+				border-radius: 100%;
+				font-size: 3vw;
+				font-weight: bold;
+				line-height: 7vw;
+				
+			}
+			.button-pill {
+				width: 12vw;
+				height: 6vw;
+			}
+			.button-pill div {
+				font-size: 1.5vw;
+				width: 7vw;
+				height: 3.5vw;
+				border-radius: 3.5vw;
+				line-height: 3.5vw;
+			}
+
+			.button-dpad {
+				width: 6vw;
+				height: 6vw;
+			}
+
+			.button-dpad div {
+				width: 7;
+				height: 7;
+			}
+			.button-dpad div:after {
+				content: '';
+				height: 0;
+				width: 0;
+				position: absolute;
+			}
+			.button-dpad-up div {
+				border-top-left-radius: 0.5vw;
+				border-top-right-radius: 0.5vw;
+			}
+			.button-dpad-up div:after {
+				left: 0;
+				bottom: -2.85vw;
+				border-left: 3vw solid transparent;
+				border-right: 3vw solid transparent;
+				border-top: 2.9vw solid #fff;
+			}
+			.button-dpad-down div {
+				border-bottom-left-radius: 0.5vw;
+				border-bottom-right-radius: 0.5vw;
+			}
+			.button-dpad-down div:after {
+				left: 0;
+				top: -2.85vw;
+				border-left: 3vw solid transparent;
+				border-right: 3vw solid transparent;
+				border-bottom: 2.9vw solid #fff;
+			}
+			.button-dpad-left div {
+				border-top-left-radius: 0.5vw;
+				border-bottom-left-radius: 0.5vw;
+			}
+			.button-dpad-left div:after {
+				top: 0;
+				right: -2.85vw;
+				border-top: 3vw solid transparent;
+				border-bottom: 3vw solid transparent;
+				border-left: 2.9vw solid #fff;
+			}
+			.button-dpad-right div {
+				border-top-right-radius: 0.5vw;
+				border-bottom-right-radius: 0.5vw;
+			}
+			.button-dpad-right div:after {
+				top: 0;
+				left: -2.85vw;
+				border-top: 3vw solid transparent;
+				border-bottom: 3vw solid transparent;
+				border-right: 2.9vw solid #fff;
+			}
 		</style>
 	</head>
 	<body>
@@ -143,6 +272,19 @@
 					no intro, no music ~11mb
 				</p>
 			</div>
+			<!-- button enums from src/input.h -->
+			<div class="button button-dpad button-dpad-up" style="left: 9vw; bottom: 22.5vw" data-button="82"><div></div></div>
+			<div class="button button-dpad button-dpad-down" style="left: 9vw; bottom: 9.5vw" data-button="81"><div></div></div>
+			<div class="button button-dpad button-dpad-left" style="left: 2vw; bottom: 16vw" data-button="80"><div></div></div>
+			<div class="button button-dpad button-dpad-right" style="left: 16vw; bottom: 16vw" data-button="79"><div></div></div>
+
+			<div class="button button-round" style="right: 2vw; bottom: 10vw" data-button="27"><div>X</div></div>
+			<div class="button button-round" style="right: 14vw; bottom: 10vw" data-button="29"><div>Y</div></div>
+			<div class="button button-pill" style="right: 2vw; bottom: 22vw" data-button="25"><div>br-r</div></div>
+			<div class="button button-pill" style="right: 14vw; bottom: 22vw" data-button="6"><div>br-l</div></div>
+
+			<div class="button button-pill" style="right: 2vw; top: 10vw" data-button="4"><div>view</div></div>
+			<div class="button button-pill" style="left: 68vw; top: 1vw" data-button="40"><div>pause</div></div>
 		</div>
 			
 		</div>
@@ -164,10 +306,12 @@
 				audioCtx.resume();
 				return false;
 			};
+
 			var requestFullscreen = (ev) => {
 				ev.preventDefault();
 				document.getElementById('game').requestFullscreen();
 			};
+
 			document.getElementById('select-version').style.display = 'block';
 			document.getElementById('fullscreen').addEventListener('click', (ev) => requestFullscreen(ev, 'wipeout.js'))
 			document.getElementById('load-full-version').addEventListener('click', (ev) => loadScript(ev, 'wipeout.js'));
@@ -176,6 +320,29 @@
 			var statusElement = document.getElementById('status');
 			var progressElement = document.getElementById('progress');
 			var spinnerElement = document.getElementById('spinner');
+
+			let onGameLoad = function() {
+				document.getElementById('loading').style.display = 'none';
+				window.scrollTo(0, 0);
+
+				// Setup touch buttons if this is a touch device
+				if ('ontouchstart' in window) {
+					document.getElementById('head').style.display = 'none';
+					document.body.classList.add('touch');
+					let touchButtons = document.getElementsByClassName('button');
+					for (let i = 0; i < touchButtons.length; i++) {
+						let button = touchButtons[i];
+						button.addEventListener('touchstart', (ev) => {
+							Module._set_button(parseInt(ev.currentTarget.dataset.button), 1);
+							ev.currentTarget.classList.add('active');
+						});
+						button.addEventListener('touchend', (ev) => {
+							Module._set_button(parseInt(ev.currentTarget.dataset.button), 0);
+							ev.currentTarget.classList.remove('active');
+						});
+					}
+				}
+			};
 
 			var Module = {
 				preRun: [],
@@ -211,7 +378,7 @@
 						progressElement.hidden = true;
 						if (!text) {
 							spinnerElement.hidden = true;
-							document.getElementById('loading').style.display = 'none';
+							onGameLoad();
 						}
 					}
 					statusElement.innerHTML = text;

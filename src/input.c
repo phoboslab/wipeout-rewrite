@@ -297,3 +297,11 @@ const char *input_button_to_name(button_t button) {
 	}
 	return button_names[button];
 }
+
+
+#if defined(__EMSCRIPTEN__)
+	#include <emscripten/emscripten.h>
+	void EMSCRIPTEN_KEEPALIVE set_button(uint32_t button, uint32_t state) {
+		input_set_button_state(button, state ? 1.0 : 0.0);
+	}
+#endif
