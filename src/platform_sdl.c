@@ -418,6 +418,10 @@ int main(int argc, char *argv[]) {
 	system_cleanup();
 	platform_video_cleanup();
 
+	if (gamepad) {
+		SDL_GameControllerClose(gamepad);
+	}
+
 	if (sdl_path_assets) {
 		SDL_free(sdl_path_assets);
 	}
