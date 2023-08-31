@@ -305,6 +305,7 @@ sapp_desc sokol_main(int argc, char* argv[]) {
 		.height = SYSTEM_WINDOW_HEIGHT,
 		.init_cb = system_init,
 		.frame_cb = system_update,
+		.window_title = SYSTEM_WINDOW_NAME,
 		.cleanup_cb = platform_cleanup,
 		.event_cb = platform_handle_event,
 		.win32_console_attach = true
