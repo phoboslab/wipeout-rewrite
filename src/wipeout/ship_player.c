@@ -177,22 +177,96 @@ void ship_player_update_race(ship_t *self) {
 	}
 
 	self->angular_acceleration = vec3(0, 0, 0);
+  self->turn_rate_target = 0;
 
 	if (input_state(A_LEFT)) {
-		if (self->angular_velocity.y >= 0) {
-			self->angular_acceleration.y += input_state(A_LEFT) * self->turn_rate;
-		}
-		else if (self->angular_velocity.y < 0) {
-			self->angular_acceleration.y += input_state(A_LEFT) * self->turn_rate * 2;
+		if (input_state(A_LEFT) < 1) {
+			if (self->angular_velocity.y >= 0) {
+				self->turn_rate_target = (input_state(A_LEFT)*(self->turn_rate+0.4));
+				if( self->turn_rate_target > self->angular_velocity.y) {
+					if((self->turn_rate_target - self->angular_velocity.y) <= self->turn_rate_max) { 
+						self->angular_acceleration.y += self->turn_rate_target - self->angular_velocity.y;
+						//printf("*******1L*******\n");
+						//printf("turn_rate              %f\n", self->turn_rate);
+						//printf("angular_velocity.y     %f\n", self->angular_velocity.y);
+						//printf("angular_acceleration.y %f\n", self->angular_acceleration.y);
+						//printf("turn_rate_target       %f\n", self->turn_rate_target);
+					}
+					else if(self->angular_velocity.y >= 0) {
+						//printf("*******2L*******\n");
+						self->angular_acceleration.y += self->turn_rate_max + self->turn_rate_target;
+					}
+					else if(self->angular_velocity.y < 0) {
+						printf("*******3L*******\n");
+						self->angular_acceleration.y += (input_state(A_LEFT)) * (self->turn_rate * 2);
+					}
+				}
+				else {
+					//printf("*******L ELSE self->turn_rate_target < self->angular_velocity.y*******\n");
+					self->angular_acceleration.y += self->angular_velocity.y - self->turn_rate_target;
+				}
+			}
+			else if (self->angular_velocity.y < 0) {
+				//printf("*******L-R*******\n");
+				self->angular_acceleration.y += (input_state(A_LEFT)) * (self->turn_rate * 2);
+			}
+		}//Digital control
+		else  {
+			if (self->angular_velocity.y >= 0) {
+				self->angular_acceleration.y += input_state(A_LEFT) * self->turn_rate;
+			}
+			else if (self->angular_velocity.y < 0) {
+				self->angular_acceleration.y += input_state(A_LEFT) * self->turn_rate * 2;
+			}
 		}
 	}
 	else if (input_state(A_RIGHT)) {
-		if (self->angular_velocity.y <= 0) {
-			self->angular_acceleration.y -= input_state(A_RIGHT) * self->turn_rate;
-		}
-		else if (self->angular_velocity.y > 0) {
-			self->angular_acceleration.y -= input_state(A_RIGHT) * self->turn_rate * 2;
-		}
+		if (input_state(A_RIGHT) < 1) {
+			if (self->angular_velocity.y <= 0) {
+				self->turn_rate_target = input_state(A_RIGHT)*(self->turn_rate+0.4);
+				if( -self->turn_rate_target < self->angular_velocity.y) {
+					if((self->turn_rate_target + self->angular_velocity.y) <= self->turn_rate_max) { 
+						self->angular_acceleration.y -= (self->turn_rate) + self->angular_velocity.y;
+						//printf("*******1R*******\n");
+						//printf("turn_rate              %f\n", self->turn_rate);
+						//printf("turn_rate_max          %f\n", self->turn_rate_max);
+						//printf("input_state(A_RIGHT)   %f\n", input_state(A_RIGHT)); 
+						//printf("turn_rate_target       %f\n", self->turn_rate_target);
+						//printf("angular_velocity.y     %f\n", self->angular_velocity.y);
+						//printf("angular_acceleration.y %f\n", self->angular_acceleration.y);
+					}
+					else if(self->angular_velocity.y >= 0) {
+						printf("*******2R*******\n");
+						self->angular_acceleration.y -= (input_state(A_RIGHT)) * (self->turn_rate * 2);
+					}
+					else if(self->angular_velocity.y < 0) {
+						//printf("*******3R*******\n");
+						self->angular_acceleration.y -= self->turn_rate_max + self->turn_rate_target;;
+					}
+				}
+				else { 
+					//printf("*******R  ELSE self->turn_rate_target > self->angular_velocity.y*******\n");
+					//printf("turn_rate_target       %f\n", self->turn_rate_target);
+					//printf("angular_velocity.y     %f\n", self->angular_velocity.y);
+					//printf("angular_acceleration.y %f\n", self->angular_acceleration.y);
+					//printf("input_state(A_RIGHT)   %f\n", input_state(A_RIGHT));
+					self->angular_acceleration.y += self->angular_velocity.y + self->turn_rate_target;
+					//printf("angular_acceleration.y %f\n", self->angular_acceleration.y);
+				}
+			}
+			else if (self->angular_velocity.y > 0) {
+				//printf("*******R-L*******\n");
+				self->angular_acceleration.y -= (input_state(A_RIGHT)) * (self->turn_rate * 2);
+			}
+		}//Digital control
+		else {
+			if (self->angular_velocity.y <= 0) {
+				self->angular_acceleration.y -= input_state(A_RIGHT) * self->turn_rate;
+			}
+			else if (self->angular_velocity.y > 0) {
+				self->angular_acceleration.y -= input_state(A_RIGHT) * self->turn_rate * 2;
+			}
+		} 
 	}
 	
 	if (flags_is(self->flags, SHIP_ELECTROED)) {
@@ -207,8 +281,8 @@ void ship_player_update_race(ship_t *self) {
 		}
 	}
 
-	self->angular_acceleration.x += input_state(A_DOWN) * SHIP_PITCH_ACCEL;
-	self->angular_acceleration.x -= input_state(A_UP) * SHIP_PITCH_ACCEL;
+	self->angular_acceleration.x += input_state(A_DOWN) * 2 * SHIP_PITCH_ACCEL;
+	self->angular_acceleration.x -= input_state(A_UP) * 2 * SHIP_PITCH_ACCEL;
 
 	// Handle Stall
 	if (self->update_timer > 0) {
