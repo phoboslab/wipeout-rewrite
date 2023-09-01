@@ -268,7 +268,6 @@ uint32_t platform_store_userdata(const char *name, void *bytes, int32_t len) {
 
 	void platform_video_cleanup() {
 		SDL_GL_DeleteContext(platform_gl);
-		SDL_DestroyWindow(window);	
 	}
 
 	void platform_end_frame() {
@@ -301,7 +300,6 @@ uint32_t platform_store_userdata(const char *name, void *bytes, int32_t len) {
 			SDL_DestroyTexture(screenbuffer);
 		}
 		SDL_DestroyRenderer(renderer);
-		SDL_DestroyWindow(window);
 	}
 
 	void platform_prepare_frame() {
@@ -340,8 +338,6 @@ uint32_t platform_store_userdata(const char *name, void *bytes, int32_t len) {
 #else
 	#error "Unsupported renderer for platform SDL"
 #endif
-
-
 
 int main(int argc, char *argv[]) {
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER);
@@ -419,6 +415,8 @@ int main(int argc, char *argv[]) {
 
 	system_cleanup();
 	platform_video_cleanup();
+
+	SDL_DestroyWindow(window);
 
 	if (gamepad) {
 		SDL_GameControllerClose(gamepad);
