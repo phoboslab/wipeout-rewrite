@@ -44,6 +44,21 @@ make sdl
 dnf install libX11-devel libXi-devel alsa-lib-devel glew-devel libXcursor-devel
 make sokol
 ```
+#### OpenSUSE
+
+Tested on Tubmleweed 20230828
+
+```
+# for SDL2 backend
+zypper install SDL2-devel glew-devel
+make sdl
+```
+
+```
+# for Sokol backend
+zypper install libX11-devel libXi-devel alsa-lib-devel glew-devel libXcursor-devel
+make sokol
+```
 
 ### macOS
 
