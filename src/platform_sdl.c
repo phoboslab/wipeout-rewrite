@@ -120,6 +120,9 @@ void platform_pump_events() {
 		// Input Gamepad Axis
 		else if (ev.type == SDL_CONTROLLERAXISMOTION) {
 			float state = (float)ev.caxis.value / 32767.0;
+      // Don't interact with digital controls
+      if (state == 1) state -= 0.00001;
+      if (state == -1) state += 0.00001;
 
 			if (ev.caxis.axis < SDL_CONTROLLER_AXIS_MAX) {
 				int code = platform_sdl_axis_map[ev.caxis.axis];
