@@ -82,7 +82,8 @@ typedef struct ship_t {
 	vec3_t temp_target; // used for start position and rescue target
 	
 	float turn_rate;
-	float turn_rate_max;
+	float turn_rate_target;
+  float turn_rate_max;
 	float turn_rate_from_hit;
 
 	float mass;
