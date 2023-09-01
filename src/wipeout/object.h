@@ -343,6 +343,7 @@ typedef struct Object {
 	vec3_t origin;
 	int32_t extent; // Flags for object characteristics
 	int16_t flags; // Next object in list
+	float radius;
 	struct Object *next; // Next object in list
 } Object;
 

@@ -259,17 +259,24 @@ void track_draw_section(section_t *section) {
 }
 
 void track_draw(camera_t *camera) {	
-	render_set_model_mat(&mat4_identity());	
-	
-	float max_dist_sq = RENDER_FADEOUT_FAR * RENDER_FADEOUT_FAR;
-	vec3_t cam_pos = camera->position;
+	render_set_model_mat(&mat4_identity());
 
-	section_t *s = g.track.sections;
-	for(int32_t i = 0; i < g.track.section_count; ++i, ++s)
-	{
-		vec3_t d = vec3_sub(cam_pos, s->center);
-		float dist_sq = d.x * d.x + d.y * d.y + d.z * d.z;
-		if (dist_sq <  max_dist_sq) {
+	// Calculate the camera forward vector, so we can cull everything that's
+	// behind. Ideally we'd want to do a full frustum culling here. FIXME.
+	vec3_t cam_pos = camera->position;
+	vec3_t cam_dir = camera_forward(camera);
+	
+	int drawn = 0;
+	int skipped = 0;
+	for(int32_t i = 0; i < g.track.section_count; i++) {
+		section_t *s = &g.track.sections[i];
+		vec3_t diff = vec3_sub(cam_pos, s->center);
+		float cam_dot = vec3_dot(diff, cam_dir);
+		float dist_sq = vec3_dot(diff, diff);
+		if (
+			cam_dot < 2048 && // FIXME: should use the bounding radius of the section
+			dist_sq < (RENDER_FADEOUT_FAR * RENDER_FADEOUT_FAR)
+		) {
 			track_draw_section(s);
 		}
 	}

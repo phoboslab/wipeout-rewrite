@@ -68,13 +68,26 @@ Object *objects_load(char *name, texture_list_t tl) {
 		p += 4; // skeleton sub
 		p += 4; // skeleton next
 
+		object->radius = 0;
 		object->vertices = mem_bump(object->vertices_len * sizeof(vec3_t));
 		for (int i = 0; i < object->vertices_len; i++) {
 			object->vertices[i].x = get_i16(bytes, &p);
 			object->vertices[i].y = get_i16(bytes, &p);
 			object->vertices[i].z = get_i16(bytes, &p);
 			p += 2; // padding
+
+			if (abs(object->vertices[i].x) > object->radius) {
+				object->radius = abs(object->vertices[i].x);
+			}
+			if (abs(object->vertices[i].y) > object->radius) {
+				object->radius = abs(object->vertices[i].y);
+			}
+			if (abs(object->vertices[i].z) > object->radius) {
+				object->radius = abs(object->vertices[i].z);
+			}
 		}
+
+
 
 		object->normals = mem_bump(object->normals_len * sizeof(vec3_t));
 		for (int i = 0; i < object->normals_len; i++) {

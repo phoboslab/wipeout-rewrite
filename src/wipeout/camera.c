@@ -21,8 +21,15 @@ void camera_init(camera_t *camera, section_t *section) {
 	camera->velocity = vec3(0, 0, 0);
 	camera->angle = vec3(0, 0, 0);
 	camera->angular_velocity = vec3(0, 0, 0);
-	camera->mat = mat4_identity();
 	camera->has_initial_section = false;
+}
+
+vec3_t camera_forward(camera_t *camera) {
+	float sx = sin(camera->angle.x);
+	float cx = cos(camera->angle.x);
+	float sy = sin(camera->angle.y);
+	float cy = cos(camera->angle.y);
+	return vec3(-(sy * cx), -sx, (cy * cx));
 }
 
 void camera_update(camera_t *camera, ship_t *ship, droid_t *droid) {

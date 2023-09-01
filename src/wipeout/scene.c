@@ -123,21 +123,26 @@ void scene_draw(camera_t *camera) {
 	object_draw(sky_object, &sky_object->mat);
 	render_set_depth_write(true);
 
-	// Nearby objects
-	vec3_t cam_pos = camera->position;
-	Object *object = scene_objects;
-	float max_dist_sq = RENDER_FADEOUT_FAR * RENDER_FADEOUT_FAR;
-	while (object) {
-		vec3_t d = vec3_sub(cam_pos, object->origin);
-		float dist_sq = d.x * d.x + d.y * d.y + d.z * d.z;
+	// Objects
 
-		if (dist_sq < max_dist_sq) {
+	// Calculate the camera forward vector, so we can cull everything that's
+	// behind. Ideally we'd want to do a full frustum culling here. FIXME.
+	vec3_t cam_pos = camera->position;
+	vec3_t cam_dir = camera_forward(camera);
+	Object *object = scene_objects;
+	
+	while (object) {
+		vec3_t diff = vec3_sub(cam_pos, object->origin);
+		float cam_dot = vec3_dot(diff, cam_dir);
+		float dist_sq = vec3_dot(diff, diff);
+		if (
+			cam_dot < object->radius && 
+			dist_sq < (RENDER_FADEOUT_FAR * RENDER_FADEOUT_FAR)
+		) {
 			object_draw(object, &object->mat);
 		}
-		
 		object = object->next;
 	}
-
 }
 
 void scene_set_start_booms(int light_index) {
