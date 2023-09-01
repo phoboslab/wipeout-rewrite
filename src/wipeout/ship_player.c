@@ -177,7 +177,7 @@ void ship_player_update_race(ship_t *self) {
 	}
 
 	self->angular_acceleration = vec3(0, 0, 0);
-  self->turn_rate_target = 0;
+  	self->turn_rate_target = 0;
 
 	if (input_state(A_LEFT)) {
 		if (input_state(A_LEFT) < 1) {
@@ -281,8 +281,8 @@ void ship_player_update_race(ship_t *self) {
 		}
 	}
 
-	self->angular_acceleration.x += input_state(A_DOWN) * 2 * SHIP_PITCH_ACCEL;
-	self->angular_acceleration.x -= input_state(A_UP) * 2 * SHIP_PITCH_ACCEL;
+	self->angular_acceleration.x += input_state(A_DOWN) * SHIP_PITCH_ACCEL;
+	self->angular_acceleration.x -= input_state(A_UP) * SHIP_PITCH_ACCEL;
 
 	// Handle Stall
 	if (self->update_timer > 0) {
