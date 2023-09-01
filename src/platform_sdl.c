@@ -247,9 +247,6 @@ uint32_t platform_store_userdata(const char *name, void *bytes, int32_t len) {
 	return file_store(path, bytes, len);
 }
 
-
-
-
 #if defined(RENDERER_GL) // ----------------------------------------------------
 	#define PLATFORM_WINDOW_FLAGS SDL_WINDOW_OPENGL
 	SDL_GLContext platform_gl;
@@ -271,6 +268,7 @@ uint32_t platform_store_userdata(const char *name, void *bytes, int32_t len) {
 
 	void platform_video_cleanup() {
 		SDL_GL_DeleteContext(platform_gl);
+		SDL_DestroyWindow(window);	
 	}
 
 	void platform_end_frame() {
@@ -299,7 +297,11 @@ uint32_t platform_store_userdata(const char *name, void *bytes, int32_t len) {
 	}
 
 	void platform_video_cleanup() {
-		
+		if (screenbuffer) {
+			SDL_DestroyTexture(screenbuffer);
+		}
+		SDL_DestroyRenderer(renderer);
+		SDL_DestroyWindow(window);
 	}
 
 	void platform_prepare_frame() {
