@@ -19,7 +19,7 @@ void *realloc_dummmy(void *p, size_t sz) {
 #define PLM_MALLOC mem_bump
 #define PLM_FREE free_dummmy
 #define PLM_REALLOC realloc_dummmy
-#include "../libs/pl_mpeg.h"
+#include <pl_mpeg.h>
 
 #define INTRO_AUDIO_BUFFER_LEN (64 * 1024)
 

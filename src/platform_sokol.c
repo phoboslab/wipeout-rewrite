@@ -14,9 +14,9 @@
 #endif
 
 #define SOKOL_IMPL
-#include "libs/sokol_audio.h"
-#include "libs/sokol_time.h"
-#include "libs/sokol_app.h"
+#include <sokol_audio.h>
+#include <sokol_time.h>
+#include <sokol_app.h>
 #include "input.h"
 
 // FIXME: we should figure out the actual path where the executabe resides,

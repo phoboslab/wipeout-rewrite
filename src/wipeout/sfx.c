@@ -7,7 +7,7 @@
 
 #define QOA_IMPLEMENTATION
 #define QOA_NO_STDIO
-#include "../libs/qoa.h"
+#include <qoa.h>
 
 typedef struct {
 	int16_t *samples;

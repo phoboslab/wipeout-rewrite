@@ -27,8 +27,7 @@ if(RENDERER IN_LIST gl_renderers)
 	set(using_gl true)
 endif()
 
-# Supported on Linux, FreeBSD, NetBSD?
-cmake_dependent_option(USE_GLVND "Link against modern GLVND ABIs" ON "using_gl;UNIX;NOT APPLE;NOT EMSCRIPTEN" OFF)
+cmake_dependent_option(USE_GLVND "Link against modern GLVND ABIs" OFF "using_gl;LINUX" ON)
 cmake_dependent_option(MINIMAL_BUNDLE "Do not include music/movies for web builds" OFF "EMSCRIPTEN" OFF)
 
 find_package(OpenGL)
@@ -95,18 +94,14 @@ set(common_src
 	packaging/windows/wipeout.rc
 )
 
-set(compile_opts
-	$<$<CXX_COMPILER_ID:MSVC>:/W4>
-	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wstrict-prototypes>
-)
-set_source_files_properties("${common_src}"
-	PROPERTIES COMPILE_FLAGS "${compile_opts}"
-)
-
 add_executable(wipeout WIN32 ${common_src})
 set_property(TARGET wipeout PROPERTY C_STANDARD 11)
 target_include_directories(wipeout PRIVATE src)
-target_compile_options(wipeout PRIVATE ${compile_opts})
+target_include_directories(wipeout SYSTEM PRIVATE src/libs)
+target_compile_options(wipeout PRIVATE
+	$<$<CXX_COMPILER_ID:MSVC>:/W4>
+	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra>
+)
 
 if(WIN32)
 	target_compile_definitions(wipeout PRIVATE

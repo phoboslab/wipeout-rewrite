@@ -17,7 +17,7 @@
 
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "../libs/stb_image_write.h"
+#include <stb_image_write.h>
 
 
 #define TIM_TYPE_PALETTED_4_BPP 0x08

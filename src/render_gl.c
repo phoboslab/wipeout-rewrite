@@ -23,7 +23,7 @@
 
 
 
-#include "libs/stb_image_write.h"
+#include <stb_image_write.h>
 
 #include "system.h"
 #include "render.h"
