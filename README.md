@@ -6,72 +6,11 @@ Play here: https://phoboslab.org/wipegame/
 
 More info in my blog: https://phoboslab.org/log/2023/08/rewriting-wipeout
 
-
 ⚠️ Work in progress. Expect bugs.
-
 
 ## Building
 
-The game currently supports two different platform-backends: [SDL2](https://github.com/libsdl-org/SDL) and [Sokol](https://github.com/floooh/sokol). The only difference in features is that the SDL2 backend supports game controllers (joysticks, gamepads), while the Sokol backend does not.
-
-
-### Linux
-
-#### Ubuntu
-
-```
-# for SDL2 backend
-apt install libsdl2-dev libglew-dev
-make sdl
-```
-
-```
-# for Sokol backend
-apt install libx11-dev libxcursor-dev libxi-dev libasound2-dev
-make sokol
-```
-
-#### Fedora
-
-```
-# for SDL2 backend
-dnf install SDL2-devel glew-devel
-make sdl
-```
-
-```
-# for Sokol backend
-dnf install libX11-devel libXi-devel alsa-lib-devel glew-devel libXcursor-devel
-make sokol
-```
-
-### macOS
-
-Currently only the SDL2 backend works. macOS is very picky about the GLSL shader version when compiling with Sokol and OpenGL3.3; it shouldn't be too difficult to get it working, but will probably require a bunch of `#ifdefs` for SDL and WASM. PRs welcome!
-
-```
-brew install sdl2 glew
-make sdl
-```
-
-### Windows
-
-In theory both backends should work on Windows, but the Makefile is missing the proper compiler flags. Please send a PR!
-
-_todo_
-
-
-### WASM
-
-Install [emscripten](https://emscripten.org/) and activate emsdk, so that `emcc` is in your `PATH`. The WASM version automatically
-selects the Sokol backend. I'm not sure what needs to be done to make the SDL2 backend work with WASM.
-
-```
-make wasm
-```
-
-This builds the minimal version (no music, no intro) as well as the full version.
-
+See [Building.md](Building.md) for more info.
 
 ### Flags
 
