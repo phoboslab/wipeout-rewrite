@@ -81,6 +81,15 @@ The makefile accepts several flags. You can specify them with `make FLAG=VALUE`
 - `RENDERER` – `GL` or `SOFTWARE`, default is `GL` (the `SOFTWARE` renderer is very much unfinished and only works with SDL)
 - `USE_GLX` – `true` or `false`, default is `false` and uses `GLVND` over `GLX`. Only used for the linux build.
 
+## Docker
+
+```
+docker build -t wipeout:1.0 .
+docker run --name wipeout -p 80:80 wipeout:1.0
+```
+
+> http://localhost
+
 
 ## Running
 
