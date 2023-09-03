@@ -12,17 +12,17 @@ RUN apt-get update && apt-get install -y \
     libxcursor-dev \
     libxi-dev \
     libasound2-dev \
-	ca-certificates \
-	unzip \
-	sed \
-	p7zip-full \
+    ca-certificates \
+    unzip \
+    sed \
+    p7zip-full \
     emscripten \
-	coffeescript \
-	xz-utils \
-	nginx \
-	wget \
-	--no-install-recommends \
-	&& rm -rf /var/lib/apt/lists/*
+    coffeescript \
+    xz-utils \
+    nginx \
+    wget \
+    --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
 
 # sinon le build failed
 RUN emcc --version
