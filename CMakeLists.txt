@@ -27,7 +27,8 @@ if(RENDERER IN_LIST gl_renderers)
 	set(using_gl true)
 endif()
 
-cmake_dependent_option(USE_GLVND "Link against modern GLVND ABIs" OFF "using_gl;LINUX" ON)
+# Supported on Linux, FreeBSD, NetBSD?
+cmake_dependent_option(USE_GLVND "Link against modern GLVND ABIs" ON "using_gl;UNIX;NOT APPLE;NOT EMSCRIPTEN" OFF)
 cmake_dependent_option(MINIMAL_BUNDLE "Do not include music/movies for web builds" OFF "EMSCRIPTEN" OFF)
 
 find_package(OpenGL)
@@ -96,7 +97,7 @@ set(common_src
 
 set(compile_opts
 	$<$<CXX_COMPILER_ID:MSVC>:/W4>
-	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra>
+	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wstrict-prototypes>
 )
 set_source_files_properties("${common_src}"
 	PROPERTIES COMPILE_FLAGS "${compile_opts}"
@@ -109,7 +110,6 @@ target_compile_options(wipeout PRIVATE ${compile_opts})
 
 if(WIN32)
 	target_compile_definitions(wipeout PRIVATE
-		# TODO(stephen): Why isn't this working?
 		"NOMINMAX"
 		"_USE_MATH_DEFINES"
 		"_CRT_SECURE_NO_WARNINGS"
@@ -126,21 +126,6 @@ elseif(APPLE)
 			"-framework Cocoa"
 			"-framework QuartzCore"
 			"-framework AudioToolbox"
-		)
-	endif()
-elseif(UNIX)
-	target_link_libraries(wipeout PUBLIC m)
-	if (PLATFORM STREQUAL "Sokol" AND LINUX)
-		find_package(Threads REQUIRED)
-		find_package(X11 REQUIRED)
-		find_package(ALSA REQUIRED)
-		target_link_libraries(wipeout PUBLIC
-			X11::X11
-			X11::Xcursor
-			Threads::Threads
-			X11::Xi
-			dl
-			ALSA::ALSA
 		)
 	endif()
 elseif(EMSCRIPTEN)
@@ -177,6 +162,21 @@ elseif(EMSCRIPTEN)
 	endif()
 
 	configure_file("${CMAKE_SOURCE_DIR}/src/wasm-index.html" "game.html" COPYONLY)
+elseif(UNIX)
+	target_link_libraries(wipeout PUBLIC m)
+	if (PLATFORM STREQUAL "Sokol" AND LINUX)
+		find_package(Threads REQUIRED)
+		find_package(X11 REQUIRED)
+		find_package(ALSA REQUIRED)
+		target_link_libraries(wipeout PUBLIC
+			X11::X11
+			X11::Xcursor
+			Threads::Threads
+			X11::Xi
+			dl
+			ALSA::ALSA
+		)
+	endif()
 endif()
 
 if(using_gl)
