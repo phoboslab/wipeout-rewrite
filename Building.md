@@ -5,15 +5,17 @@ The only difference in features is that the SDL2 backend supports game
 controllers (joysticks, gamepads), while the Sokol backend does not.
 The Sokol backend is also only supported on macOS, Linux, Windows and Emscripten.
 
-## Building For Your Platform
+# Building For Your Platform
 
-This project requires [CMake](https://cmake.org) to build and platform-specific
-libraries to run.
-Consult the following sections for how to acquire them for your platform:
+For Linux & Unix-likes a simple Makefile is a provided. Additionally, this
+project can be build with [CMake](https://cmake.org) for all platforms.
 
-## *NIX
+Consult the following sections for how to install the prerequisites for your platform:
 
-Building on *NIX should be as simple as installing CMake, GLEW, and the
+
+## Linux & Unix-like
+
+Building on Linux should be as simple as installing CMake, GLEW, and the
 necessary platform libraries from your package manager.
 For brevity, this guide assumes that the necessary development tools (i.e. a C
 complier, make) have already been installed.
@@ -26,9 +28,9 @@ Sokol platform requires the library/headers for:
 - `ALSA`
 
 The following snippets list the specific package manager invocations for
-popluar *NIX OSs:
+popluar \*nix OSs:
 
-**Debian/Ubuntu**
+### Debian/Ubuntu
 
 ```sh
 apt install cmake libglew-dev
@@ -38,7 +40,7 @@ apt install libsdl2-dev
 apt install libx11-dev libxcursor-dev libxi-dev libasound2-dev
 ```
 
-**Fedora**
+### Fedora
 
 ```sh
 dnf install cmake glew-devel
@@ -48,7 +50,7 @@ dnf install SDL2-devel
 dnf install libx11-devel libxcursor-devel libxi-devel alsa-lib-devel
 ```
 
-**Arch Linux**
+### Arch Linux
 
 ```sh
 pacman -S cmake glew
@@ -58,7 +60,7 @@ pacman -S sdl2
 pacman install libx11 libxcursor libxi alsa-lib
 ```
 
-**OpenSUSE**
+### OpenSUSE
 
 ```sh
 zypper install cmake glew-devel
@@ -68,13 +70,13 @@ zypper install SDL2-devel
 zypper install libx11-devel libxcursor-devel libxi-devel alsa-lib-devel
 ```
 
-**FreeBSD**
+### FreeBSD
 
 ```sh
 pkg install cmake sdl2
 ```
 
-**OpenBSD**
+### OpenBSD
 
 ```sh
 pkg_add cmake sdl2
@@ -86,6 +88,13 @@ headers themselves do not support these Operating Systems.
 With the packages installed, you can now setup and build:
 
 ```sh
+# With make for SDL2 backend
+make sdl
+
+# With make for Sokol backend
+make sokol
+
+# With cmake
 cmake -S path/to/wipeout-rewrite -B path/to/build-dir
 cmake --build path/to/build-dir
 ```
@@ -173,23 +182,26 @@ Download and install the [Emscripten SDK](https://emscripten.org/docs/getting_st
 so that `emcc` and `emcmake` is in your path.
 Linux users may find it easier to install using their distro's package manager
 if it is available.
-Note that only the Sokol platform will work for WebAssembly builds, so make sure
-to select it at compile time using `-DPLATFORM=Sokol`.
+Note that only the Sokol platform will work for WebAssembly builds.
 
 With the SDK installed, you can now setup and build:
 
 ```sh
-emcmake cmake -S path/to/wipeout-rewrite -B path/to/build-dir
-emcmake cmake --build path/to/build-dir
+# With make (combined full and minimal builds)
+cd wipeout-rewrite && make wasm
+
+# With cmame (full or minimal builds specified via -DMINIMAL_BUNDLE={OFF|ON})
+emcmake cmake -S path/to/wipeout-rewrite -B path/to/build-dir -DPLATFORM=SOKOL
+cmake --build path/to/build-dir
 ```
 
-## Build Flags
+## Build Flags for cmake
 
 The following is a table for project specific build flags using CMake:
 
 | Flag             | Description                                                     | Options                                                                              | Default                                                                                     |
 |------------------|-----------------------------------------------------------------|--------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------|
-| `PLATFORM`       | The platform to build for.                                      | `SDL2`, `Sokol`                                                                      | `SDL2`                                                                                      |
+| `PLATFORM`       | The platform to build for.                                      | `SDL2`, `SOKOL`                                                                      | `SDL2`                                                                                      |
 | `RENDERER`       | Graphics renderer.                                              | `GL` for OpenGL 3, `GLES2` for OpenGL ES 2, `Software` for a pure software renderer. | `GL`                                                                                        |
-| `USE_GLVND`      | Link against the OpenGL Vendor Neutral Dispatch libraries.      | `On`, `Off`                                                                          | `On`, falling back to `Off` if the libraries aren't found or an OpenGL renderer isn't used. |
-| `MINIMAL_BUNDLE` | Do not include the music/intro video when building for the web. | `On`, `Off`                                                                          | `Off`                                                                                       |
+| `USE_GLVND`      | Link against the OpenGL Vendor Neutral Dispatch libraries.      | `ON`, `OFF`                                                                          | `ON`, falling back to `OFF` if the libraries aren't found or an OpenGL renderer isn't used. |
+| `MINIMAL_BUNDLE` | Do not include the music/intro video when building for the web. | `ON`, `OFF`                                                                          | `OFF`                                                                                       |
