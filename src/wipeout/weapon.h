@@ -40,12 +40,12 @@
 #define WEAPON_CLASS_PROJECTILE 2
 
 
-void weapons_load();
-void weapons_init();
+void weapons_load(void);
+void weapons_init(void);
 void weapons_fire(ship_t *ship, int weapon_type);
 void weapons_fire_delayed(ship_t *ship, int weapon_type);
-void weapons_update();
-void weapons_draw();
+void weapons_update(void);
+void weapons_draw(void);
 int weapon_get_random_type(int type_class);
 
 #endif

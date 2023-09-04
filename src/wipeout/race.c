@@ -29,7 +29,7 @@ static bool has_show_credits = false;
 static float attract_start_time;
 static menu_t *active_menu = NULL;
 
-void race_init() {
+void race_init(void) {
 	ingame_menus_load();
 	menu_is_scroll_text = false;
 
@@ -67,7 +67,7 @@ void race_init() {
 	is_paused = false;
 }
 
-void race_update() {
+void race_update(void) {
 	if (is_paused) {
 		if (!active_menu) {
 			active_menu = pause_menu_init();
@@ -131,7 +131,7 @@ void race_update() {
 	}
 }
 
-void race_start() {
+void race_start(void) {
 	active_menu = NULL;
 	sfx_reset();
 	scene_init();
@@ -157,7 +157,7 @@ void race_start() {
 	g.race_time = 0;
 }
 
-void race_restart() {
+void race_restart(void) {
 	race_unpause();
 
 	if (g.race_type == RACE_TYPE_CHAMPIONSHIP) {
@@ -176,7 +176,7 @@ static bool sort_points_compare(pilot_points_t *pa, pilot_points_t *pb) {
 	return (pa->points < pb->points);
 }
 
-void race_end() {
+void race_end(void) {
 	race_release_control();
 
 	g.race_position = g.ships[g.pilot].position_rank;
@@ -222,7 +222,7 @@ void race_end() {
 	active_menu = race_stats_menu_init();
 }
 
-void race_next() {
+void race_next(void) {
 	int next_circut = g.circut + 1;
 
 	// Championship complete
@@ -259,7 +259,7 @@ void race_next() {
 	}
 }
 
-void race_release_control() {
+void race_release_control(void) {
 	flags_rm(g.ships[g.pilot].flags, SHIP_RACING);
 	g.ships[g.pilot].remote_thrust_max = 3160;
 	g.ships[g.pilot].remote_thrust_mag = 32;
@@ -267,12 +267,12 @@ void race_release_control() {
 	g.camera.update_func = camera_update_attract_random;
 }
 
-void race_pause() {
+void race_pause(void) {
 	sfx_pause();
 	is_paused = true;
 }
 
-void race_unpause() {
+void race_unpause(void) {
 	sfx_unpause();
 	is_paused = false;
 	active_menu = NULL;

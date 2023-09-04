@@ -61,6 +61,8 @@
         The main purpose of this function is to remove jitter/inaccuracies from
         measured frame times, and instead use the display refresh rate as
         frame duration.
+        NOTE: for more robust frame timing, consider using the
+        sokol_app.h function sapp_frame_duration()
 
     Use the following functions to convert a duration in ticks into
     useful time units:
@@ -77,7 +79,7 @@
 
     Windows:        QueryPerformanceFrequency() / QueryPerformanceCounter()
     MacOS/iOS:      mach_absolute_time()
-    emscripten:     performance.now()
+    emscripten:     emscripten_get_now()
     Linux+others:   clock_gettime(CLOCK_MONOTONIC)
 
     zlib/libpng license
@@ -199,17 +201,11 @@ static _stm_state_t _stm;
     see https://gist.github.com/jspohr/3dc4f00033d79ec5bdaf67bc46c813e3
 */
 #if defined(_WIN32) || (defined(__APPLE__) && defined(__MACH__))
-_SOKOL_PRIVATE int64_t int64_muldiv(int64_t value, int64_t numer, int64_t denom) {
+_SOKOL_PRIVATE int64_t _stm_int64_muldiv(int64_t value, int64_t numer, int64_t denom) {
     int64_t q = value / denom;
     int64_t r = value % denom;
     return q * numer + r * numer / denom;
 }
-#endif
-
-#if defined(__EMSCRIPTEN__)
-EM_JS(double, stm_js_perfnow, (void), {
-    return performance.now();
-});
 #endif
 
 SOKOL_API_IMPL void stm_setup(void) {
@@ -222,7 +218,7 @@ SOKOL_API_IMPL void stm_setup(void) {
         mach_timebase_info(&_stm.timebase);
         _stm.start = mach_absolute_time();
     #elif defined(__EMSCRIPTEN__)
-        _stm.start = stm_js_perfnow();
+        _stm.start = emscripten_get_now();
     #else
         struct timespec ts;
         clock_gettime(CLOCK_MONOTONIC, &ts);
@@ -236,13 +232,12 @@ SOKOL_API_IMPL uint64_t stm_now(void) {
     #if defined(_WIN32)
         LARGE_INTEGER qpc_t;
         QueryPerformanceCounter(&qpc_t);
-        now = (uint64_t) int64_muldiv(qpc_t.QuadPart - _stm.start.QuadPart, 1000000000, _stm.freq.QuadPart);
+        now = (uint64_t) _stm_int64_muldiv(qpc_t.QuadPart - _stm.start.QuadPart, 1000000000, _stm.freq.QuadPart);
     #elif defined(__APPLE__) && defined(__MACH__)
         const uint64_t mach_now = mach_absolute_time() - _stm.start;
-        now = (uint64_t) int64_muldiv((int64_t)mach_now, (int64_t)_stm.timebase.numer, (int64_t)_stm.timebase.denom);
+        now = (uint64_t) _stm_int64_muldiv((int64_t)mach_now, (int64_t)_stm.timebase.numer, (int64_t)_stm.timebase.denom);
     #elif defined(__EMSCRIPTEN__)
-        double js_now = stm_js_perfnow() - _stm.start;
-        SOKOL_ASSERT(js_now >= 0.0);
+        double js_now = emscripten_get_now() - _stm.start;
         now = (uint64_t) (js_now * 1000000.0);
     #else
         struct timespec ts;

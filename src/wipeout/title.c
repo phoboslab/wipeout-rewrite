@@ -11,13 +11,13 @@ static uint16_t title_image;
 static float start_time;
 static bool has_shown_attract = false;
 
-void title_init() {
+void title_init(void) {
 	title_image = image_get_texture("wipeout/textures/wiptitle.tim");
 	start_time = system_time();
 	sfx_music_mode(SFX_MUSIC_RANDOM);
 }
 
-void title_update() {
+void title_update(void) {
 	render_set_view_2d();
 	render_push_2d(vec2i(0, 0), render_size(), rgba(128, 128, 128, 255), title_image);
 	ui_draw_text_centered("PRESS ENTER", ui_scaled_pos(UI_POS_BOTTOM | UI_POS_CENTER, vec2i(0, -40)), UI_SIZE_8, UI_COLOR_DEFAULT);

@@ -47,7 +47,7 @@ static struct {
 
 void scene_pulsate_red_light(Object *obj);
 void scene_move_oil_pump(Object *obj);
-void scene_update_aurora_borealis();
+void scene_update_aurora_borealis(void);
 
 void scene_load(const char *base_path, float sky_y_offset) {
 	texture_list_t scene_textures = image_get_compressed_textures(get_path(base_path, "scene.cmp"));
@@ -93,14 +93,14 @@ void scene_load(const char *base_path, float sky_y_offset) {
 	aurora_borealis.enabled = false;
 }
 
-void scene_init() {
+void scene_init(void) {
 	scene_set_start_booms(0);
 	for (int i = 0; i < stands_len; i++) {
 		stands[i].sfx = sfx_reserve_loop(SFX_CROWD);
 	}
 }
 
-void scene_update() {
+void scene_update(void) {
 	for (int i = 0; i < red_lights_len; i++) {
 		scene_pulsate_red_light(red_lights[i]);
 	}
@@ -198,7 +198,7 @@ void scene_move_oil_pump(Object *pump) {
 	mat4_set_yaw_pitch_roll(&pump->mat, vec3(sin(system_cycle_time() * 0.125 * M_PI * 2), 0, 0));
 }
 
-void scene_init_aurora_borealis() {
+void scene_init_aurora_borealis(void) {
 	aurora_borealis.enabled = true;
 	clear(aurora_borealis.grey_coords);
 
@@ -236,7 +236,7 @@ void scene_init_aurora_borealis() {
 	}
 }
 
-void scene_update_aurora_borealis() {
+void scene_update_aurora_borealis(void) {
 	float phase = system_time() / 30.0;
 	for (int i = 0; i < 80; i++) {
 		int16_t *coords = aurora_borealis.coords[i];

@@ -16,7 +16,7 @@
 #include "race.h"
 #include "sfx.h"
 
-void ships_load() {
+void ships_load(void) {
 	texture_list_t ship_textures = image_get_compressed_textures("wipeout/common/allsh.cmp");
 	Object *ship_models = objects_load("wipeout/common/allsh.prm", ship_textures);
 
@@ -120,7 +120,7 @@ static inline bool sort_rank_compare(pilot_points_t *pa, pilot_points_t *pb) {
 	}
 }
 
-void ships_update() {
+void ships_update(void) {
 	if (g.race_type == RACE_TYPE_TIME_TRIAL) {
 		ship_update(&g.ships[g.pilot]);
 	}
@@ -145,7 +145,7 @@ void ships_update() {
 
 
 
-void ships_draw() {
+void ships_draw(void) {
 	// Ship models
 	for (int i = 0; i < len(g.ships); i++) {
 		if (

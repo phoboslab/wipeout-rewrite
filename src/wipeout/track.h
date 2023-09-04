@@ -91,6 +91,6 @@ section_t *track_nearest_section(vec3_t pos, section_t *section, float *distance
 struct camera_t;
 void track_draw(struct camera_t *camera);
 
-void track_cycle_pickups();
+void track_cycle_pickups(void);
 
 #endif

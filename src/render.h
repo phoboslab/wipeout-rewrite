@@ -28,18 +28,18 @@ typedef enum {
 extern uint16_t RENDER_NO_TEXTURE;
 
 void render_init(vec2i_t screen_size);
-void render_cleanup();
+void render_cleanup(void);
 
 void render_set_screen_size(vec2i_t size);
 void render_set_resolution(render_resolution_t res);
 void render_set_post_effect(render_post_effect_t post);
-vec2i_t render_size();
+vec2i_t render_size(void);
 
-void render_frame_prepare();
-void render_frame_end();
+void render_frame_prepare(void);
+void render_frame_end(void);
 
 void render_set_view(vec3_t pos, vec3_t angles);
-void render_set_view_2d();
+void render_set_view_2d(void);
 void render_set_model_mat(mat4_t *m);
 void render_set_depth_write(bool enabled);
 void render_set_depth_test(bool enabled);
@@ -57,7 +57,7 @@ void render_push_2d_tile(vec2i_t pos, vec2i_t uv_offset, vec2i_t uv_size, vec2i_
 uint16_t render_texture_create(uint32_t width, uint32_t height, rgba_t *pixels);
 vec2i_t render_texture_size(uint16_t texture_index);
 void render_texture_replace_pixels(int16_t texture_index, rgba_t *pixels);
-uint16_t render_textures_len();
+uint16_t render_textures_len(void);
 void render_textures_reset(uint16_t len);
 void render_textures_dump(const char *path);
 
