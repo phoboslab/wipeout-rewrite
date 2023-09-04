@@ -8,7 +8,7 @@ DEBUG ?= false
 USER_CFLAGS ?=
 
 L_FLAGS ?= -lm
-C_FLAGS ?= -std=gnu99 -Wall -Wno-unused-variable $(USER_CFLAGS)
+C_FLAGS ?= -Isrc/libs/ -std=gnu99 -Wall -Wno-unused-variable $(USER_CFLAGS)
 
 ifeq ($(DEBUG), true)
 	C_FLAGS := $(C_FLAGS) -g
