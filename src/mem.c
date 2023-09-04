@@ -46,7 +46,7 @@ void mem_reset(void *p) {
 // and aftewards free A then B.
 
 void *mem_temp_alloc(uint32_t size) {
-	size = ((size >> 3) + 7) << 3; // allign to 8 bytes
+	size = ((size + 7) >> 3) << 3; // allign to 8 bytes
 
 	error_if(bump_len + temp_len + size >= MEM_HUNK_BYTES, "Failed to allocate %d bytes in temp mem", size);
 	error_if(temp_objects_len >= MEM_TEMP_OBJECTS_MAX, "MEM_TEMP_OBJECTS_MAX reached");
