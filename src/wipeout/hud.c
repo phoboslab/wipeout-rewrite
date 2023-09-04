@@ -231,6 +231,10 @@ void hud_draw(ship_t *ship) {
 		: ship->speed;
 	hud_draw_speedo(speedo_speed, ship->thrust_mag);
 
+	// Current speed
+	ui_draw_number((int)ship->speed / 100, ui_scaled_pos(UI_POS_BOTTOM | UI_POS_RIGHT, vec2i(-140, -70)), UI_SIZE_16, UI_COLOR_DEFAULT);
+	ui_draw_text("KPH", ui_scaled_pos(UI_POS_BOTTOM | UI_POS_RIGHT, vec2i(-75, -70)), UI_SIZE_8, UI_COLOR_ACCENT);
+
 	// Weapon icon
 	if (ship->weapon_type != WEAPON_TYPE_NONE) {
 		vec2i_t pos = ui_scaled_pos(UI_POS_TOP | UI_POS_CENTER, vec2i(-16, 20));
