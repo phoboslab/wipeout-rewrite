@@ -28,7 +28,7 @@ Consult the following sections for how to install the prerequisites for your pla
 Building on Linux should be as simple as installing CMake, GLEW, and the
 necessary platform libraries from your package manager.
 For brevity, this guide assumes that the necessary development tools (i.e. a C
-complier, make) have already been installed.
+compiler, make) have already been installed.
 The SDL2 platform should only require the `sdl2` library and headers, whilst the
 Sokol platform requires the library/headers for:
 
@@ -205,7 +205,7 @@ With the SDK installed, you can now setup and build:
 
 ```sh
 # With make (combined full and minimal builds)
-cd wipeout-rewrite && make wasm
+make wasm
 
 # With cmame (full or minimal builds specified via -DMINIMAL_BUNDLE={OFF|ON})
 emcmake cmake -S path/to/wipeout-rewrite -B path/to/build-dir -DPLATFORM=SOKOL
