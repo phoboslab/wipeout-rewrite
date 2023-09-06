@@ -147,6 +147,8 @@ typedef enum {
 	INPUT_BUTTON_MAX = 139
 } button_t;
 
+extern unsigned int is_analog;
+
 typedef enum {
 	INPUT_LAYER_SYSTEM = 0,
 	INPUT_LAYER_USER = 1,
