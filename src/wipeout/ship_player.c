@@ -56,6 +56,7 @@ void ship_player_update_intro(ship_t *self) {
 
 void ship_player_update_intro_await_three(ship_t *self) {
 	ship_player_update_intro_general(self);
+	//fixme need a default view option
 	flags_rm(self->flags, SHIP_VIEW_INTERNAL);
 	g.camera.update_func = camera_update_race_external;
 
