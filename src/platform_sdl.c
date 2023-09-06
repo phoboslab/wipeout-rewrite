@@ -48,11 +48,11 @@ uint8_t platform_sdl_axis_map[] = {
 };
 
 
-void platform_exit() {
+void platform_exit(void) {
 	wants_to_exit = true;
 }
 
-SDL_GameController *platform_find_gamepad() {
+SDL_GameController *platform_find_gamepad(void) {
 	for (int i = 0; i < SDL_NumJoysticks(); i++) {
 		if (SDL_IsGameController(i)) {
 			return SDL_GameControllerOpen(i);
@@ -63,7 +63,7 @@ SDL_GameController *platform_find_gamepad() {
 }
 
 
-void platform_pump_events() {
+void platform_pump_events(void) {
 	SDL_Event ev;
 	while (SDL_PollEvent(&ev)) {
 		// Detect ALT+Enter press to toggle fullscreen
@@ -191,12 +191,12 @@ void platform_pump_events() {
 	}
 }
 
-double platform_now() {
+double platform_now(void) {
 	uint64_t perf_counter = SDL_GetPerformanceCounter();
 	return (double)perf_counter / (double)perf_freq;
 }
 
-bool platform_get_fullscreen() {
+bool platform_get_fullscreen(void) {
 	return SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN;
 }
 
@@ -254,7 +254,7 @@ uint32_t platform_store_userdata(const char *name, void *bytes, int32_t len) {
 	#define PLATFORM_WINDOW_FLAGS SDL_WINDOW_OPENGL
 	SDL_GLContext platform_gl;
 
-	void platform_video_init() {
+	void platform_video_init(void) {
 		#if defined(USE_GLES2)
 			SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
 			SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
@@ -265,19 +265,19 @@ uint32_t platform_store_userdata(const char *name, void *bytes, int32_t len) {
 		SDL_GL_SetSwapInterval(1);
 	}
 
-	void platform_prepare_frame() {
+	void platform_prepare_frame(void) {
 		// nothing
 	}
 
-	void platform_video_cleanup() {
+	void platform_video_cleanup(void) {
 		SDL_GL_DeleteContext(platform_gl);
 	}
 
-	void platform_end_frame() {
+	void platform_end_frame(void) {
 		SDL_GL_SwapWindow(window);
 	}
 
-	vec2i_t platform_screen_size() {
+	vec2i_t platform_screen_size(void) {
 		int width, height;
 		SDL_GL_GetDrawableSize(window, &width, &height);
 		return vec2i(width, height);
@@ -294,18 +294,18 @@ uint32_t platform_store_userdata(const char *name, void *bytes, int32_t len) {
 	static vec2i_t screen_size = vec2i(0, 0);
 
 
-	void platform_video_init() {
+	void platform_video_init(void) {
 		renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 	}
 
-	void platform_video_cleanup() {
+	void platform_video_cleanup(void) {
 		if (screenbuffer) {
 			SDL_DestroyTexture(screenbuffer);
 		}
 		SDL_DestroyRenderer(renderer);
 	}
 
-	void platform_prepare_frame() {
+	void platform_prepare_frame(void) {
 		if (screen_size.x != screenbuffer_size.x || screen_size.y != screenbuffer_size.y) {
 			if (screenbuffer) {
 				SDL_DestroyTexture(screenbuffer);
@@ -316,7 +316,7 @@ uint32_t platform_store_userdata(const char *name, void *bytes, int32_t len) {
 		SDL_LockTexture(screenbuffer, NULL, &screenbuffer_pixels, &screenbuffer_pitch);
 	}
 
-	void platform_end_frame() {
+	void platform_end_frame(void) {
 		screenbuffer_pixels = NULL;
 		SDL_UnlockTexture(screenbuffer);
 		SDL_RenderCopy(renderer, screenbuffer, NULL, NULL);
@@ -328,7 +328,7 @@ uint32_t platform_store_userdata(const char *name, void *bytes, int32_t len) {
 		return screenbuffer_pixels;
 	}
 
-	vec2i_t platform_screen_size() {
+	vec2i_t platform_screen_size(void) {
 		int width, height;
 		SDL_GetWindowSize(window, &width, &height);
 
@@ -346,7 +346,7 @@ int main(int argc, char *argv[]) {
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER);
 
 	// Figure out the absolute asset and userdata paths. These may either be
-	// supplied at build time through -DPATH_ASSETS=.. and -DPATH_USERDATA=.. 
+	// supplied at build time through -DPATH_ASSETS=.. and -DPATH_USERDATA=..
 	// or received at runtime from SDL. Note that SDL may return NULL for these.
 	// We fall back to the current directory (i.e. just "") in this case.
 

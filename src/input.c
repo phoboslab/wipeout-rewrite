@@ -159,16 +159,16 @@ static void *capture_user;
 static int32_t mouse_x;
 static int32_t mouse_y;
 
-void input_init() {
+void input_init(void) {
 	input_unbind_all(INPUT_LAYER_SYSTEM);
 	input_unbind_all(INPUT_LAYER_USER);
 }
 
-void input_cleanup() {
+void input_cleanup(void) {
 
 }
 
-void input_clear() {
+void input_clear(void) {
 	clear(actions_pressed);
 	clear(actions_released);
 }
@@ -274,7 +274,7 @@ bool input_released(uint8_t action) {
 	return actions_released[action];
 }
 
-vec2_t input_mouse_pos() {
+vec2_t input_mouse_pos(void) {
 	return vec2(mouse_x, mouse_y);
 }
 

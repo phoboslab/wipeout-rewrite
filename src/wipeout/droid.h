@@ -29,7 +29,7 @@ typedef struct droid_t {
 
 void droid_draw(droid_t *droid);
 
-void droid_load();
+void droid_load(void);
 void droid_init(droid_t *droid, ship_t *ship);
 void droid_update(droid_t *droid, ship_t *ship);
 void droid_update_intro(droid_t *droid, ship_t *ship);

@@ -17,7 +17,7 @@
 
 static Object *droid_model;
 
-void droid_load() {
+void droid_load(void) {
 	texture_list_t droid_textures = image_get_compressed_textures("wipeout/common/rescu.cmp");
 	droid_model = objects_load("wipeout/common/rescu.prm", droid_textures);
 }

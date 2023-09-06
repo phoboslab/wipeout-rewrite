@@ -55,7 +55,7 @@ char_set_t char_set[UI_SIZE_MAX] = {
 
 uint16_t icon_textures[UI_ICON_MAX];
 
-void ui_load() {
+void ui_load(void) {
 	texture_list_t tl = image_get_compressed_textures("wipeout/textures/drfonts.cmp");
 	char_set[UI_SIZE_16].texture   = texture_from_list(tl, 0);
 	char_set[UI_SIZE_12].texture   = texture_from_list(tl, 1);
@@ -68,7 +68,7 @@ void ui_load() {
 	icon_textures[UI_ICON_STAR]    = texture_from_list(tl, 9);
 }
 
-int ui_get_scale() {
+int ui_get_scale(void) {
 	return ui_scale;
 }
 
@@ -81,7 +81,7 @@ vec2i_t ui_scaled(vec2i_t v) {
 	return vec2i(v.x * ui_scale, v.y * ui_scale);
 }
 
-vec2i_t ui_scaled_screen() {
+vec2i_t ui_scaled_screen(void) {
 	return vec2i_mulf(render_size(), ui_scale);
 }
 

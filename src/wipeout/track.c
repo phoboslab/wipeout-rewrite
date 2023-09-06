@@ -282,7 +282,7 @@ void track_draw(camera_t *camera) {
 	}
 }
 
-void track_cycle_pickups() {
+void track_cycle_pickups(void) {
 	float pickup_cycle_time = 1.5 * system_cycle_time();
 
 	for (int i = 0; i < g.track.pickups_len; i++) {

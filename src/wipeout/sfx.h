@@ -58,12 +58,12 @@ typedef struct {
 #define SFX_MAX 64
 #define SFX_MAX_ACTIVE 16
 
-void sfx_load();
+void sfx_load(void);
 void sfx_stero_mix(float *buffer, uint32_t len);
 void sfx_set_external_mix_cb(void (*cb)(float *, uint32_t len));
-void sfx_reset();
-void sfx_pause();
-void sfx_unpause();
+void sfx_reset(void);
+void sfx_pause(void);
+void sfx_unpause(void);
 
 sfx_t *sfx_play(sfx_source_t source_index);
 sfx_t *sfx_play_at(sfx_source_t source_index, vec3_t pos, vec3_t vel, float volume);
@@ -77,9 +77,9 @@ typedef enum {
 	SFX_MUSIC_LOOP
 } sfx_music_mode_t;
 
-void sfx_music_next();
+void sfx_music_next(void);
 void sfx_music_play(uint32_t index);
 void sfx_music_mode(sfx_music_mode_t);
-void sfx_music_pause();
+void sfx_music_pause(void);
 
 #endif

@@ -76,14 +76,14 @@ Object *objects_load(char *name, texture_list_t tl) {
 			object->vertices[i].z = get_i16(bytes, &p);
 			p += 2; // padding
 
-			if (abs(object->vertices[i].x) > object->radius) {
-				object->radius = abs(object->vertices[i].x);
+			if (fabsf(object->vertices[i].x) > object->radius) {
+				object->radius = fabsf(object->vertices[i].x);
 			}
-			if (abs(object->vertices[i].y) > object->radius) {
-				object->radius = abs(object->vertices[i].y);
+			if (fabsf(object->vertices[i].y) > object->radius) {
+				object->radius = fabsf(object->vertices[i].y);
 			}
-			if (abs(object->vertices[i].z) > object->radius) {
-				object->radius = abs(object->vertices[i].z);
+			if (fabsf(object->vertices[i].z) > object->radius) {
+				object->radius = fabsf(object->vertices[i].z);
 			}
 		}
 

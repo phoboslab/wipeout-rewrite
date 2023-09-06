@@ -10,17 +10,17 @@ static particle_t *particles;
 static int particles_active = 0;
 static texture_list_t particle_textures;
 
-void particles_load() {
+void particles_load(void) {
 	particles = mem_bump(sizeof(particle_t) * PARTICLES_MAX);
 	particle_textures = image_get_compressed_textures("wipeout/common/effects.cmp");
 	particles_init();
 }
 
-void particles_init() {
+void particles_init(void) {
 	particles_active = 0;
 }
 
-void particles_update() {
+void particles_update(void) {
 	for (int i = 0; i < particles_active; i++) {
 		particle_t *p = &particles[i];
 
@@ -33,7 +33,7 @@ void particles_update() {
 	}
 }
 
-void particles_draw() {
+void particles_draw(void) {
 	if (particles_active == 0) {
 		return;
 	}

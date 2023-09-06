@@ -5,7 +5,7 @@
 
 #if defined(RENDERER_GL)
 	#ifdef __EMSCRIPTEN__
-		#define SOKOL_GLES2
+		#define SOKOL_GLES3
 	#else
 		#define SOKOL_GLCORE33
 	#endif
@@ -14,9 +14,9 @@
 #endif
 
 #define SOKOL_IMPL
-#include "libs/sokol_audio.h"
-#include "libs/sokol_time.h"
-#include "libs/sokol_app.h"
+#include <sokol_audio.h>
+#include <sokol_time.h>
+#include <sokol_app.h>
 #include "input.h"
 
 // FIXME: we should figure out the actual path where the executabe resides,
@@ -161,15 +161,15 @@ static const uint8_t keyboard_map[] = {
 
 static void (*audio_callback)(float *buffer, uint32_t len) = NULL;
 
-void platform_exit() {
+void platform_exit(void) {
 	sapp_quit();
 }
 
-vec2i_t platform_screen_size() {
+vec2i_t platform_screen_size(void) {
 	return vec2i(sapp_width(), sapp_height());
 }
 
-double platform_now() {
+double platform_now(void) {
 	return stm_sec(stm_now());
 }
 

@@ -74,7 +74,7 @@ void weapon_fire_turbo(ship_t *ship);
 
 void invert_shield_polys(Object *shield);
 
-void weapons_load() {
+void weapons_load(void) {
 	weapons = mem_bump(sizeof(weapon_t) * WEAPONS_MAX);
 	weapon_assets.reticle = image_get_texture("wipeout/textures/target2.tim");
 
@@ -106,7 +106,7 @@ void weapons_load() {
 	weapons_init();
 }
 
-void weapons_init() {
+void weapons_init(void) {
 	weapons_active = 0;
 }
 
@@ -160,7 +160,7 @@ void weapons_fire_delayed(ship_t *ship, int weapon_type) {
 
 bool weapon_collides_with_track(weapon_t *self);
 
-void weapons_update() {
+void weapons_update(void) {
 	for (int i = 0; i < weapons_active; i++) {
 		weapon_t *weapon = &weapons[i];
 		
@@ -214,7 +214,7 @@ void weapons_update() {
 	}
 }
 
-void weapons_draw() {
+void weapons_draw(void) {
 	mat4_t mat = mat4_identity();
 	for (int i = 0; i < weapons_active; i++) {
 		weapon_t *weapon = &weapons[i];

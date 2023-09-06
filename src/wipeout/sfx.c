@@ -7,7 +7,7 @@
 
 #define QOA_IMPLEMENTATION
 #define QOA_NO_STDIO
-#include "../libs/qoa.h"
+#include <qoa.h>
 
 typedef struct {
 	int16_t *samples;
@@ -50,7 +50,7 @@ static sfx_t *nodes;
 static music_decoder_t *music;
 static void (*external_mix_cb)(float *, uint32_t len) = NULL;
 
-void sfx_load() {
+void sfx_load(void) {
 	// Init decode buffer for music
 	uint32_t channels = 2;
 	music = mem_bump(sizeof(music_decoder_t));
@@ -118,7 +118,7 @@ void sfx_load() {
 	platform_set_audio_mix_cb(sfx_stero_mix);
 }
 
-void sfx_reset() {
+void sfx_reset(void) {
 	for (int i = 0; i < SFX_MAX; i++) {
 		if (flags_is(nodes[i].flags, SFX_LOOP)) {
 			flags_set(nodes[i].flags, SFX_NONE);
@@ -126,7 +126,7 @@ void sfx_reset() {
 	}
 }
 
-void sfx_unpause() {
+void sfx_unpause(void) {
 	for (int i = 0; i < SFX_MAX; i++) {
 		if (flags_is(nodes[i].flags, SFX_LOOP_PAUSE)) {
 			flags_rm(nodes[i].flags, SFX_LOOP_PAUSE);
@@ -135,7 +135,7 @@ void sfx_unpause() {
 	}
 }
 
-void sfx_pause() {
+void sfx_pause(void) {
 	for (int i = 0; i < SFX_MAX; i++) {
 		if (flags_is(nodes[i].flags, SFX_PLAY | SFX_LOOP)) {
 			flags_rm(nodes[i].flags, SFX_PLAY);
@@ -227,7 +227,7 @@ void sfx_set_position(sfx_t *sfx, vec3_t pos, vec3_t vel, float volume) {
 
 // Music
 
-uint32_t sfx_music_decode_frame() {
+uint32_t sfx_music_decode_frame(void) {
 	if (!music->file) {
 		return 0;
 	}
@@ -240,7 +240,7 @@ uint32_t sfx_music_decode_frame() {
 	return frame_len;
 }
 
-void sfx_music_rewind() {
+void sfx_music_rewind(void) {
 	fseek(music->file, music->first_frame_pos, SEEK_SET);
 	music->sample_data_len = 0;
 	music->sample_data_pos = 0;

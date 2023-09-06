@@ -19,7 +19,7 @@ static void page_hall_of_fame_init(menu_t * menu);
 static texture_list_t pilot_portraits;
 static menu_t *ingame_menu;
 
-void ingame_menus_load() {
+void ingame_menus_load(void) {
 	pilot_portraits = image_get_compressed_textures(def.pilots[g.pilot].portrait);
 	ingame_menu = mem_bump(sizeof(menu_t));
 }
@@ -86,7 +86,7 @@ static void button_music(menu_t *menu, int data) {
 	menu_page_add_button(page, 0, "RANDOM", button_music_random);
 }
 
-menu_t *pause_menu_init() {
+menu_t *pause_menu_init(void) {
 	sfx_play(SFX_MENU_SELECT);
 	menu_reset(ingame_menu);
 
@@ -103,7 +103,7 @@ menu_t *pause_menu_init() {
 // -----------------------------------------------------------------------------
 // Game Over
 
-menu_t *game_over_menu_init() {
+menu_t *game_over_menu_init(void) {
 	sfx_play(SFX_MENU_SELECT);
 	menu_reset(ingame_menu);
 
@@ -187,7 +187,7 @@ static void page_race_stats_draw(menu_t *menu, int data) {
 	pos.y += 12;
 }
 
-menu_t *race_stats_menu_init() {
+menu_t *race_stats_menu_init(void) {
 	sfx_play(SFX_MENU_SELECT);
 	menu_reset(ingame_menu);
 	
