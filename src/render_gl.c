@@ -489,7 +489,7 @@ static mat4_t render_setup_3d_projection_mat(vec2i_t size) {
 	// view. For the original 4/3 aspect ratio this equates to a vertical fov
 	// of 73.75deg.
 	float aspect = (float)size.x / (float)size.y;
-	float fov = (73.75 / 180.0) * 3.14159265358;
+	float fov = render_vertical_fov();
 	float f = 1.0 / tan(fov / 2);
 	float nf = 1.0 / (NEAR_PLANE - FAR_PLANE);
 	return mat4(
@@ -570,6 +570,11 @@ void render_set_post_effect(render_post_effect_t post) {
 
 vec2i_t render_size(void) {
 	return backbuffer_size;
+}
+
+float render_vertical_fov() {
+	const float k_vertical_fov = (73.75 / 180.0) * 3.14159265358;
+	return k_vertical_fov;
 }
 
 void render_frame_prepare(void) {

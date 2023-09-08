@@ -120,8 +120,13 @@ static inline vec3_t vec3_divf(vec3_t a, float f) {
 	);
 }
 
+static inline float vec3_len_sq(vec3_t a) {
+	return a.x * a.x + a.y * a.y + a.z * a.z;
+}
+
+
 static inline float vec3_len(vec3_t a) {
-	return sqrt(a.x * a.x + a.y * a.y + a.z * a.z);
+	return sqrt(vec3_len_sq(a));
 }
 
 static inline vec3_t vec3_cross(vec3_t a, vec3_t b) {

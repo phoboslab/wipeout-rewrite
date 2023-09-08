@@ -193,6 +193,27 @@ void track_load_faces(char *file_name, vec3_t *vertices) {
 }
 
 
+static float track_section_compute_radius(const vec3_t center, uint16_t face_start, uint16_t face_count)
+{
+	const track_face_t *face_begin = g.track.faces + face_start;
+	const track_face_t *face_end = face_begin + face_count;
+
+	float dist_sq = 0;
+
+	for(;face_begin < face_end; ++face_begin)
+	{
+		dist_sq = max(dist_sq, vec3_len_sq(vec3_sub(face_begin->tris[0].vertices[0].pos, center)));
+		dist_sq = max(dist_sq, vec3_len_sq(vec3_sub(face_begin->tris[0].vertices[1].pos, center)));
+		dist_sq = max(dist_sq, vec3_len_sq(vec3_sub(face_begin->tris[0].vertices[2].pos, center)));
+
+		dist_sq = max(dist_sq, vec3_len_sq(vec3_sub(face_begin->tris[1].vertices[0].pos, center)));
+		dist_sq = max(dist_sq, vec3_len_sq(vec3_sub(face_begin->tris[1].vertices[1].pos, center)));
+		dist_sq = max(dist_sq, vec3_len_sq(vec3_sub(face_begin->tris[1].vertices[2].pos, center)));
+	}
+
+	return dist_sq;
+}
+
 void track_load_sections(char *file_name) {
 	uint32_t size;
 	uint8_t *bytes = platform_load_asset(file_name, &size);
@@ -232,6 +253,8 @@ void track_load_sections(char *file_name) {
 		ts->face_start = get_i16(bytes, &p);
 		ts->face_count = get_i16(bytes, &p);
 
+		ts->radius_sq = track_section_compute_radius(ts->center, ts->face_start, ts->face_count);
+
 		p += 2 * 2; // global/local radius
 
 		ts->flags = get_i16(bytes, &p);
@@ -261,22 +284,24 @@ void track_draw_section(section_t *section) {
 void track_draw(camera_t *camera) {	
 	render_set_model_mat(&mat4_identity());
 
+	// Compute the scale factor for section radius based on the fov.
+	const vec2i_t res_size = render_size();
+	const float half_vertical_fov = 0.5f * render_vertical_fov();
+	const float max_fov = half_vertical_fov * (res_size.x > res_size.y ? (res_size.x / res_size.y) : 1.0f);
+	const float scale_factor = 1.0f / cos(max_fov);
+
+	const float k_render_fade_out_sq = RENDER_FADEOUT_FAR * RENDER_FADEOUT_FAR;
+
 	// Calculate the camera forward vector, so we can cull everything that's
 	// behind. Ideally we'd want to do a full frustum culling here. FIXME.
 	vec3_t cam_pos = camera->position;
 	vec3_t cam_dir = camera_forward(camera);
-	
-	int drawn = 0;
-	int skipped = 0;
+
 	for(int32_t i = 0; i < g.track.section_count; i++) {
 		section_t *s = &g.track.sections[i];
-		vec3_t diff = vec3_sub(cam_pos, s->center);
-		float cam_dot = vec3_dot(diff, cam_dir);
-		float dist_sq = vec3_dot(diff, diff);
-		if (
-			cam_dot < 2048 && // FIXME: should use the bounding radius of the section
-			dist_sq < (RENDER_FADEOUT_FAR * RENDER_FADEOUT_FAR)
-		) {
+		const vec3_t diff = vec3_sub(s->center, cam_pos);
+		const float signed_dist_sq = vec3_len_sq(diff) * (vec3_dot(diff, cam_dir) >= 0.0f ? 1.0f : -1.0f);
+		if ((signed_dist_sq >= -(s->radius_sq * scale_factor) && signed_dist_sq < k_render_fade_out_sq)) {
 			track_draw_section(s);
 		}
 	}

@@ -46,6 +46,7 @@ typedef struct section_t {
 	struct section_t *next;
 
 	vec3_t center;
+	float radius_sq;
 
 	int16_t face_start;
 	int16_t face_count;
