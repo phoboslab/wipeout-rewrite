@@ -353,6 +353,7 @@ static uint32_t tris_len = 0;
 
 static vec2i_t screen_size;
 static vec2i_t backbuffer_size;
+static float horizontal_fov = 0;
 
 static uint32_t atlas_map[ATLAS_SIZE] = {0};
 static GLuint atlas_texture = 0;
@@ -380,6 +381,12 @@ prg_post_t *prg_post_effects[NUM_RENDER_POST_EFFCTS] = {};
 
 
 static void render_flush(void);
+
+static void render_update_horizontal_fov() {
+	const float half_vertical_fov = 0.5f * render_vertical_fov();
+	const float aspect_ratio = (screen_size.x > screen_size.y ? ((float)screen_size.x / screen_size.y) : 1.0f);
+	horizontal_fov = atan(tan(half_vertical_fov) * aspect_ratio);
+}
 
 
 // static void gl_message_callback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *userParam) {
@@ -505,6 +512,8 @@ void render_set_screen_size(vec2i_t size) {
 	projection_mat_bb = render_setup_2d_projection_mat(screen_size);
 
 	render_set_resolution(render_res);
+
+	render_update_horizontal_fov();
 }
 
 
@@ -575,6 +584,10 @@ vec2i_t render_size(void) {
 float render_vertical_fov() {
 	const float k_vertical_fov = (73.75 / 180.0) * 3.14159265358;
 	return k_vertical_fov;
+}
+
+float render_horizontal_fov(void) {
+	return horizontal_fov;
 }
 
 void render_frame_prepare(void) {

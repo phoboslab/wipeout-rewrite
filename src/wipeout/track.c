@@ -285,9 +285,7 @@ void track_draw(camera_t *camera) {
 	render_set_model_mat(&mat4_identity());
 
 	// Compute the scale factor for section radius based on the fov.
-	const vec2i_t res_size = render_size();
-	const float half_vertical_fov = 0.5f * render_vertical_fov();
-	const float max_fov = half_vertical_fov * (res_size.x > res_size.y ? (res_size.x / res_size.y) : 1.0f);
+	const float max_fov = max(render_vertical_fov(), render_horizontal_fov());
 	const float scale_factor = 1.0f / cos(max_fov);
 
 	const float k_render_fade_out_sq = RENDER_FADEOUT_FAR * RENDER_FADEOUT_FAR;
