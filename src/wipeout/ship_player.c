@@ -230,7 +230,7 @@ void ship_player_update_race(ship_t *self) {
 
 	self->angular_acceleration.x += input_state(A_DOWN) * SHIP_PITCH_ACCEL;
 	self->angular_acceleration.x -= input_state(A_UP) * SHIP_PITCH_ACCEL;
-	
+
 	// Handle Stall
 	if (self->update_timer > 0) {
 		if (self->current_thrust_max < 500) {
