@@ -9,7 +9,6 @@
 #include "game.h"
 #include "image.h"
 #include "ui.h"
-unsigned int is_analog = 1;
 
 static void page_main_init(menu_t *menu);
 static void page_options_init(menu_t *menu);
@@ -161,19 +160,6 @@ void button_capture(void *user, button_t button, int32_t ascii_char) {
 	}
 	input_capture(NULL, NULL);
 	input_bind(INPUT_LAYER_USER, button, control_current_action);
-	is_analog = 0;
-	if (button == INPUT_GAMEPAD_L_TRIGGER ||
-		button == INPUT_GAMEPAD_R_TRIGGER ||
-		button == INPUT_GAMEPAD_L_STICK_UP ||
-		button == INPUT_GAMEPAD_L_STICK_DOWN ||
-		button == INPUT_GAMEPAD_L_STICK_LEFT ||
-		button == INPUT_GAMEPAD_L_STICK_RIGHT ||
-		button == INPUT_GAMEPAD_R_STICK_UP ||
-		button == INPUT_GAMEPAD_R_STICK_DOWN ||
-		button == INPUT_GAMEPAD_R_STICK_LEFT ||
-		button == INPUT_GAMEPAD_R_STICK_RIGHT
-	) is_analog = 1;
-	printf("is_analog		%u\n", is_analog);
 	save.buttons[control_current_action][index] = button;
 	save.is_dirty = true;
 	menu_pop(menu);
@@ -528,6 +514,8 @@ static void objects_unpack_imp(Object **dest_array, int len, Object *src) {
 
 void main_menu_init(void) {
 	g.is_attract_mode = false;
+
+	ships_reset_exhaust_plumes();
 
 	main_menu = mem_bump(sizeof(menu_t));
 
