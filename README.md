@@ -216,13 +216,15 @@ cmake --build path/to/build-dir
 
 The following is a table for project specific build flags using CMake:
 
-| Flag             | Description                                                     | Options                                                                              | Default                                                                                     |
-|------------------|-----------------------------------------------------------------|--------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------|
-| `PLATFORM`       | The platform to build for.                                      | `SDL2`, `SOKOL`                                                                      | `SDL2`                                                                                      |
-| `RENDERER`       | Graphics renderer.                                              | `GL` for OpenGL 3, `GLES2` for OpenGL ES 2, `SOFTWARE` for a pure software renderer. | `GL`                                                                                        |
-| `USE_GLVND`      | Link against the OpenGL Vendor Neutral Dispatch libraries.      | `ON`, `OFF`                                                                          | `ON`, falling back to `OFF` if the libraries aren't found or an OpenGL renderer isn't used. |
-| `MINIMAL_BUNDLE` | Do not include the music/intro video when building for the web. | `ON`, `OFF`                                                                          | `OFF`                                                                                       |
-
+| Flag             | Description                                                                             | Options                                                                              | Default                                                                                     |
+|------------------|-----------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------|
+| `PLATFORM`       | The platform to build for.                                                              | `SDL2`, `SOKOL`                                                                      | `SDL2`                                                                                      |
+| `RENDERER`       | Graphics renderer.                                                                      | `GL` for OpenGL 3, `GLES2` for OpenGL ES 2, `SOFTWARE` for a pure software renderer. | `GL`                                                                                        |
+| `USE_GLVND`      | Link against the OpenGL Vendor Neutral Dispatch libraries.                              | `ON`, `OFF`                                                                          | `ON`, falling back to `OFF` if the libraries aren't found or an OpenGL renderer isn't used. |
+| `MINIMAL_BUNDLE` | Do not include the music/intro video when building for the web.                         | `ON`, `OFF`                                                                          | `OFF`                                                                                       |
+| `PATH_ASSETS`    | Set a static path where the game assets are loaded from.                                | Any valid filesystem path.                                                           | Unset                                                                                       |
+| `PATH_USERDATA`  | Set a static path where user data (e.g. game saves) are stored.                         | Any valid filesystem path.                                                           | Unset                                                                                       |
+| `DEV_BUILD`      | Sets the assets/userdata path to the source directory. Useful when testing any changes. | `ON`, `OFF`                                                                          | `OFF`                                                                                       |
 
 # Running
 

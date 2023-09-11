@@ -143,6 +143,11 @@ void ships_update(void) {
 	}
 }
 
+void ships_reset_exhaust_plumes(void) {
+	for (int i = 0; i < len(g.ships); i++) {
+		ship_reset_exhaust_plume(&g.ships[i]);
+	}
+}
 
 
 void ships_draw(void) {
@@ -385,6 +390,17 @@ void ship_init_exhaust_plume(ship_t *self) {
 		if (shared[j] != -1) {
 			self->exhaust_plume[j].v = &self->model->vertices[shared[j]];
 			self->exhaust_plume[j].initial = self->model->vertices[shared[j]];
+		}
+	}
+}
+
+void ship_reset_exhaust_plume(ship_t* self)
+{
+	for (int i = 0; i < 3; i++) {
+		if (self->exhaust_plume[i].v != NULL) {
+			self->exhaust_plume[i].v->z = self->exhaust_plume[i].initial.z;
+			self->exhaust_plume[i].v->x = self->exhaust_plume[i].initial.x;
+			self->exhaust_plume[i].v->y = self->exhaust_plume[i].initial.y;
 		}
 	}
 }
@@ -1001,6 +1017,3 @@ void ship_collide_with_ship(ship_t *self, ship_t *other) {
 	flags_add(self->flags, SHIP_COLL);
 	flags_add(other->flags, SHIP_COLL);
 }
-
-
-

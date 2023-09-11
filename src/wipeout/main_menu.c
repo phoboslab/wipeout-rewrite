@@ -529,6 +529,8 @@ static void objects_unpack_imp(Object **dest_array, int len, Object *src) {
 void main_menu_init(void) {
 	g.is_attract_mode = false;
 
+	ships_reset_exhaust_plumes();
+
 	main_menu = mem_bump(sizeof(menu_t));
 
 	background = image_get_texture("wipeout/textures/wipeout1.tim");
