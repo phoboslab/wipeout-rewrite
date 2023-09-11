@@ -180,7 +180,7 @@ void ship_player_update_race(ship_t *self) {
 
 	self->angular_acceleration = vec3(0, 0, 0);
 	float turn_rate_target = 0;
-	
+
 	if (input_state(A_LEFT)) {
 		turn_rate_target = (pow(input_state(A_LEFT),1.2) * self->turn_rate_max);
 		if (self->angular_velocity.y >= 0) {
