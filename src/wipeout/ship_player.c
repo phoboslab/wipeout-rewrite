@@ -56,8 +56,6 @@ void ship_player_update_intro(ship_t *self) {
 
 void ship_player_update_intro_await_three(ship_t *self) {
 	ship_player_update_intro_general(self);
-	flags_rm(self->flags, SHIP_VIEW_INTERNAL);
-	g.camera.update_func = camera_update_race_external;
 
 	if (self->update_timer <= UPDATE_TIME_THREE) {
 		sfx_t *sfx = sfx_play(SFX_VOICE_COUNT_3);
