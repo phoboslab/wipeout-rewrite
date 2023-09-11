@@ -185,11 +185,11 @@ void ship_player_update_race(ship_t *self) {
 		turn_rate_target = (pow(input_state(A_LEFT),1.2) * self->turn_rate_max);
 		if (self->angular_velocity.y >= 0) {
 			if (turn_rate_target > self->angular_velocity.y) {	
-				self->angular_acceleration.y += self->turn_rate;
+				self->angular_acceleration.y += turn_rate_target * self->turn_rate;
 				printf("1L\n");
 			}
 			else if(turn_rate_target < self->angular_velocity.y) {
-				self->angular_acceleration.y -= self->turn_rate;
+				self->angular_acceleration.y -= turn_rate_target * self->turn_rate;
 				printf("3L\n");
 			}
 		}
@@ -202,11 +202,11 @@ void ship_player_update_race(ship_t *self) {
 		turn_rate_target = (pow(input_state(A_RIGHT),1.2) * self->turn_rate_max);
 		if (self->angular_velocity.y <= 0) {
 			if (-turn_rate_target < self->angular_velocity.y) {	
-				self->angular_acceleration.y -= self->turn_rate;
+				self->angular_acceleration.y -= turn_rate_target * self->turn_rate;
 				printf("1R\n");
 			}
 			else if(-turn_rate_target > self->angular_velocity.y) {
-				self->angular_acceleration.y += self->turn_rate;
+				self->angular_acceleration.y += turn_rate_target * self->turn_rate;
 				printf("3R\n");
 			}
 		}
