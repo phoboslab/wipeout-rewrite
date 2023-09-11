@@ -77,7 +77,7 @@ void ship_player_update_intro_await_two(ship_t *self) {
 
 void ship_player_update_intro_await_one(ship_t *self) {
 	ship_player_update_intro_general(self);
-	
+
 	if (self->update_timer <= UPDATE_TIME_ONE) {
 		scene_set_start_booms(2);
 		sfx_t *sfx = sfx_play(SFX_VOICE_COUNT_1);
@@ -87,6 +87,7 @@ void ship_player_update_intro_await_one(ship_t *self) {
 
 void ship_player_update_intro_await_go(ship_t *self) {
 	ship_player_update_intro_general(self);
+
 	if (self->update_timer <= UPDATE_TIME_GO) {
 		scene_set_start_booms(3);
 		sfx_t *sfx = sfx_play(SFX_VOICE_COUNT_GO);
@@ -110,7 +111,6 @@ void ship_player_update_intro_await_go(ship_t *self) {
 		else {
 			self->update_func = ship_ai_update_race;
 		}
-		
 	}
 }
 
@@ -177,10 +177,9 @@ void ship_player_update_race(ship_t *self) {
 	if (flags_is(self->flags, SHIP_REVCONNED)) {
 		// FIXME_PL: make sure revconned is honored
 	}
-	
-	
+
+	self->angular_acceleration = vec3(0, 0, 0);
 	float turn_rate_target = 0;
-	self->angular_acceleration = vec3(0, 0, 0);		
 	
 	if (input_state(A_LEFT)) {
 		turn_rate_target = (pow(input_state(A_LEFT),1.2) * self->turn_rate_max);
@@ -216,7 +215,7 @@ void ship_player_update_race(ship_t *self) {
 			printf("2R\n");
 		}
 	}
-			
+
 	if (flags_is(self->flags, SHIP_ELECTROED)) {
 		self->ebolt_effect_timer += system_tick();
 		// Yank the ship every 0.1 seconds
