@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
 project(wipeout-rewrite)
 
+if("${PROJECT_SOURCE_DIR}" STREQUAL "${PROJECT_BINARY_DIR}")
+	message(FATAL_ERROR "In-tree builds are not allowed.")
+endif()
+
 include(GNUInstallDirs)
 include(CMakeDependentOption)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
@@ -17,18 +21,27 @@ if(NOT PLATFORM IN_LIST platform_options)
 endif()
 
 set(renderer_options "GL" "GLES2" "SOFTWARE")
-set(gl_renderers "GL" "GLES2")
 set(RENDERER "GL" CACHE STRING "Graphics rendering backend")
 set_property(CACHE RENDERER PROPERTY STRINGS "${renderer_options}")
 if(NOT RENDERER IN_LIST renderer_options)
 	message(FATAL_ERROR "RENDERER must be one of ${renderer_options}")
 endif()
-if(RENDERER IN_LIST gl_renderers)
+if("${RENDERER}" MATCHES "GL(ES2)?")
 	set(using_gl true)
 endif()
+if("${CMAKE_SYSTEM_NAME}" MATCHES "(Linux|FreeBSD)")
+	set(has_glvnd true)
+endif()
 
-cmake_dependent_option(USE_GLVND "Link against modern GLVND ABIs" OFF "using_gl;LINUX" ON)
+cmake_dependent_option(USE_GLVND "Link against modern GLVND ABIs" ON "using_gl;has_glvnd" OFF)
 cmake_dependent_option(MINIMAL_BUNDLE "Do not include music/movies for web builds" OFF "EMSCRIPTEN" OFF)
+option(PATH_ASSETS "Path to where the game assets should be located.")
+option(PATH_USERDATA "Path to where user data (e.g. game saves) should be located.")
+option(DEV_BUILD "Set asset/userdata paths to the source directory for testing" OFF)
+if (DEV_BUILD)
+	set(PATH_ASSETS "${CMAKE_SOURCE_DIR}/")
+	set(PATH_USERDATA "${CMAKE_SOURCE_DIR}/")
+endif()
 
 find_package(OpenGL)
 find_package(GLEW)
@@ -102,6 +115,10 @@ target_compile_options(wipeout PRIVATE
 	$<$<CXX_COMPILER_ID:MSVC>:/W4>
 	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra>
 )
+target_compile_definitions(wipeout PRIVATE
+	$<$<BOOL:${PATH_ASSETS}>:-DPATH_ASSETS=${PATH_ASSETS}>
+	$<$<BOOL:${PATH_USERDATA}>:-DPATH_USERDATA=${PATH_USERDATA}>
+)
 
 if(WIN32)
 	target_compile_definitions(wipeout PRIVATE
@@ -131,7 +148,7 @@ elseif(EMSCRIPTEN)
 	if (NOT TARGET SDL2::Main)
 		add_library(SDL2::Main INTERFACE IMPORTED)
 	endif()
-	set_target_properties(OpenGL::GL PROPERTIES 
+	set_target_properties(OpenGL::GL PROPERTIES
 		IMPORTED_LIBNAME "GL"
 	)
 	set_target_properties(GLEW::GLEW PROPERTIES
@@ -159,7 +176,7 @@ elseif(EMSCRIPTEN)
 	configure_file("${CMAKE_SOURCE_DIR}/src/wasm-index.html" "game.html" COPYONLY)
 elseif(UNIX)
 	target_link_libraries(wipeout PUBLIC m)
-	if ("${PLATFORM}" STREQUAL "SOKOL" AND UNIX)
+	if ("${PLATFORM}" STREQUAL "SOKOL" AND "${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
 		find_package(Threads REQUIRED)
 		find_package(X11 REQUIRED)
 		find_package(ALSA REQUIRED)
@@ -179,7 +196,7 @@ if(using_gl)
 	target_sources(wipeout PRIVATE src/render_gl.c)
 
 	target_include_directories(wipeout PUBLIC ${OPENGL_INCLUDE_DIR})
-	if (USE_GLES2)
+	if ("${RENDERER}" STREQUAL "GLES2")
 		target_compile_definitions(wipeout PRIVATE "USE_GLES2")
 		if (TARGET OpenGL::GLES2)
 			target_link_libraries(wipeout PUBLIC OpenGL::GLES2)
