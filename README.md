@@ -13,8 +13,9 @@ More info in my blog: https://phoboslab.org/log/2023/08/rewriting-wipeout
 The Wipeout rewrite supports two different platform-backends:
 [SDL2](https://github.com/libsdl-org/SDL) and
 [Sokol](https://github.com/floooh/sokol).
-The only difference in features is that the SDL2 backend supports game
-controllers (joysticks, gamepads), while the Sokol backend does not.
+The only difference in features is that the SDL2 backend supports game controllers 
+(joysticks, gamepads) and uses OpenGL 2.x, while the Sokol backend does not
+support controllers and uses OpenGL 3.3.
 The Sokol backend is also only supported on macOS, Linux, Windows and Emscripten.
 
 For Linux & Unix-likes a simple Makefile is a provided. Additionally, this
@@ -100,6 +101,9 @@ With the packages installed, you can now setup and build:
 ```sh
 # With make for SDL2 backend
 make sdl
+
+# With make for SDL2 with GLX backend (for legacy NVIDIA and perhaps others)
+USE_GLX=true make sdl
 
 # With make for Sokol backend
 make sokol
