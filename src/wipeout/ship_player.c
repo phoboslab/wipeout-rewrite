@@ -180,7 +180,7 @@ void ship_player_update_race(ship_t *self) {
 	float turn_rate_target = 0;
 
 	if (input_state(A_LEFT)) {
-		turn_rate_target = (pow(input_state(A_LEFT),1.2) * self->turn_rate_max);
+		turn_rate_target = input_state(A_LEFT) * self->turn_rate_max;
 		if (self->angular_velocity.y >= 0) {
 			if (turn_rate_target > self->angular_velocity.y) {	
 				self->angular_acceleration.y += turn_rate_target * self->turn_rate;
@@ -197,7 +197,7 @@ void ship_player_update_race(ship_t *self) {
 		}
 	}
 	else if (input_state(A_RIGHT)) {
-		turn_rate_target = (pow(input_state(A_RIGHT),1.2) * self->turn_rate_max);
+		turn_rate_target = input_state(A_RIGHT) * self->turn_rate_max;
 		if (self->angular_velocity.y <= 0) {
 			if (-turn_rate_target < self->angular_velocity.y) {	
 				self->angular_acceleration.y -= turn_rate_target * self->turn_rate;
