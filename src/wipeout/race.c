@@ -21,6 +21,10 @@
 #include "ship_ai.h"
 #include "ingame_menus.h"
 
+#if defined(__EMSCRIPTEN__)
+	#include <emscripten/emscripten.h>
+#endif
+
 #define ATTRACT_DURATION 60.0
 
 static bool is_paused = false;
@@ -32,6 +36,11 @@ static menu_t *active_menu = NULL;
 void race_init(void) {
 	ingame_menus_load();
 	menu_is_scroll_text = false;
+
+	#if defined(__EMSCRIPTEN__)
+	const char* rename_button_script = "document.querySelector('[data-button=\"40\"]').firstChild.innerText = 'pause';";
+		emscripten_run_script(rename_button_script);
+	#endif
 
 	const circut_settings_t *cs = &def.circuts[g.circut].settings[g.race_class];
 	track_load(cs->path);
@@ -74,6 +83,10 @@ void race_update(void) {
 		}
 		if (input_pressed(A_MENU_QUIT)) {
 			race_unpause();
+			#if defined(__EMSCRIPTEN__)
+			const char* rename_button_script = "document.querySelector('[data-button=\"40\"]').firstChild.innerText = 'pause';";
+				emscripten_run_script(rename_button_script);
+			#endif
 		}
 	}
 	else {

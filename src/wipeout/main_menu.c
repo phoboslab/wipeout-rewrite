@@ -10,6 +10,10 @@
 #include "image.h"
 #include "ui.h"
 
+#if defined(__EMSCRIPTEN__)
+	#include <emscripten/emscripten.h>
+#endif
+
 static void page_main_init(menu_t *menu);
 static void page_options_init(menu_t *menu);
 static void page_race_class_init(menu_t *menu);
@@ -90,6 +94,9 @@ static void page_main_init(menu_t *menu) {
 
 	#ifndef __EMSCRIPTEN__
 		menu_page_add_button(page, 2, "QUIT", button_quit);
+	#else
+		const char* rename_button_script = "document.querySelector('[data-button=\"40\"]').firstChild.innerText = 'enter';";
+		emscripten_run_script(rename_button_script);
 	#endif
 }
 
