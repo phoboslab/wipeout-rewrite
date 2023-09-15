@@ -20,6 +20,7 @@
 #include "menu.h"
 #include "ship_ai.h"
 #include "ingame_menus.h"
+#include "ui.h"
 
 #if defined(__EMSCRIPTEN__)
 	#include <emscripten/emscripten.h>
@@ -38,8 +39,7 @@ void race_init(void) {
 	menu_is_scroll_text = false;
 
 	#if defined(__EMSCRIPTEN__)
-	const char* rename_button_script = "document.querySelector('[data-button=\"40\"]').firstChild.innerText = 'pause';";
-		emscripten_run_script(rename_button_script);
+		ui_update_pause_button(true);
 	#endif
 
 	const circut_settings_t *cs = &def.circuts[g.circut].settings[g.race_class];
@@ -84,8 +84,7 @@ void race_update(void) {
 		if (input_pressed(A_MENU_QUIT)) {
 			race_unpause();
 			#if defined(__EMSCRIPTEN__)
-			const char* rename_button_script = "document.querySelector('[data-button=\"40\"]').firstChild.innerText = 'pause';";
-				emscripten_run_script(rename_button_script);
+				ui_update_pause_button(true);
 			#endif
 		}
 	}

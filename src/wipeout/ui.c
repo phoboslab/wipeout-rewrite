@@ -4,6 +4,15 @@
 #include "ui.h"
 #include "image.h"
 
+#ifdef __EMSCRIPTEN__
+	#include <emscripten/emscripten.h>
+
+	EM_JS(void, ui_update_pause_button, (bool in_race), {
+		const button_text = in_race ? "pause" : "enter";
+		document.querySelector('[data-button=\"40\"]').firstChild.innerText = button_text;
+	});
+#endif
+
 typedef struct {
 	vec2i_t offset;
 	uint16_t width;

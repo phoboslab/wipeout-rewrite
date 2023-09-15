@@ -1,6 +1,8 @@
 /wipeout.sublime-project
 /wipeout.sublime-workspace
 
+.vscode
+
 /wipeout/
 /build/
 

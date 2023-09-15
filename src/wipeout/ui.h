@@ -53,4 +53,8 @@ void ui_draw_image(vec2i_t pos, uint16_t texture);
 void ui_draw_icon(ui_icon_type_t icon, vec2i_t pos, rgba_t color);
 void ui_draw_text_centered(const char *text, vec2i_t pos, ui_text_size_t size, rgba_t color);
 
+#ifdef __EMSCRIPTEN__
+	void ui_update_pause_button(bool in_race);
+#endif
+
 #endif

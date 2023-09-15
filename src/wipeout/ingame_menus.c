@@ -101,8 +101,7 @@ menu_t *pause_menu_init(void) {
 	menu_page_add_button(page, 0, "MUSIC", button_music);
 
 	#if defined(__EMSCRIPTEN__)
-		const char* rename_button_script = "document.querySelector('[data-button=\"40\"]').firstChild.innerText = 'enter';";
-		emscripten_run_script(rename_button_script);
+		ui_update_pause_button(false);
 	#endif
 
 	return ingame_menu;
