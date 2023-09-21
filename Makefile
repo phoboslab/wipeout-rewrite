@@ -1,7 +1,6 @@
 CC ?= gcc
 EMCC ?= emcc
 UNAME_S := $(shell uname -s)
-UNAME_O := $(shell uname -o)
 RENDERER ?= GL
 USE_GLX ?= false
 DEBUG ?= false
@@ -38,8 +37,9 @@ endif
 # macOS ------------------------------------------------------------------------
 
 ifeq ($(UNAME_S), Darwin)
+	BREW_HOME := $(shell brew --prefix)
 	C_FLAGS := $(C_FLAGS) -x objective-c -I/opt/homebrew/include -D_THREAD_SAFE -w
-	L_FLAGS := $(L_FLAGS) -L/opt/homebrew/lib -framework Foundation
+	L_FLAGS := $(L_FLAGS) -L$(BREW_HOME)/lib -framework Foundation
 
 	ifeq ($(RENDERER), GL)
 		L_FLAGS := $(L_FLAGS) -lGLEW -GLU -framework OpenGL
@@ -68,7 +68,7 @@ else ifeq ($(UNAME_S), Linux)
 
 
 # Windows MSYS ------------------------------------------------------------------
-else ifeq ($(UNAME_O), Msys)
+else ifeq ($(shell uname -o), Msys)
 	ifeq ($(RENDERER), GL)
 		L_FLAGS := $(L_FLAGS) -lglew32 -lopengl32
 	endif
