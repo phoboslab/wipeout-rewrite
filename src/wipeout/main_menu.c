@@ -10,10 +10,6 @@
 #include "image.h"
 #include "ui.h"
 
-#if defined(__EMSCRIPTEN__)
-	#include <emscripten/emscripten.h>
-#endif
-
 static void page_main_init(menu_t *menu);
 static void page_options_init(menu_t *menu);
 static void page_race_class_init(menu_t *menu);
@@ -94,8 +90,6 @@ static void page_main_init(menu_t *menu) {
 
 	#ifndef __EMSCRIPTEN__
 		menu_page_add_button(page, 2, "QUIT", button_quit);
-	#else
-		ui_update_pause_button(false);
 	#endif
 }
 

@@ -12,10 +12,6 @@
 #include "ui.h"
 #include "race.h"
 
-#if defined(__EMSCRIPTEN__)
-	#include <emscripten/emscripten.h>
-#endif
-
 static void page_race_points_init(menu_t * menu);
 static void page_championship_points_init(menu_t * menu);
 static void page_hall_of_fame_init(menu_t * menu);
@@ -99,11 +95,6 @@ menu_t *pause_menu_init(void) {
 	menu_page_add_button(page, 0, "RESTART", button_restart);
 	menu_page_add_button(page, 0, "QUIT", button_quit);
 	menu_page_add_button(page, 0, "MUSIC", button_music);
-
-	#if defined(__EMSCRIPTEN__)
-		ui_update_pause_button(false);
-	#endif
-
 	return ingame_menu;
 }
 
