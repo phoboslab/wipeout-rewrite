@@ -246,7 +246,7 @@ The directory structure is assumed to be as follows
 
 Note that the blog post announcing this project may or may not provide a link to a ZIP containing all files needed. Who knows!
 
-Optionally, if you want to use a game controller that may not be supported by SDL directly, you can place the [gamecontrollerdb.txt](https://github.com/gabomdq/SDL_GameControllerDB) in the root directory of this project (along the compiled `wipegame`).
+Optionally, if you want to use a game controller that may not be supported by SDL directly, you can place the [gamecontrollerdb.txt](https://github.com/gabomdq/SDL_GameControllerDB) in the root directory of this project (along the compiled `wipegame`). Note that if you want to use the analog sticks of your gamecontroller in the game you have to configure it in the Options menu; the analog sticks are not bound by default.
 
 
 
