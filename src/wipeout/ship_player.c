@@ -389,7 +389,7 @@ void ship_player_update_race(ship_t *self) {
 		vec3_t best_path = vec3_project_to_ray(self->position, next->center, self->section->center);
 		vec3_t distance = vec3_sub(best_path, self->position);
 
-		if (distance.y > 0) {
+		if (distance.y > -512) {
 			distance.y = distance.y * 0.0001;
 		}
 		else {
