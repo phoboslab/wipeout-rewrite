@@ -197,13 +197,18 @@ void ship_player_update_race(ship_t *self) {
 	
 	if (flags_is(self->flags, SHIP_ELECTROED)) {
 		self->ebolt_effect_timer += system_tick();
+
 		// Yank the ship every 0.1 seconds
 		if (self->ebolt_effect_timer > 0.1) {
+			self->ebolt_effect_timer -= 0.1;
 			if (flags_is(self->flags, SHIP_VIEW_INTERNAL)) {
 				// SetShake(2); // FIXME
 			}
-			self->angular_velocity.y += rand_float(-0.5, 0.5); // FIXME: 60fps
-			self->ebolt_effect_timer -= 0.1;
+			self->angular_velocity.y += rand_float(-0.5, 0.5);
+
+			if (rand_int(0, 10) == 0) { // approx once per second
+				self->thrust_mag -= self->thrust_mag * 0.25;
+			}
 		}
 	}
 
@@ -230,10 +235,6 @@ void ship_player_update_race(ship_t *self) {
 		self->thrust_mag -= SHIP_THRUST_FALLOFF * system_tick();
 	}
 	self->thrust_mag = clamp(self->thrust_mag, 0, self->current_thrust_max);
-
-	if (flags_is(self->flags, SHIP_ELECTROED) && rand_int(0, 80) == 0) {
-		self->thrust_mag -= self->thrust_mag * 0.25; // FIXME: 60fps
-	}
 
 	// Brake
 	if (input_state(A_BRAKE_RIGHT))	{
