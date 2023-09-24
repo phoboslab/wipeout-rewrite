@@ -525,10 +525,16 @@ void ship_ai_update_race(ship_t *self) {
 	self->position = vec3_add(self->position, vec3_mulf(self->velocity, 0.015625 * 30 * system_tick()));
 
 	if (flags_is(self->flags, SHIP_ELECTROED)) {
-		self->position = vec3_add(self->position, vec3(rand_float(-20, 20), rand_float(-20, 20), rand_float(-20, 20)));
+		self->ebolt_effect_timer += system_tick();
 
-		if (rand_int(0, 50) == 0) {
-			self->speed -= self->speed * 0.5 * 30 * system_tick();
+		if (self->ebolt_effect_timer > 0.1) {
+			self->ebolt_effect_timer -= 0.1;
+
+			self->position = vec3_add(self->position, vec3(rand_float(-20, 20), rand_float(-20, 20), rand_float(-20, 20)));
+
+			if (rand_int(0, 10) == 0) {
+				self->speed -= self->speed * 0.5;
+			}
 		}
 	}
 
