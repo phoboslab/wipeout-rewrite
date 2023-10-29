@@ -453,7 +453,7 @@ static void button_pilot_select(menu_t *menu, int data) {
 }
 
 static void page_pilot_draw(menu_t *menu, int data) {
-	draw_model(models.pilots[data], vec2(0, -0.2), vec3(0, 0, -10000), system_cycle_time());
+	draw_model(models.pilots[def.pilots[data].logo_model], vec2(0, -0.2), vec3(0, 0, -10000), system_cycle_time());
 }
 
 static void page_pilot_init(menu_t *menu) {
