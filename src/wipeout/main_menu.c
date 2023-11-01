@@ -20,6 +20,7 @@ static void page_circut_init(menu_t *menu);
 static void page_options_controls_init(menu_t *menu);
 static void page_options_video_init(menu_t *menu);
 static void page_options_audio_init(menu_t *menu);
+static void page_options_highscores_init(menu_t *menu);
 
 static uint16_t background;
 static texture_list_t track_images;
@@ -110,11 +111,16 @@ static void button_audio(menu_t *menu, int data) {
 	page_options_audio_init(menu);
 }
 
+static void button_highscores(menu_t *menu, int data) {
+	page_options_highscores_init(menu);
+}
+
 static void page_options_draw(menu_t *menu, int data) {
 	switch (data) {
 		case 0: draw_model(models.controller, vec2(0, -0.1), vec3(0, 0, -6000), system_cycle_time()); break;
 		case 1: draw_model(models.rescue, vec2(0, -0.2), vec3(0, 0, -700), system_cycle_time()); break; // TODO: needs better model
 		case 2: draw_model(models.options.headphones, vec2(0, -0.2), vec3(0, 0, -300), system_cycle_time()); break;
+		case 3: draw_model(models.options.stopwatch, vec2(0, -0.2), vec3(0, 0, -400), system_cycle_time()); break;
 	}
 }
 
@@ -128,6 +134,7 @@ static void page_options_init(menu_t *menu) {
 	menu_page_add_button(page, 0, "CONTROLS", button_controls);
 	menu_page_add_button(page, 1, "VIDEO", button_video);
 	menu_page_add_button(page, 2, "AUDIO", button_audio);
+	menu_page_add_button(page, 3, "BEST TIMES", button_highscores);
 }
 
 
@@ -334,10 +341,112 @@ static void page_options_audio_init(menu_t *menu) {
 	menu_page_add_toggle(page, save.sfx_volume * 10, "SOUND EFFECTS VOLUME", opts_volume, len(opts_volume), toggle_sfx_volume);
 }
 
+// -----------------------------------------------------------------------------
+// Options Best Times
 
+static int options_highscores_race_class;
+static int options_highscores_circut;
+static int options_highscores_tab;
 
+static void page_options_highscores_viewer_input_handler() {
+	int last_race_class_index = options_highscores_race_class;
+	int last_circut_index = options_highscores_circut;
 
+	if (input_pressed(A_MENU_UP)) {
+		options_highscores_race_class--;
+	}
+	else if (input_pressed(A_MENU_DOWN)) {
+		options_highscores_race_class++;
+	}
 
+	if (input_pressed(A_MENU_LEFT)) {
+		options_highscores_circut--;
+	}
+	else if (input_pressed(A_MENU_RIGHT)) {
+		options_highscores_circut++;
+	}
+
+	if (options_highscores_race_class >= NUM_RACE_CLASSES) {
+		options_highscores_race_class = 0;
+	}
+	if (options_highscores_race_class < 0) {
+		options_highscores_race_class = NUM_RACE_CLASSES - 1;
+	}
+
+	if (options_highscores_circut >= NUM_CIRCUTS) {
+		options_highscores_circut = 0;
+	}
+	if (options_highscores_circut < 0) {
+		options_highscores_circut = NUM_CIRCUTS - 1;
+	}
+
+	if ((last_race_class_index != options_highscores_race_class) ||
+		(last_circut_index != options_highscores_circut)) {
+		sfx_play(SFX_MENU_MOVE);
+	}
+}
+
+static void page_options_highscores_viewer_draw(menu_t *menu, int data) {
+	ui_pos_t anchor = UI_POS_MIDDLE | UI_POS_CENTER;
+
+	vec2i_t pos = vec2i(0, -130);
+	ui_draw_text_centered(def.race_classes[options_highscores_race_class].name, ui_scaled_pos(anchor, pos), UI_SIZE_12, UI_COLOR_DEFAULT);
+	pos.y += 60;
+	ui_draw_text_centered(def.circuts[options_highscores_circut].name, ui_scaled_pos(anchor, pos), UI_SIZE_16, UI_COLOR_ACCENT);
+	
+	vec2i_t entry_pos = vec2i(pos.x - 120, pos.y + 40);
+	highscores_t *hs = &save.highscores[options_highscores_race_class][options_highscores_circut][options_highscores_tab];
+	for (int i = 0; i < NUM_HIGHSCORES; i++) {
+		ui_draw_text(hs->entries[i].name, ui_scaled_pos(anchor, entry_pos), UI_SIZE_16, UI_COLOR_DEFAULT);
+		ui_draw_time(hs->entries[i].time, ui_scaled_pos(anchor, vec2i(entry_pos.x + 120, entry_pos.y)), UI_SIZE_16, UI_COLOR_DEFAULT);
+		entry_pos.y += 24;
+	}
+
+	vec2i_t lap_pos = vec2i(entry_pos.x - 40, entry_pos.y + 24);
+	ui_draw_text("LAP RECORD", ui_scaled_pos(anchor, lap_pos), UI_SIZE_12, UI_COLOR_ACCENT);
+	ui_draw_time(hs->lap_record, ui_scaled_pos(anchor, vec2i(lap_pos.x + 190, lap_pos.y - 4)), UI_SIZE_16, UI_COLOR_DEFAULT);
+
+	page_options_highscores_viewer_input_handler();
+}
+
+static void page_options_highscores_viewer_init(menu_t *menu) {
+	menu_page_t *page;
+	if (options_highscores_tab == HIGHSCORE_TAB_TIME_TRIAL) {
+		page = menu_push(menu, "BEST TIME TRIAL TIMES", page_options_highscores_viewer_draw);
+	}
+	else /*options_highscores_tab == HIGHSCORE_TAB_RACE)*/ {
+		page = menu_push(menu, "BEST RACE TIMES", page_options_highscores_viewer_draw);
+	}
+
+	flags_add(page->layout_flags, MENU_FIXED);
+	page->title_anchor = UI_POS_TOP | UI_POS_CENTER;
+	page->title_pos = vec2i(0, 30);
+}
+
+static void button_highscores_viewer(menu_t *menu, int data) {
+	options_highscores_tab = data;
+	page_options_highscores_viewer_init(menu);
+}
+
+static void page_options_highscores_draw(menu_t *menu, int data) {
+	draw_model(models.options.stopwatch, vec2(0, -0.2), vec3(0, 0, -400), system_cycle_time());
+}
+
+static void page_options_highscores_init(menu_t *menu) {
+	menu_page_t *page = menu_push(menu, "VIEW BEST TIMES", page_options_highscores_draw);
+
+	flags_add(page->layout_flags, MENU_FIXED);
+	page->title_pos = vec2i(0, 30);
+	page->title_anchor = UI_POS_TOP | UI_POS_CENTER;
+	page->items_pos = vec2i(0, -110);
+	page->items_anchor = UI_POS_BOTTOM | UI_POS_CENTER;
+
+	options_highscores_race_class = RACE_CLASS_VENOM;
+	options_highscores_circut = CIRCUT_ALTIMA_VII;
+
+	menu_page_add_button(page, HIGHSCORE_TAB_TIME_TRIAL, "TIME TRIAL TIMES", button_highscores_viewer);
+	menu_page_add_button(page, HIGHSCORE_TAB_RACE, "RACE TIMES", button_highscores_viewer);
+}
 
 
 
