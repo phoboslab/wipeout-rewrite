@@ -240,6 +240,7 @@ typedef struct {
 
 	float sfx_volume;
 	float music_volume;
+	float internal_roll;
 	uint8_t ui_scale;
 	bool show_fps;
 	bool fullscreen;
