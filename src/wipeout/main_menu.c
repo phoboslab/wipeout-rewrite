@@ -396,22 +396,22 @@ static void page_options_highscores_viewer_input_handler() {
 static void page_options_highscores_viewer_draw(menu_t *menu, int data) {
 	ui_pos_t anchor = UI_POS_MIDDLE | UI_POS_CENTER;
 
-	vec2i_t pos = vec2i(0, -130);
+	vec2i_t pos = vec2i(0, -70);
 	ui_draw_text_centered(def.race_classes[options_highscores_race_class].name, ui_scaled_pos(anchor, pos), UI_SIZE_12, UI_COLOR_DEFAULT);
-	pos.y += 60;
-	ui_draw_text_centered(def.circuts[options_highscores_circut].name, ui_scaled_pos(anchor, pos), UI_SIZE_16, UI_COLOR_ACCENT);
+	pos.y += 16;
+	ui_draw_text_centered(def.circuts[options_highscores_circut].name, ui_scaled_pos(anchor, pos), UI_SIZE_12, UI_COLOR_ACCENT);
 	
-	vec2i_t entry_pos = vec2i(pos.x - 120, pos.y + 40);
+	vec2i_t entry_pos = vec2i(pos.x - 110, pos.y + 24);
 	highscores_t *hs = &save.highscores[options_highscores_race_class][options_highscores_circut][options_highscores_tab];
 	for (int i = 0; i < NUM_HIGHSCORES; i++) {
 		ui_draw_text(hs->entries[i].name, ui_scaled_pos(anchor, entry_pos), UI_SIZE_16, UI_COLOR_DEFAULT);
-		ui_draw_time(hs->entries[i].time, ui_scaled_pos(anchor, vec2i(entry_pos.x + 120, entry_pos.y)), UI_SIZE_16, UI_COLOR_DEFAULT);
+		ui_draw_time(hs->entries[i].time, ui_scaled_pos(anchor, vec2i(entry_pos.x + 110, entry_pos.y)), UI_SIZE_16, UI_COLOR_DEFAULT);
 		entry_pos.y += 24;
 	}
 
-	vec2i_t lap_pos = vec2i(entry_pos.x - 40, entry_pos.y + 24);
+	vec2i_t lap_pos = vec2i(entry_pos.x - 40, entry_pos.y + 8);
 	ui_draw_text("LAP RECORD", ui_scaled_pos(anchor, lap_pos), UI_SIZE_12, UI_COLOR_ACCENT);
-	ui_draw_time(hs->lap_record, ui_scaled_pos(anchor, vec2i(lap_pos.x + 190, lap_pos.y - 4)), UI_SIZE_16, UI_COLOR_DEFAULT);
+	ui_draw_time(hs->lap_record, ui_scaled_pos(anchor, vec2i(lap_pos.x + 180, lap_pos.y - 4)), UI_SIZE_16, UI_COLOR_DEFAULT);
 
 	page_options_highscores_viewer_input_handler();
 }
