@@ -260,6 +260,11 @@ static void toggle_fullscreen(menu_t *menu, int data) {
 	platform_set_fullscreen(save.fullscreen);
 }
 
+static void toggle_internal_roll(menu_t *menu, int data) {
+	save.internal_roll = (float)data * 0.1;
+	save.is_dirty = true;
+}
+
 static void toggle_show_fps(menu_t *menu, int data) {
 	save.show_fps = data;
 	save.is_dirty = true;
@@ -283,6 +288,7 @@ static void toggle_post(menu_t *menu, int data) {
 }
 
 static const char *opts_off_on[] = {"OFF", "ON"};
+static const char *opts_roll[] = {"0", "10", "20", "30", "40", "50", "60", "70", "80", "90", "100"};
 static const char *opts_ui_sizes[] = {"AUTO", "1X", "2X", "3X", "4X"};
 static const char *opts_res[] = {"NATIVE", "240P", "480P"};
 static const char *opts_post[] = {"NONE", "CRT EFFECT"};
@@ -299,6 +305,7 @@ static void page_options_video_init(menu_t *menu) {
 	#ifndef __EMSCRIPTEN__
 		menu_page_add_toggle(page, save.fullscreen, "FULLSCREEN", opts_off_on, len(opts_off_on), toggle_fullscreen);
 	#endif
+	menu_page_add_toggle(page, save.internal_roll * 10, "INTERNAL VIEW ROLL", opts_roll, len(opts_roll), toggle_internal_roll);
 	menu_page_add_toggle(page, save.ui_scale, "UI SCALE", opts_ui_sizes, len(opts_ui_sizes), toggle_ui_scale);
 	menu_page_add_toggle(page, save.show_fps, "SHOW FPS", opts_off_on, len(opts_off_on), toggle_show_fps);
 	menu_page_add_toggle(page, save.screen_res, "SCREEN RESOLUTION", opts_res, len(opts_res), toggle_res);

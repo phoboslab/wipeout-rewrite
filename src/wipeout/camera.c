@@ -10,6 +10,7 @@
 #include "weapon.h"
 #include "droid.h"
 #include "camera.h"
+#include "game.h"
 
 void camera_init(camera_t *camera, section_t *section) {
 	camera->section = section;
@@ -61,7 +62,7 @@ void camera_update_race_external(camera_t *camera, ship_t *ship, droid_t *droid)
 void camera_update_race_internal(camera_t *camera, ship_t *ship, droid_t *droid) {
 	camera->section = ship->section;
 	camera->position = ship_cockpit(ship);
-	camera->angle = vec3(ship->angle.x, ship->angle.y, ship->angle.z);
+	camera->angle = vec3(ship->angle.x, ship->angle.y, ship->angle.z * save.internal_roll);
 }
 
 void camera_update_race_intro(camera_t *camera, ship_t *ship, droid_t *droid) {
