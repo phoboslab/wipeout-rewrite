@@ -260,7 +260,6 @@ Some things from the original game are not yet implemented in this rewrite. This
 
 - screen shake effect
 - game-end animations, formerly `Spline.cpp` (the end messages are just shown over the attract mode cameras)
-- viewing highscores in options menu
 - reverb for sfx and music when there's more than 4 track faces (tunnels and such)
 - some more? grep the source for `TODO` and `FIXME`
 
@@ -269,7 +268,6 @@ Some things from the original game are not yet implemented in this rewrite. This
 - less punishing physics for ship vs. ship collisions
 - less punishing physics for sideways ship vs. track collisions (i.e. wall grinding like in newer wipEouts)
 - somehow resolve the issue of inevitably running into an enemy that you just shot
-- add option to lessen the roll in the internal view
 - add additional external view that behaves more like in modern racing games
 - dynamic lighting on ships
 - the scene geometry could use some touch-ups to make an infinite draw distance option less awkward
