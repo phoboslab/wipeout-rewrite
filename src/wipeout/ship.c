@@ -154,7 +154,7 @@ void ships_draw(void) {
 	// Ship models
 	for (int i = 0; i < len(g.ships); i++) {
 		if (
-			flags_is(g.ships[i].flags, SHIP_VIEW_INTERNAL) ||
+			(flags_is(g.ships[i].flags, SHIP_VIEW_INTERNAL) && flags_not(g.ships[i].flags, SHIP_IN_RESCUE)) ||
 			(g.race_type == RACE_TYPE_TIME_TRIAL && i != g.pilot)
 		) {
 			continue;
