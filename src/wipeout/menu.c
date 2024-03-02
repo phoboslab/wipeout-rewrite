@@ -86,18 +86,18 @@ void menu_update(menu_t *menu) {
 	int selected_data = 0;
 	if (page->entries_len > 0) {
 		if (flags_is(page->layout_flags, MENU_HORIZONTAL)) {
-			if (input_pressed(A_MENU_LEFT) || input_pressed(A_MENU_LEFT_2) || input_pressed(A_MENU_LEFT_3)) {
+			if (input_pressed(A_MENU_LEFT)) {
 				page->index--;
 			}
-			else if (input_pressed(A_MENU_RIGHT) || input_pressed(A_MENU_RIGHT_2) || input_pressed(A_MENU_RIGHT_3)) {
+			else if (input_pressed(A_MENU_RIGHT)) {
 				page->index++;
 			}
 		}
 		else {
-			if (input_pressed(A_MENU_UP) || input_pressed(A_MENU_UP_2) || input_pressed(A_MENU_UP_3)) {
+			if (input_pressed(A_MENU_UP)) {
 				page->index--;
 			}
-			if (input_pressed(A_MENU_DOWN) || input_pressed(A_MENU_DOWN_2) || input_pressed(A_MENU_DOWN_3)) {
+			if (input_pressed(A_MENU_DOWN)) {
 				page->index++;
 			}
 		}

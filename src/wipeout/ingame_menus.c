@@ -325,10 +325,10 @@ static void hall_of_fame_draw_name_entry(menu_t *menu, ui_pos_t anchor, vec2i_t 
 		c_first = 36;
 	}
 
-	if (input_pressed(A_MENU_UP) || input_pressed(A_MENU_UP_2) || input_pressed(A_MENU_UP_3)) {
+	if (input_pressed(A_MENU_UP)) {
 		hs_char_index++;
 	}
-	else if (input_pressed(A_MENU_DOWN) || input_pressed(A_MENU_DOWN_2) || input_pressed(A_MENU_DOWN_3)) {
+	else if (input_pressed(A_MENU_DOWN)) {
 		hs_char_index--;
 	}
 
