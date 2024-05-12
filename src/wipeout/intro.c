@@ -3,6 +3,7 @@
 #include "../utils.h"
 #include "../types.h"
 #include "../mem.h"
+#include "../platform.h"
 
 #include "intro.h"
 #include "ui.h"
@@ -36,7 +37,13 @@ static void audio_mix(float *samples, uint32_t len);
 static void intro_end(void);
 
 void intro_init(void) {
-	plm = plm_create_with_filename("wipeout/intro.mpeg");
+	FILE *file = platform_open_asset("wipeout/intro.mpeg", "rb");
+	if (!file) {
+		intro_end();
+		return;
+	}
+
+	plm = plm_create_with_file(file, true);
 	if (!plm) {
 		intro_end();
 		return;
