@@ -195,7 +195,7 @@ void weapons_update(void) {
 			}
 
 			// Track collision
-			weapon->section = track_nearest_section(weapon->position, weapon->section, NULL);
+			weapon->section = track_nearest_section(weapon->position, vec3(1,1,1), weapon->section, NULL);
 			if (weapon_collides_with_track(weapon)) {
 				for (int p = 0; p < 32; p++) {
 					vec3_t velocity = vec3(rand_float(-512, 512), rand_float(-512, 512), rand_float(-512, 512));

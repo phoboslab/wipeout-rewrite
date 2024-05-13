@@ -42,7 +42,7 @@ void camera_update(camera_t *camera, ship_t *ship, droid_t *droid) {
 void camera_update_race_external(camera_t *camera, ship_t *ship, droid_t *droid) {
 	vec3_t pos = vec3_sub(ship->position, vec3_mulf(ship->dir_forward, 1024));
 	pos.y -= 200;
-	camera->section = track_nearest_section(pos, camera->section, NULL);
+	camera->section = track_nearest_section(pos, vec3(1,1,1), camera->section, NULL);
 	section_t *next = camera->section->next;
 
 	vec3_t target = vec3_project_to_ray(pos, next->center, camera->section->center);
@@ -78,7 +78,7 @@ void camera_update_race_intro(camera_t *camera, ship_t *ship, droid_t *droid) {
 		camera->has_initial_section = true;
 	}
 	else {
-		camera->section = track_nearest_section(pos, camera->section, NULL);
+		camera->section = track_nearest_section(pos, vec3(1,1,1), camera->section, NULL);
 	}
 
 	camera->position = pos;

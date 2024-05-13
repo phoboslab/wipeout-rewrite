@@ -467,8 +467,15 @@ void ship_update(ship_t *self) {
 	self->dir_up.z = (sy * sz) + (cy * sx * cz);
 
 	self->prev_section = self->section;
+
+	// To find the nearest section to the ship, the original source de-emphasizes
+	// the .y component when calculating the distance to each section by a 
+	// >> 2 shift. I.e. it tries to find the section that is more closely to the
+	// horizontal x,z plane (directly underneath the ship), instead of finding 
+	// the section with the "real" closest distance. Hence the bias of 
+	// vec3(1, 0.25, 1) here.
 	float distance;
-	self->section = track_nearest_section(self->position, self->section, &distance);
+	self->section = track_nearest_section(self->position, vec3(1, 0.25, 1), self->section, &distance);
 	if (distance > 3700) {
 		flags_add(self->flags, SHIP_FLYING);
 	}

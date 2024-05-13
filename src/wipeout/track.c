@@ -323,7 +323,7 @@ track_face_t *track_section_get_base_face(section_t *section) {
 	return face;
 }
 
-section_t *track_nearest_section(vec3_t pos, section_t *section, float *distance) {
+section_t *track_nearest_section(vec3_t pos, vec3_t bias, section_t *section, float *distance) {
 	// Start search several sections before current section
 
 	for (int i = 0; i < TRACK_SEARCH_LOOK_BACK; i++) {
@@ -340,7 +340,10 @@ section_t *track_nearest_section(vec3_t pos, section_t *section, float *distance
 			junction = section->junction;
 		}
 
-		float d = vec3_len(vec3_sub(pos, section->center));
+		// Some callers of this function want to de-emphazise the .y component
+		// of the difference, hence the multiplication with the bias vector.
+		// For the real, exact difference bias should be vec3(1,1,1)
+		float d = vec3_len(vec3_mul(vec3_sub(pos, section->center), bias));
 		if (d < shortest_distance) {
 			shortest_distance = d;
 			nearest_section = section;
@@ -352,7 +355,7 @@ section_t *track_nearest_section(vec3_t pos, section_t *section, float *distance
 	if (junction) {
 		section = junction;
 		for (int i = 0; i < TRACK_SEARCH_LOOK_AHEAD; i++) {
-			float d = vec3_len(vec3_sub(pos, section->center));
+			float d = vec3_len(vec3_mul(vec3_sub(pos, section->center), bias));
 			if (d < shortest_distance) {
 				shortest_distance = d;
 				nearest_section = section;
