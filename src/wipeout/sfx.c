@@ -251,8 +251,8 @@ void sfx_music_open(char *path) {
 		fclose(music->file);
 		music->file = NULL;
 	}
-
-	FILE *file = fopen(path, "rb");
+	
+	FILE *file = platform_open_asset(path, "rb");
 	if (!file) {
 		return;
 	}

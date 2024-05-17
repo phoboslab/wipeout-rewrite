@@ -86,7 +86,7 @@ void track_load_sections(char *file);
 bool track_collect_pickups(track_face_t *face);
 void track_face_set_color(track_face_t *face, rgba_t color);
 track_face_t *track_section_get_base_face(section_t *section);
-section_t *track_nearest_section(vec3_t pos, section_t *section, float *distance);
+section_t *track_nearest_section(vec3_t pos, vec3_t bias, section_t *section, float *distance);
 
 struct camera_t;
 void track_draw(struct camera_t *camera);
