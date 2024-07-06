@@ -143,7 +143,7 @@ void weapons_fire(ship_t *ship, int weapon_type) {
 		case WEAPON_TYPE_EBOLT:     weapon_fire_ebolt(ship); break;
 		case WEAPON_TYPE_SHIELD:    weapon_fire_shield(ship); break;
 		case WEAPON_TYPE_TURBO:     weapon_fire_turbo(ship); break;
-		default: die("Inavlid weapon type %d", weapon_type);
+		default: die("Invalid weapon type %d", weapon_type);
 	}
 	ship->weapon_type = WEAPON_TYPE_NONE;
 }
