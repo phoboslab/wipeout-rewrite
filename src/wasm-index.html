@@ -245,6 +245,7 @@
 				<span class="key"><kbd>C</kbd> brake left</span>
 				<span class="key"><kbd>V</kbd> brake right</span>
 				<span class="key"><kbd>A</kbd> view</span>
+				<span id="gamepads"></span>
 			</div>
 			<div>
 				Read: 
@@ -342,6 +343,73 @@
 						});
 					}
 				}
+				// detect and setup gamepad
+				var activeGamepad;
+				var activeGamepadIndex;
+
+				const gamepadArray = [{
+					"gamepadName":"DualShock 4",
+					"regex":"(054c)(.*09cc)" ,
+					"pause":9,	//option
+					"view":3,	//triangle
+					"leftBrake":6,	//l2
+					"rightBrake":7,	//r2
+					"accelerate":0,	//x
+					"item":1,	//o
+					"up":12,
+					"down":13,
+					"left":14,
+					"right":15
+				},
+				{
+					"gamepadName":"DualShock 4",
+					"regex":"(android)" ,
+					"pause":9,	//option
+					"view":3,	//triangle
+					"leftBrake":6,	//l2
+					"rightBrake":7,	//r2
+					"accelerate":0,	//x
+					"item":1,	//o
+					"up":12,
+					"down":13,
+					"left":14,
+					"right":15
+
+				}
+				];
+
+				window.addEventListener("gamepadconnected", (event) => {
+				        mapGamepad(event.gamepad);
+				});
+
+				function mapGamepad(gamepad){
+					gamepadArray.forEach((detectedGamepad, index) => {
+						if (gamepad.id.match(new RegExp(detectedGamepad.regex, "g", "i"))){
+							activeGamepad = detectedGamepad;
+		                                        document.body.classList.remove('touch');
+						}
+					});
+					activeGamepadIndex = gamepad.index;
+					document.getElementById("gamepads").innerHTML = "Gamepad: " +activeGamepad.gamepadName;
+				        pollGamepad(gamepad);
+				};
+
+				function pollGamepad(gamepad){
+					Module._set_button(40, gamepad.buttons[activeGamepad.pause].value);
+					Module._set_button(4, gamepad.buttons[activeGamepad.view].value);
+					Module._set_button(6, gamepad.buttons[activeGamepad.leftBrake].value);
+					Module._set_button(25, gamepad.buttons[activeGamepad.rightBrake].value);
+					Module._set_button(27, gamepad.buttons[activeGamepad.accelerate].value);
+					Module._set_button(29, gamepad.buttons[activeGamepad.item].value);
+					Module._set_button(82, gamepad.buttons[activeGamepad.up].value);
+					Module._set_button(81, gamepad.buttons[activeGamepad.down].value);
+					Module._set_button(80, gamepad.buttons[activeGamepad.left].value);
+					Module._set_button(79, gamepad.buttons[activeGamepad.right].value);
+				        gamepad = navigator.getGamepads()[activeGamepadIndex];
+				        setTimeout(pollGamepad, 5, gamepad);
+                                };
+
+
 			};
 
 			var Module = {
