@@ -7,7 +7,7 @@ DEBUG ?= false
 USER_CFLAGS ?=
 
 L_FLAGS ?= -lm
-C_FLAGS ?= -Isrc/libs/ -std=gnu99 -Wall -Wno-unused-variable $(USER_CFLAGS) $(shell sdl2-config --cflags)
+C_FLAGS ?= -Isrc/libs/ -std=gnu99 -Wall -Wno-unused-variable $(USER_CFLAGS)
 
 ifeq ($(DEBUG), true)
 	C_FLAGS := $(C_FLAGS) -g
@@ -133,6 +133,7 @@ COMMON_SRC = \
 COMMON_OBJ = $(patsubst %.c, $(BUILD_DIR)/%.o, $(COMMON_SRC))
 COMMON_DEPS = $(patsubst %.c, $(BUILD_DIR)/%.d, $(COMMON_SRC))
 
+sdl: C_FLAGS += $(shell sdl2-config --cflags)
 sdl: $(BUILD_DIR)/src/platform_sdl.o
 sdl: $(COMMON_OBJ)
 	$(CC) $^ -o $(TARGET_NATIVE) $(L_FLAGS) $(L_FLAGS_SDL)
