@@ -177,24 +177,37 @@ void ship_player_update_race(ship_t *self) {
 	}
 
 	self->angular_acceleration = vec3(0, 0, 0);
+	float turn_rate_target = 0;
 
 	if (input_state(A_LEFT)) {
+		turn_rate_target = input_state(A_LEFT) * self->turn_rate_max;
 		if (self->angular_velocity.y >= 0) {
-			self->angular_acceleration.y += input_state(A_LEFT) * self->turn_rate;
+			if (turn_rate_target > self->angular_velocity.y) {	
+				self->angular_acceleration.y += self->turn_rate;
+			}
+			else if(turn_rate_target < self->angular_velocity.y) {
+				self->angular_acceleration.y -= self->turn_rate;
+			}
 		}
 		else if (self->angular_velocity.y < 0) {
-			self->angular_acceleration.y += input_state(A_LEFT) * self->turn_rate * 2;
+			self->angular_acceleration.y += self->turn_rate * 2;
 		}
 	}
 	else if (input_state(A_RIGHT)) {
+		turn_rate_target = input_state(A_RIGHT) * self->turn_rate_max;
 		if (self->angular_velocity.y <= 0) {
-			self->angular_acceleration.y -= input_state(A_RIGHT) * self->turn_rate;
+			if (-turn_rate_target < self->angular_velocity.y) {	
+				self->angular_acceleration.y -= self->turn_rate;
+			}
+			else if(-turn_rate_target > self->angular_velocity.y) {
+				self->angular_acceleration.y += self->turn_rate;
+			}
 		}
 		else if (self->angular_velocity.y > 0) {
-			self->angular_acceleration.y -= input_state(A_RIGHT) * self->turn_rate * 2;
+			self->angular_acceleration.y -= self->turn_rate * 2;
 		}
 	}
-	
+
 	if (flags_is(self->flags, SHIP_ELECTROED)) {
 		self->ebolt_effect_timer += system_tick();
 
