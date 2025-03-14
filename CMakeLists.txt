@@ -229,4 +229,15 @@ elseif("${PLATFORM}" STREQUAL SOKOL)
 	target_sources(wipeout PRIVATE src/platform_sokol.c)
 endif()
 
+set(SOURCE_FOLDER "${CMAKE_SOURCE_DIR}/wipeout")
+set(DESTINATION_FOLDER "${CMAKE_BINARY_DIR}/wipeout")
+add_custom_command(
+    TARGET wipeout
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${SOURCE_FOLDER}"
+        "${DESTINATION_FOLDER}"
+    COMMENT "Copying folder ${SOURCE_FOLDER} to ${DESTINATION_FOLDER} after build"
+)
+
 install(TARGETS wipeout)
