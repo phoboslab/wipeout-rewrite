@@ -44,8 +44,8 @@ if (DEV_BUILD)
 endif()
 
 find_package(OpenGL)
-find_package(GLEW)
-find_package(SDL2)
+find_package(GLEW REQUIRED)
+find_package(SDL2 CONFIG REQUIRED)
 
 set(common_src
 	src/wipeout/camera.c
@@ -220,7 +220,11 @@ endif()
 
 if("${PLATFORM}" STREQUAL SDL2)
 	target_sources(wipeout PRIVATE src/platform_sdl.c)
-	target_link_libraries(wipeout PUBLIC SDL2::Main)
+	target_link_libraries(wipeout 
+		PRIVATE 
+		$<TARGET_NAME_IF_EXISTS:SDL2::SDL2main>
+		$<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
+	)
 elseif("${PLATFORM}" STREQUAL SOKOL)
 	target_sources(wipeout PRIVATE src/platform_sokol.c)
 endif()
