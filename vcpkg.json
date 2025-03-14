@@ -11,6 +11,7 @@
       "name": "glew",
       "version>=": "2.2.0#3"
     },
+    "sokol",
     "stb"
   ]
 }
