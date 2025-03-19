@@ -581,7 +581,7 @@ void game_init(void) {
 	
 
 	// User defined, loaded from the save struct
-	for (int action = 0; action < len(save.buttons); action++) {
+	for (unsigned int action = 0; action < len(save.buttons); action++) {
 		if (save.buttons[action][0] != INPUT_INVALID) {
 			input_bind(INPUT_LAYER_USER, save.buttons[action][0], action);
 		}
@@ -600,7 +600,7 @@ void game_set_scene(game_scene_t scene) {
 }
 
 void game_reset_championship(void) {
-	for (int i = 0; i < len(g.championship_ranks); i++) {
+	for (unsigned int i = 0; i < len(g.championship_ranks); i++) {
 		g.championship_ranks[i].points = 0;
 		g.championship_ranks[i].pilot = i;
 	}

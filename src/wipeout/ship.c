@@ -23,7 +23,7 @@ void ships_load(void) {
 	texture_list_t collision_textures = image_get_compressed_textures("wipeout/common/alcol.cmp");
 	Object *collision_models = objects_load("wipeout/common/alcol.prm", collision_textures);
 
-	int object_index;
+	unsigned int object_index;
 	Object *ship_model = ship_models;
 	Object *collision_model = collision_models;
 
@@ -46,7 +46,7 @@ void ships_load(void) {
 	image_get_texture_semi_trans("wipeout/textures/shad3.tim");
 	image_get_texture_semi_trans("wipeout/textures/shad4.tim");
 
-	for (int i = 0; i < len(g.ships); i++) {
+	for (unsigned int i = 0; i < len(g.ships); i++) {
 		g.ships[i].shadow_texture = shadow_textures_start + (i >> 1);
 	}
 }
@@ -58,7 +58,7 @@ void ships_init(section_t *section) {
 	int ranks_to_pilots[NUM_PILOTS];
 
 	// Initialize ranks with all pilots in order
-	for (int i = 0; i < len(g.ships); i++) {
+	for (unsigned int i = 0; i < len(g.ships); i++) {
 		ranks_to_pilots[i] = i;
 	}
 
@@ -70,7 +70,7 @@ void ships_init(section_t *section) {
 	// Randomize some tiers in an ongoing championship
 	else if (g.race_type == RACE_TYPE_CHAMPIONSHIP) {
 		// Initialize with current championship order
-		for (int i = 0; i < len(g.ships); i++) {
+		for (unsigned int i = 0; i < len(g.ships); i++) {
 			ranks_to_pilots[i] = g.championship_ranks[i].pilot;
 		}		
 		shuffle(ranks_to_pilots, 2); // shuffle 0..1
@@ -78,7 +78,7 @@ void ships_init(section_t *section) {
 	}
 
 	// player is always last
-	for (int i = 0; i < len(ranks_to_pilots)-1; i++) {
+	for (unsigned int i = 0; i < len(ranks_to_pilots)-1; i++) {
 		if (ranks_to_pilots[i] == g.pilot) {
 			swap(ranks_to_pilots[i], ranks_to_pilots[i+1]);
 		}
@@ -89,7 +89,7 @@ void ships_init(section_t *section) {
 	for (int i = 0; i < start_line_pos - 15; i++) {
 		section = section->next;
 	}
-	for (int i = 0; i < len(g.ships); i++) {
+	for (unsigned int i = 0; i < len(g.ships); i++) {
 		start_sections[i] = section;
 		section = section->next;
 		if ((i % 2) == 0) {
@@ -97,7 +97,7 @@ void ships_init(section_t *section) {
 		}
 	}
 
-	for (int i = 0; i < len(ranks_to_pilots); i++) {
+	for (unsigned int i = 0; i < len(ranks_to_pilots); i++) {
 		int rank_inv = (len(g.ships)-1) - i;
 		int pilot = ranks_to_pilots[i];
 		ship_init(&g.ships[pilot], start_sections[rank_inv], pilot, rank_inv);
@@ -125,18 +125,18 @@ void ships_update(void) {
 		ship_update(&g.ships[g.pilot]);
 	}
 	else {
-		for (int i = 0; i < len(g.ships); i++) {
+		for (unsigned int i = 0; i < len(g.ships); i++) {
 			ship_update(&g.ships[i]);
 		}
-		for (int j = 0; j < (len(g.ships) - 1); j++) {
-			for (int i = j + 1; i < len(g.ships); i++) {
+		for (unsigned int j = 0; j < (len(g.ships) - 1); j++) {
+			for (unsigned int i = j + 1; i < len(g.ships); i++) {
 				ship_collide_with_ship(&g.ships[i], &g.ships[j]);
 			}
 		}
 
 		if (flags_is(g.ships[g.pilot].flags, SHIP_RACING)) {
 			sort(g.race_ranks, len(g.race_ranks), sort_rank_compare);
-			for (int32_t i = 0; i < len(g.ships); i++) {
+			for (uint32_t i = 0; i < len(g.ships); i++) {
 				g.ships[g.race_ranks[i].pilot].position_rank = i + 1;
 			}
 		}
@@ -144,7 +144,7 @@ void ships_update(void) {
 }
 
 void ships_reset_exhaust_plumes(void) {
-	for (int i = 0; i < len(g.ships); i++) {
+	for (unsigned int i = 0; i < len(g.ships); i++) {
 		ship_reset_exhaust_plume(&g.ships[i]);
 	}
 }
@@ -152,7 +152,7 @@ void ships_reset_exhaust_plumes(void) {
 
 void ships_draw(void) {
 	// Ship models
-	for (int i = 0; i < len(g.ships); i++) {
+	for (unsigned int i = 0; i < len(g.ships); i++) {
 		if (
 			(flags_is(g.ships[i].flags, SHIP_VIEW_INTERNAL) && flags_not(g.ships[i].flags, SHIP_IN_RESCUE)) ||
 			(g.race_type == RACE_TYPE_TIME_TRIAL && i != g.pilot)
@@ -170,7 +170,7 @@ void ships_draw(void) {
 	render_set_depth_write(false);
 	render_set_depth_offset(-32.0);
 
-	for (int i = 0; i < len(g.ships); i++) {
+	for (unsigned int i = 0; i < len(g.ships); i++) {
 		if (
 			(g.race_type == RACE_TYPE_TIME_TRIAL && i != g.pilot) ||
 			flags_not(g.ships[i].flags, SHIP_VISIBLE) || 

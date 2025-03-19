@@ -907,21 +907,21 @@ uint16_t render_texture_create(uint32_t tw, uint32_t th, rgba_t *pixels) {
 		}
 		
 		// Left border
-		for (int32_t y = 0; y < bh; y++) {
-			for (int32_t x = 0; x < ATLAS_BORDER; x++) {
+		for (uint32_t y = 0; y < bh; y++) {
+			for (uint32_t x = 0; x < ATLAS_BORDER; x++) {
 				pb[y * bw + x] = pixels[clamp(y-ATLAS_BORDER, 0, th-1) * tw];
 			}
 		}
 
 		// Right border
-		for (int32_t y = 0; y < bh; y++) {
-			for (int32_t x = 0; x < ATLAS_BORDER; x++) {
+		for (uint32_t y = 0; y < bh; y++) {
+			for (uint32_t x = 0; x < ATLAS_BORDER; x++) {
 				pb[y * bw + x + bw - ATLAS_BORDER] = pixels[tw - 1 + clamp(y-ATLAS_BORDER, 0, th-1) * tw];
 			}
 		}
 
 		// Texture
-		for (int32_t y = 0; y < th; y++) {
+		for (uint32_t y = 0; y < th; y++) {
 			memcpy(pb + bw * (y + ATLAS_BORDER) + ATLAS_BORDER, pixels + tw * y, tw * sizeof(rgba_t));
 		}
 	}
@@ -947,7 +947,7 @@ vec2i_t render_texture_size(uint16_t texture_index) {
 	return textures[texture_index].size;
 }
 
-void render_texture_replace_pixels(int16_t texture_index, rgba_t *pixels) {
+void render_texture_replace_pixels(uint16_t texture_index, rgba_t *pixels) {
 	error_if(texture_index >= textures_len, "Invalid texture %d", texture_index);
 
 	render_texture_t *t = &textures[texture_index];
@@ -977,7 +977,7 @@ void render_textures_reset(uint16_t len) {
 	}
 
 	// Replay all texture grid insertions up to the reset len
-	for (int i = 0; i < textures_len; i++) {
+	for (unsigned int i = 0; i < textures_len; i++) {
 		uint32_t grid_x = (textures[i].offset.x - ATLAS_BORDER) / ATLAS_GRID;
 		uint32_t grid_y = (textures[i].offset.y - ATLAS_BORDER) / ATLAS_GRID;
 		uint32_t grid_width = (textures[i].size.x + ATLAS_BORDER * 2 + ATLAS_GRID - 1) / ATLAS_GRID;

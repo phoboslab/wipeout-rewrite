@@ -160,7 +160,7 @@ void button_capture(void *user, button_t button, int32_t ascii_char) {
 	int index = button < INPUT_KEY_MAX ? 0 : 1; // joypad or keyboard
 
 	// unbind this button if it's bound anywhere
-	for (int i = 0; i < len(save.buttons); i++) {
+	for (unsigned int i = 0; i < len(save.buttons); i++) {
 		if (save.buttons[i][index] == button) {
 			save.buttons[i][index] = INPUT_INVALID;
 		}
@@ -486,7 +486,7 @@ static void page_race_class_draw(menu_t *menu, int data) {
 
 static void page_race_class_init(menu_t *menu) {
 	menu_page_t *page = menu_push(menu, "SELECT RACING CLASS", page_race_class_draw);
-	for (int i = 0; i < len(def.race_classes); i++) {
+	for (unsigned int i = 0; i < len(def.race_classes); i++) {
 		menu_page_add_button(page, i, def.race_classes[i].name, button_race_class_select);
 	}
 }
@@ -517,7 +517,7 @@ static void page_race_type_init(menu_t *menu) {
 	page->title_anchor = UI_POS_TOP | UI_POS_CENTER;
 	page->items_pos = vec2i(0, -110);
 	page->items_anchor = UI_POS_BOTTOM | UI_POS_CENTER;
-	for (int i = 0; i < len(def.race_types); i++) {
+	for (unsigned int i = 0; i < len(def.race_types); i++) {
 		menu_page_add_button(page, i, def.race_types[i].name, button_race_type_select);
 	}
 }
@@ -546,7 +546,7 @@ static void page_team_init(menu_t *menu) {
 	page->title_anchor = UI_POS_TOP | UI_POS_CENTER;
 	page->items_pos = vec2i(0, -110);
 	page->items_anchor = UI_POS_BOTTOM | UI_POS_CENTER;
-	for (int i = 0; i < len(def.teams); i++) {
+	for (unsigned int i = 0; i < len(def.teams); i++) {
 		menu_page_add_button(page, i, def.teams[i].name, button_team_select);
 	}
 }
@@ -579,7 +579,7 @@ static void page_pilot_init(menu_t *menu) {
 	page->title_anchor = UI_POS_TOP | UI_POS_CENTER;
 	page->items_pos = vec2i(0, -110);
 	page->items_anchor = UI_POS_BOTTOM | UI_POS_CENTER;
-	for (int i = 0; i < len(def.teams[g.team].pilots); i++) {
+	for (unsigned int i = 0; i < len(def.teams[g.team].pilots); i++) {
 		menu_page_add_button(page, def.teams[g.team].pilots[i], def.pilots[def.teams[g.team].pilots[i]].name, button_pilot_select);
 	}
 }
@@ -608,7 +608,7 @@ static void page_circut_init(menu_t *menu) {
 	page->title_anchor = UI_POS_TOP | UI_POS_CENTER;
 	page->items_pos = vec2i(0, -100);
 	page->items_anchor = UI_POS_BOTTOM | UI_POS_CENTER;
-	for (int i = 0; i < len(def.circuts); i++) {
+	for (unsigned int i = 0; i < len(def.circuts); i++) {
 		if (!def.circuts[i].is_bonus_circut || save.has_bonus_circuts) {
 			menu_page_add_button(page, i, def.circuts[i].name, button_circut_select);
 		}
