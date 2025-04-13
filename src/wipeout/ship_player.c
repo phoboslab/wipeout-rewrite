@@ -316,7 +316,7 @@ void ship_player_update_race(ship_t *self) {
 			vec3_angle(vec2, vec3) +
 			vec3_angle(vec3, vec1) +
 			vec3_angle(vec1, vec0);
-		if (angle < M_PI * 2 - 0.01) {
+		if (angle < (0.91552734375 * M_PI * 2)) {
 			flags_add(self->flags, SHIP_FLYING);
 		}
 	}
