@@ -37,6 +37,7 @@ void camera_update(camera_t *camera, ship_t *ship, droid_t *droid) {
 	camera->last_position = camera->position;
 	(camera->update_func)(camera, ship, droid);
 	camera->real_velocity = vec3_mulf(vec3_sub(camera->position, camera->last_position), 1.0/system_tick());
+	camera_update_shake(camera);
 }
 
 void camera_update_race_external(camera_t *camera, ship_t *ship, droid_t *droid) {
@@ -172,4 +173,19 @@ void camera_update_attract_random(camera_t *camera, ship_t *ship, droid_t *droid
 	}
 
 	(camera->update_func)(camera, ship, droid);
+}
+
+void camera_set_shake(camera_t *camera, float duration) {
+	camera->shake_timer = duration;
+}
+
+void camera_update_shake(camera_t *camera) {
+	if (camera->shake_timer > 0.0f) {
+		camera->shake.x = (-(rand_float(0.0f, camera->shake_timer)) + (camera->shake_timer * 0.5f));
+		camera->shake.y = (-(rand_float(0.0f, camera->shake_timer)) + (camera->shake_timer * 0.5f));
+		camera->shake_timer -= system_tick();
+	}
+        else {
+		camera->shake.x = camera->shake.y = camera->shake_timer = 0.0f;
+        }
 }
