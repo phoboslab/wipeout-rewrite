@@ -639,9 +639,9 @@ void ship_resolve_wing_collision(ship_t *self, track_face_t *face, float directi
 	self->velocity = vec3_reflect(self->velocity, face->normal, 2);
 	self->position = vec3_sub(self->position, vec3_mulf(self->velocity, 0.015625)); // system_tick?
 	self->velocity = vec3_sub(self->velocity, vec3_mulf(self->velocity, 0.5));
-	self->velocity = vec3_add(self->velocity, vec3_mulf(face->normal, 4096)); // div by 4096?
+	self->velocity = vec3_add(self->velocity, vec3_mulf(face->normal, 4096.0)); // div by 4096?
 
-	float magnitude = (fabsf(angle) * self->speed) * M_PI / (4096 * 16.0); // (6 velocity shift, 12 angle shift?)
+	float magnitude = (fabsf(angle) * self->speed) * M_PI / 4096.0; // (6 velocity shift, 12 angle shift?)
 
 	vec3_t wing_pos;
 	if (direction > 0) {
