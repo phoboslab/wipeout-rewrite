@@ -434,7 +434,7 @@ void ship_player_update_race(ship_t *self) {
 	self->position = vec3_add(self->position, vec3_mulf(self->velocity, 0.015625 * 30 * system_tick()));
 
 	self->angular_acceleration.x -= self->angular_velocity.x * 0.25 * 30;
-	self->angular_acceleration.z += ((0.03125 * self->angular_velocity.y) - (0.5 * self->angular_velocity.z)) * 30;
+	self->angular_acceleration.z += (self->angular_velocity.y - (0.5 * self->angular_velocity.z)) * 30;
 
 	// Orientation
 	if (self->angular_acceleration.y == 0) {
