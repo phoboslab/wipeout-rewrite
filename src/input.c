@@ -234,6 +234,7 @@ void input_bind(input_layer_t layer, button_t button, uint8_t action) {
 
 	actions_state[action] = 0;
 	bindings[layer][button] = action;
+	clear(expected_button);
 }
 
 uint8_t input_bound_to_action(button_t button) {
