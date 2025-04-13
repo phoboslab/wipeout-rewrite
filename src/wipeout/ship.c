@@ -630,7 +630,7 @@ static bool vec3_is_on_face(vec3_t pos, track_face_t *face, float alpha) {
 		vec3_angle(vec3, vec1) +
 		vec3_angle(vec1, vec0);
 
-	return (angle > M_PI * 2 - 0.01);
+	return (angle > ((30000/32767) * M_PI * 2));
 }
 
 void ship_resolve_wing_collision(ship_t *self, track_face_t *face, float direction) {
