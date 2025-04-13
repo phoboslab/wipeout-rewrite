@@ -212,6 +212,7 @@ void ship_init(ship_t *self, section_t *section, int pilot, int inv_start_rank) 
 	self->ebolt_timer = 0;
 	self->revcon_timer = 0;
 	self->special_timer = 0;
+	self->weapon_target = NULL;
 	self->mat = mat4_identity();
 
 	self->update_timer = 0;
