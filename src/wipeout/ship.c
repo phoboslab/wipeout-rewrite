@@ -668,7 +668,7 @@ void ship_resolve_nose_collision(ship_t *self, track_face_t *face, float directi
 	self->velocity = vec3_sub(self->velocity, vec3_mulf(self->velocity, 0.5));
 	self->velocity = vec3_add(self->velocity, vec3_mulf(face->normal, 4096)); // div by 4096?
 
-	float magnitude = ((self->speed * 0.0625) + 400) * M_PI / (4096.0 * 64.0);
+	float magnitude = ((self->speed * 0.0625) + 400) * M_PI / 4096.0;
 	if (direction > 0) {
 		self->angular_velocity.y += magnitude;
 	}
