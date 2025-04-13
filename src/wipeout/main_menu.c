@@ -37,7 +37,7 @@ static struct {
 } models;
 
 static void draw_model(Object *model, vec2_t offset, vec3_t pos, float rotation) {
-	render_set_view(vec3(0,0,0), vec3(0, -M_PI, -M_PI));
+	render_set_view(vec3(0,0,0), vec3(0, -M_PI, -M_PI), 0/*lrdist*/);
 	render_set_screen_position(offset);
 	mat4_t mat = mat4_identity();
 	mat4_set_translation(&mat, pos);
@@ -256,6 +256,9 @@ static void page_options_controls_init(menu_t *menu) {
 	menu_page_add_button(page, A_THRUST, "THRUST", page_options_controls_set_init);
 	menu_page_add_button(page, A_FIRE, "FIRE", page_options_controls_set_init);
 	menu_page_add_button(page, A_CHANGE_VIEW, "VIEW", page_options_controls_set_init);
+	menu_page_add_button(page, A_TOGGLE_SBS, "3D SBS", page_options_controls_set_init);
+	menu_page_add_button(page, A_SBS_MORE, "SBS MORE", page_options_controls_set_init);
+	menu_page_add_button(page, A_SBS_LESS, "SBS LESS", page_options_controls_set_init);
 }
 
 // -----------------------------------------------------------------------------
