@@ -185,7 +185,7 @@ void camera_update_shake(camera_t *camera) {
 		camera->shake.y = (-(rand_float(0.0f, camera->shake_timer)) + (camera->shake_timer * 0.5f));
 		camera->shake_timer -= system_tick();
 	}
-        else {
+	else {
 		camera->shake.x = camera->shake.y = camera->shake_timer = 0.0f;
-        }
+	}
 }
