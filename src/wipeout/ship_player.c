@@ -347,10 +347,10 @@ void ship_player_update_race(ship_t *self) {
 			}
 			self->velocity = vec3_reflect(self->velocity, face->normal, 2);
 			self->velocity = vec3_sub(self->velocity, vec3_mulf(self->velocity, 0.125));
-			self->velocity = vec3_sub(self->velocity, vec3_mulf(face->normal, 4096.0 * 30 * system_tick()));
+			self->velocity = vec3_sub(self->velocity, vec3_mulf(face->normal, 64.0 * 30 * system_tick()));
 		}
 		else if (height < 30) {
-			self->velocity = vec3_add(self->velocity, vec3_mulf(face->normal, 4096.0 * 30 * system_tick()));
+			self->velocity = vec3_add(self->velocity, vec3_mulf(face->normal, 64.0 * 30 * system_tick()));
 		}
 
 		if (height < 50) {
