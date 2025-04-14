@@ -385,7 +385,7 @@ void weapon_update_mine(weapon_t *self) {
 		if (flags_not(ship->flags, SHIP_SHIELDED)) {
 			if (ship->pilot == g.pilot) {
 				ship->velocity = vec3_sub(ship->velocity, vec3_mulf(ship->velocity, 0.125));
-				camera_set_shake(&g.camera, LONG_SHAKE);
+				camera_set_shake(&g.camera, CAMERA_SHAKE_LONG);
 			}
 			else {
 				ship->speed = ship->speed * 0.125;
@@ -435,7 +435,7 @@ void weapon_update_missile(weapon_t *self) {
 				ship->velocity = vec3_sub(ship->velocity, vec3_mulf(ship->velocity, 0.75));
 				ship->angular_velocity.z += rand_float(-0.1, 0.1);
 				ship->turn_rate_from_hit = rand_float(-0.1, 0.1);
-				camera_set_shake(&g.camera, LONG_SHAKE);
+				camera_set_shake(&g.camera, CAMERA_SHAKE_LONG);
 			}
 			else {
 				ship->speed = ship->speed * 0.03125;
@@ -483,7 +483,7 @@ void weapon_update_rocket(weapon_t *self) {
 				ship->velocity = vec3_sub(ship->velocity, vec3_mulf(ship->velocity, 0.75));
 				ship->angular_velocity.z += rand_float(-0.1, 0.1);;
 				ship->turn_rate_from_hit = rand_float(-0.1, 0.1);;
-				camera_set_shake(&g.camera, LONG_SHAKE);
+				camera_set_shake(&g.camera, CAMERA_SHAKE_LONG);
 			}
 			else {
 				ship->speed = ship->speed * 0.03125;

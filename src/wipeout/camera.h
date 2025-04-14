@@ -4,8 +4,8 @@
 #include "../types.h"
 #include "droid.h"
 
-#define LONG_SHAKE (20.0f * (1.0f / 30.0f))
-#define SHORT_SHAKE (2.0f * (1.0f / 30.0f))
+#define CAMERA_SHAKE_LONG (20.0f * (1.0f / 30.0f))
+#define CAMERA_SHAKE_SHORT (2.0f * (1.0f / 30.0f))
 
 typedef struct camera_t {
 	vec3_t position;

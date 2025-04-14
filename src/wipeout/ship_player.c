@@ -202,7 +202,7 @@ void ship_player_update_race(ship_t *self) {
 		if (self->ebolt_effect_timer > 0.1) {
 			self->ebolt_effect_timer -= 0.1;
 			if (flags_is(self->flags, SHIP_VIEW_INTERNAL)) {
-				camera_set_shake(&g.camera, SHORT_SHAKE);
+				camera_set_shake(&g.camera, CAMERA_SHAKE_SHORT);
 			}
 			self->angular_velocity.y += rand_float(-0.5, 0.5);
 
