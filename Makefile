@@ -133,6 +133,7 @@ COMMON_SRC = \
 COMMON_OBJ = $(patsubst %.c, $(BUILD_DIR)/%.o, $(COMMON_SRC))
 COMMON_DEPS = $(patsubst %.c, $(BUILD_DIR)/%.d, $(COMMON_SRC))
 
+sdl: C_FLAGS += $(shell sdl2-config --cflags)
 sdl: $(BUILD_DIR)/src/platform_sdl.o
 sdl: $(COMMON_OBJ)
 	$(CC) $^ -o $(TARGET_NATIVE) $(L_FLAGS) $(L_FLAGS_SDL)

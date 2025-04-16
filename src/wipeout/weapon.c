@@ -9,6 +9,7 @@
 #include "game.h"
 #include "image.h"
 #include "particle.h"
+#include "camera.h"
 
 extern int32_t ctrlNeedTargetIcon;
 extern int ctrlnearShip;
@@ -143,7 +144,7 @@ void weapons_fire(ship_t *ship, int weapon_type) {
 		case WEAPON_TYPE_EBOLT:     weapon_fire_ebolt(ship); break;
 		case WEAPON_TYPE_SHIELD:    weapon_fire_shield(ship); break;
 		case WEAPON_TYPE_TURBO:     weapon_fire_turbo(ship); break;
-		default: die("Inavlid weapon type %d", weapon_type);
+		default: die("Invalid weapon type %d", weapon_type);
 	}
 	ship->weapon_type = WEAPON_TYPE_NONE;
 }
@@ -384,7 +385,7 @@ void weapon_update_mine(weapon_t *self) {
 		if (flags_not(ship->flags, SHIP_SHIELDED)) {
 			if (ship->pilot == g.pilot) {
 				ship->velocity = vec3_sub(ship->velocity, vec3_mulf(ship->velocity, 0.125));
-				// SetShake(20); // FIXME
+				camera_set_shake(&g.camera, CAMERA_SHAKE_LONG);
 			}
 			else {
 				ship->speed = ship->speed * 0.125;
@@ -434,7 +435,7 @@ void weapon_update_missile(weapon_t *self) {
 				ship->velocity = vec3_sub(ship->velocity, vec3_mulf(ship->velocity, 0.75));
 				ship->angular_velocity.z += rand_float(-0.1, 0.1);
 				ship->turn_rate_from_hit = rand_float(-0.1, 0.1);
-				// SetShake(20);  // FIXME
+				camera_set_shake(&g.camera, CAMERA_SHAKE_LONG);
 			}
 			else {
 				ship->speed = ship->speed * 0.03125;
@@ -482,7 +483,7 @@ void weapon_update_rocket(weapon_t *self) {
 				ship->velocity = vec3_sub(ship->velocity, vec3_mulf(ship->velocity, 0.75));
 				ship->angular_velocity.z += rand_float(-0.1, 0.1);;
 				ship->turn_rate_from_hit = rand_float(-0.1, 0.1);;
-				// SetShake(20);  // FIXME
+				camera_set_shake(&g.camera, CAMERA_SHAKE_LONG);
 			}
 			else {
 				ship->speed = ship->speed * 0.03125;

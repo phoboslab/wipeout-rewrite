@@ -3,6 +3,7 @@
 #include "../platform.h"
 #include "../system.h"
 #include "../utils.h"
+#include "../render.h"
 
 #include "object.h"
 #include "track.h"
@@ -104,9 +105,10 @@ void race_update(void) {
 
 	// Draw 3D
 	render_set_view(g.camera.position, g.camera.angle);
+	render_set_screen_position(g.camera.shake);
 
 	render_set_cull_backface(false);
-	scene_draw(&g.camera);	
+	scene_draw(&g.camera);
 	track_draw(&g.camera);
 	render_set_cull_backface(true);
 
@@ -116,6 +118,7 @@ void race_update(void) {
 	particles_draw();
 
 	// Draw 2d
+	render_set_screen_position(vec2(0,0));
 	render_set_view_2d();
 
 	if (flags_is(g.ships[g.pilot].flags, SHIP_RACING)) {
