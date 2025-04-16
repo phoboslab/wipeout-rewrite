@@ -287,7 +287,7 @@ texture_list_t image_get_compressed_textures(char *name) {
 	cmp_t *cmp = image_load_compressed(name);
 	texture_list_t list = {.start = render_textures_len(), .len = cmp->len};
 
-	for (int i = 0; i < cmp->len; i++) {
+	for (unsigned int i = 0; i < cmp->len; i++) {
 		int32_t width, height;
 		image_t *image = image_load_from_bytes(cmp->entries[i], false);
 
