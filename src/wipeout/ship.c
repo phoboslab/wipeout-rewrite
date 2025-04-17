@@ -973,7 +973,7 @@ bool ship_intersects_ship(ship_t *self, ship_t *other) {
 
 void ship_collide_with_ship(ship_t *self, ship_t *other) {
 	float distance = vec3_len(vec3_sub(self->position, other->position));
-	
+
 	// Do a quick distance check; if ships are far apart, remove the collision flag
 	// and early out.
 	if (distance > 960) {
@@ -997,8 +997,8 @@ void ship_collide_with_ship(ship_t *self, ship_t *other) {
 		self->mass + other->mass
 	);
 
-	vec3_t ship_react = vec3_mulf(vec3_sub(vc, self->velocity), 0.25);
-	vec3_t other_react = vec3_mulf(vec3_sub(vc, other->velocity), 0.25);
+	vec3_t ship_react = vec3_mulf(vec3_sub(vc, self->velocity), 0.5); // >> 1
+	vec3_t other_react = vec3_mulf(vec3_sub(vc, other->velocity), 0.5); // >> 1
 	self->position = vec3_sub(self->position, vec3_mulf(self->velocity, 0.015625)); // >> 6
 	other->position = vec3_sub(other->position, vec3_mulf(other->velocity, 0.015625)); // >> 6
 
@@ -1007,10 +1007,10 @@ void ship_collide_with_ship(ship_t *self, ship_t *other) {
 
 	vec3_t res = vec3_sub(self->position, other->position);
 
-	self->velocity = vec3_add(self->velocity, vec3_mulf(res, 2));  // << 2
+	self->velocity = vec3_add(self->velocity, vec3_mulf(res, 4));  // << 2
 	self->position = vec3_add(self->position, vec3_mulf(self->velocity, 0.015625)); // >> 6
 
-	other->velocity = vec3_sub(other->velocity, vec3_mulf(res, 2)); // << 2
+	other->velocity = vec3_sub(other->velocity, vec3_mulf(res, 4)); // << 2
 	other->position = vec3_add(other->position, vec3_mulf(other->velocity, 0.015625)); // >> 6
 
 	if (
