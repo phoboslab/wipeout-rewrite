@@ -181,8 +181,9 @@ void camera_set_shake(camera_t *camera, float duration) {
 
 void camera_update_shake(camera_t *camera) {
 	if (camera->shake_timer > 0.0f) {
-		camera->shake.x = (-(rand_float(0.0f, camera->shake_timer)) + (camera->shake_timer * 0.5f));
-		camera->shake.y = (-(rand_float(0.0f, camera->shake_timer)) + (camera->shake_timer * 0.5f));
+		float s = 0.25 * save.screen_shake * camera->shake_timer;
+		camera->shake.x = rand_float(-s, s);
+		camera->shake.y = rand_float(-s, s);
 		camera->shake_timer -= system_tick();
 	}
 	else {

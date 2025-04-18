@@ -397,6 +397,7 @@ save_t save = {
 	.sfx_volume = 0.6,
 	.music_volume = 0.5,
 	.internal_roll = 0.6,
+	.screen_shake = 0.5,
 	.ui_scale = 0,
 	.show_fps = false,
 	.fullscreen = false,
