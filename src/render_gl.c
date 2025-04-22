@@ -721,7 +721,10 @@ void render_set_blend_mode(render_blend_mode_t new_mode) {
 }
 
 void render_set_cull_backface(bool enabled) {
-	render_flush();
+	// this function gets called *many* times by object_draw
+	// leaving the flush enabled kills llvm-softpipe performance
+	// I am not sure about other drivers - jnmartin84
+	//render_flush();
 	if (enabled) {
 		glEnable(GL_CULL_FACE);
 	}

@@ -462,13 +462,19 @@ void object_draw(Object *object, mat4_t *mat) {
 
 	render_set_model_mat(mat);
 
-	// TODO: check for PRM_SINGLE_SIDED
-
 	for (int i = 0; i < primitives_len; i++) {
 		int coord0;
 		int coord1;
 		int coord2;
 		int coord3;
+
+		if (flags_is(poly.primitive->flag, PRM_SINGLE_SIDED)) {
+			render_set_cull_backface(true);
+		}
+		else {
+			render_set_cull_backface(false);
+		}
+
 		switch (poly.primitive->type) {
 		case PRM_TYPE_GT3:
 			coord0 = poly.gt3->coords[0];
