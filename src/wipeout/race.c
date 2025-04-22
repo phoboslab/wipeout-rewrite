@@ -107,7 +107,9 @@ void race_update(void) {
 	render_set_screen_position(g.camera.shake);
 
 	scene_draw(&g.camera);
+	render_set_cull_backface(false);
 	track_draw(&g.camera);
+	render_set_cull_backface(true);
 
 	ships_draw();
 	droid_draw(&g.droid);

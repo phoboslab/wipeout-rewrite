@@ -123,6 +123,7 @@ void render_set_depth_test(bool enabled) {}
 void render_set_depth_offset(float offset) {}
 void render_set_screen_position(vec2_t pos) {}
 void render_set_blend_mode(render_blend_mode_t mode) {}
+void render_set_cull_backface(bool enabled) {}
 
 vec3_t render_transform(vec3_t pos) {
 	return vec3_transform(vec3_transform(pos, &view_mat), &projection_mat);

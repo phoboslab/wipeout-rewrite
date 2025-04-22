@@ -721,6 +721,19 @@ void render_set_blend_mode(render_blend_mode_t new_mode) {
 	}
 }
 
+void render_set_cull_backface(bool enabled) {
+	render_flush();
+	if (enabled) {
+		glEnable(GL_CULL_FACE);
+	}
+	else {
+		glDisable(GL_CULL_FACE);
+	}
+}
+
+
+
+
 vec3_t render_transform(vec3_t pos) {
 	return vec3_transform(vec3_transform(pos, &view_mat), &projection_mat_3d);
 }
