@@ -27,7 +27,12 @@ Object *objects_load(char *name, texture_list_t tl) {
 	Object *prevObject = NULL;
 	uint32_t p = 0;
 
+	int total_double = 0;
+	int total_single = 0;
+
 	while (p < length) {
+		int count_singleface = 0;
+		int count_doubleface = 0;
 		Object *object = mem_bump(sizeof(Object));
 		if (prevObject) {
 			prevObject->next = object;
@@ -102,6 +107,14 @@ Object *objects_load(char *name, texture_list_t tl) {
 			Prm prm;
 			int16_t prm_type = get_i16(bytes, &p);
 			int16_t prm_flag = get_i16(bytes, &p);
+
+			if (flags_is(prm_flag, PRM_SINGLE_SIDED)) {
+				count_singleface++;
+				total_single++;
+			} else {
+				count_doubleface++;
+				total_double++;
+			}
 
 			switch (prm_type) {
 			case PRM_TYPE_F3:
@@ -447,6 +460,104 @@ Object *objects_load(char *name, texture_list_t tl) {
 			prm.f3->type = prm_type;
 			prm.f3->flag = prm_flag;
 		} // each prim
+
+		object->primitives_singleface_len = count_singleface;
+		object->primitives_doubleface_len = count_doubleface;
+		object->primitives_singleface = (Primitive **)mem_bump(sizeof(Primitive *) * count_singleface);
+		object->primitives_doubleface = (Primitive **)mem_bump(sizeof(Primitive *) * count_doubleface);
+		Prm poly = {.primitive = object->primitives};
+		int primitives_len = object->primitives_len;
+		int index_singleface = 0;
+		int index_doubleface = 0;
+		for (int i = 0; i < primitives_len; i++) {
+			switch (poly.primitive->type) {
+			case PRM_TYPE_GT3:
+				if (flags_is(poly.primitive->flag, PRM_SINGLE_SIDED)) {
+					object->primitives_singleface[index_singleface++] = poly.primitive;
+				} else {
+					object->primitives_doubleface[index_doubleface++] = poly.primitive;
+				}
+				poly.gt3 += 1;
+				break;
+
+			case PRM_TYPE_GT4:
+				if (flags_is(poly.primitive->flag, PRM_SINGLE_SIDED)) {
+					object->primitives_singleface[index_singleface++] = poly.primitive;
+				} else {
+					object->primitives_doubleface[index_doubleface++] = poly.primitive;
+				}
+				poly.gt4 += 1;
+				break;
+
+			case PRM_TYPE_FT3:
+				if (flags_is(poly.primitive->flag, PRM_SINGLE_SIDED)) {
+					object->primitives_singleface[index_singleface++] = poly.primitive;
+				} else {
+					object->primitives_doubleface[index_doubleface++] = poly.primitive;
+				}
+				poly.ft3 += 1;
+				break;
+
+			case PRM_TYPE_FT4:
+				if (flags_is(poly.primitive->flag, PRM_SINGLE_SIDED)) {
+					object->primitives_singleface[index_singleface++] = poly.primitive;
+				} else {
+					object->primitives_doubleface[index_doubleface++] = poly.primitive;
+				}
+				poly.ft4 += 1;
+				break;
+
+			case PRM_TYPE_G3:
+				if (flags_is(poly.primitive->flag, PRM_SINGLE_SIDED)) {
+					object->primitives_singleface[index_singleface++] = poly.primitive;
+				} else {
+					object->primitives_doubleface[index_doubleface++] = poly.primitive;
+				}
+				poly.g3 += 1;
+				break;
+
+			case PRM_TYPE_G4:
+				if (flags_is(poly.primitive->flag, PRM_SINGLE_SIDED)) {
+					object->primitives_singleface[index_singleface++] = poly.primitive;
+				} else {
+					object->primitives_doubleface[index_doubleface++] = poly.primitive;
+				}
+				poly.g4 += 1;
+				break;
+
+			case PRM_TYPE_F3:
+				if (flags_is(poly.primitive->flag, PRM_SINGLE_SIDED)) {
+					object->primitives_singleface[index_singleface++] = poly.primitive;
+				} else {
+					object->primitives_doubleface[index_doubleface++] = poly.primitive;
+				}
+				poly.f3 += 1;
+				break;
+
+			case PRM_TYPE_F4:
+				if (flags_is(poly.primitive->flag, PRM_SINGLE_SIDED)) {
+					object->primitives_singleface[index_singleface++] = poly.primitive;
+				} else {
+					object->primitives_doubleface[index_doubleface++] = poly.primitive;
+				}
+				poly.f4 += 1;
+				break;
+
+			case PRM_TYPE_TSPR:
+			case PRM_TYPE_BSPR:
+				if (flags_is(poly.primitive->flag, PRM_SINGLE_SIDED)) {
+					object->primitives_singleface[index_singleface++] = poly.primitive;
+				} else {
+					object->primitives_doubleface[index_doubleface++] = poly.primitive;
+				}
+				poly.spr += 1;
+				break;
+
+			default:
+				break;
+
+			}	
+		}
 	} // each object
 
 	mem_temp_free(bytes);
@@ -457,13 +568,15 @@ Object *objects_load(char *name, texture_list_t tl) {
 void object_draw(Object *object, mat4_t *mat) {
 	vec3_t *vertex = object->vertices;
 
-	Prm poly = {.primitive = object->primitives};
-	int primitives_len = object->primitives_len;
+	int singleface_len = object->primitives_singleface_len;
+	int doubleface_len = object->primitives_doubleface_len;
 
 	render_set_model_mat(mat);
 
 	render_set_cull_backface(true);
-	for (int i = 0; i < primitives_len; i++) {
+	Primitive **ppoly = object->primitives_singleface;
+	for (int i = 0; i < singleface_len; i++) {
+		Prm poly = {.primitive = ppoly[i]};
 		int coord0;
 		int coord1;
 		int coord2;
@@ -471,315 +584,306 @@ void object_draw(Object *object, mat4_t *mat) {
 
 		switch (poly.primitive->type) {
 		case PRM_TYPE_GT3:
-			if (flags_is(poly.primitive->flag, PRM_SINGLE_SIDED)) {
-				coord0 = poly.gt3->coords[0];
-				coord1 = poly.gt3->coords[1];
-				coord2 = poly.gt3->coords[2];
+			coord0 = poly.gt3->coords[0];
+			coord1 = poly.gt3->coords[1];
+			coord2 = poly.gt3->coords[2];
 
-				render_push_tris((tris_t) {
-					.vertices = {
-						{
-							.pos = vertex[coord2],
-							.uv = {poly.gt3->u2, poly.gt3->v2},
-							.color = poly.gt3->color[2]
-						},
-						{
-							.pos = vertex[coord1],
-							.uv = {poly.gt3->u1, poly.gt3->v1},
-							.color = poly.gt3->color[1]
-						},
-						{
-							.pos = vertex[coord0],
-							.uv = {poly.gt3->u0, poly.gt3->v0},
-							.color = poly.gt3->color[0]
-						},
-					}
-				}, poly.gt3->texture);
-			}
+			render_push_tris((tris_t) {
+				.vertices = {
+					{
+						.pos = vertex[coord2],
+						.uv = {poly.gt3->u2, poly.gt3->v2},
+						.color = poly.gt3->color[2]
+					},
+					{
+						.pos = vertex[coord1],
+						.uv = {poly.gt3->u1, poly.gt3->v1},
+						.color = poly.gt3->color[1]
+					},
+					{
+						.pos = vertex[coord0],
+						.uv = {poly.gt3->u0, poly.gt3->v0},
+						.color = poly.gt3->color[0]
+					},
+				}
+			}, poly.gt3->texture);
+
 			poly.gt3 += 1;
 			break;
 
 		case PRM_TYPE_GT4:
-			if (flags_is(poly.primitive->flag, PRM_SINGLE_SIDED)) {
-				coord0 = poly.gt4->coords[0];
-				coord1 = poly.gt4->coords[1];
-				coord2 = poly.gt4->coords[2];
-				coord3 = poly.gt4->coords[3];
+			coord0 = poly.gt4->coords[0];
+			coord1 = poly.gt4->coords[1];
+			coord2 = poly.gt4->coords[2];
+			coord3 = poly.gt4->coords[3];
 
-				render_push_tris((tris_t) {
-					.vertices = {
-						{
-							.pos = vertex[coord2],
-							.uv = {poly.gt4->u2, poly.gt4->v2},
-							.color = poly.gt4->color[2]
-						},
-						{
-							.pos = vertex[coord1],
-							.uv = {poly.gt4->u1, poly.gt4->v1},
-							.color = poly.gt4->color[1]
-						},
-						{
-							.pos = vertex[coord0],
-							.uv = {poly.gt4->u0, poly.gt4->v0},
-							.color = poly.gt4->color[0]
-						},
-					}
-				}, poly.gt4->texture);
-				render_push_tris((tris_t) {
-					.vertices = {
-						{
-							.pos = vertex[coord2],
-							.uv = {poly.gt4->u2, poly.gt4->v2},
-							.color = poly.gt4->color[2]
-						},
-						{
-							.pos = vertex[coord3],
-							.uv = {poly.gt4->u3, poly.gt4->v3},
-							.color = poly.gt4->color[3]
-						},
-						{
-							.pos = vertex[coord1],
-							.uv = {poly.gt4->u1, poly.gt4->v1},
-							.color = poly.gt4->color[1]
-						},
-					}
-				}, poly.gt4->texture);
-			}
+			render_push_tris((tris_t) {
+				.vertices = {
+					{
+						.pos = vertex[coord2],
+						.uv = {poly.gt4->u2, poly.gt4->v2},
+						.color = poly.gt4->color[2]
+					},
+					{
+						.pos = vertex[coord1],
+						.uv = {poly.gt4->u1, poly.gt4->v1},
+						.color = poly.gt4->color[1]
+					},
+					{
+						.pos = vertex[coord0],
+						.uv = {poly.gt4->u0, poly.gt4->v0},
+						.color = poly.gt4->color[0]
+					},
+				}
+			}, poly.gt4->texture);
+			render_push_tris((tris_t) {
+				.vertices = {
+					{
+						.pos = vertex[coord2],
+						.uv = {poly.gt4->u2, poly.gt4->v2},
+						.color = poly.gt4->color[2]
+					},
+					{
+						.pos = vertex[coord3],
+						.uv = {poly.gt4->u3, poly.gt4->v3},
+						.color = poly.gt4->color[3]
+					},
+					{
+						.pos = vertex[coord1],
+						.uv = {poly.gt4->u1, poly.gt4->v1},
+						.color = poly.gt4->color[1]
+					},
+				}
+			}, poly.gt4->texture);
+
 			poly.gt4 += 1;
 			break;
 
 		case PRM_TYPE_FT3:
-			if (flags_is(poly.primitive->flag, PRM_SINGLE_SIDED)) {
-				coord0 = poly.ft3->coords[0];
-				coord1 = poly.ft3->coords[1];
-				coord2 = poly.ft3->coords[2];
+			coord0 = poly.ft3->coords[0];
+			coord1 = poly.ft3->coords[1];
+			coord2 = poly.ft3->coords[2];
 
-				render_push_tris((tris_t) {
-					.vertices = {
-						{
-							.pos = vertex[coord2],
-							.uv = {poly.ft3->u2, poly.ft3->v2},
-							.color = poly.ft3->color
-						},
-						{
-							.pos = vertex[coord1],
-							.uv = {poly.ft3->u1, poly.ft3->v1},
-							.color = poly.ft3->color
-						},
-						{
-							.pos = vertex[coord0],
-							.uv = {poly.ft3->u0, poly.ft3->v0},
-							.color = poly.ft3->color
-						},
-					}
-				}, poly.ft3->texture);
-			}
+			render_push_tris((tris_t) {
+				.vertices = {
+					{
+						.pos = vertex[coord2],
+						.uv = {poly.ft3->u2, poly.ft3->v2},
+						.color = poly.ft3->color
+					},
+					{
+						.pos = vertex[coord1],
+						.uv = {poly.ft3->u1, poly.ft3->v1},
+						.color = poly.ft3->color
+					},
+					{
+						.pos = vertex[coord0],
+						.uv = {poly.ft3->u0, poly.ft3->v0},
+						.color = poly.ft3->color
+					},
+				}
+			}, poly.ft3->texture);
+
 			poly.ft3 += 1;
 			break;
 
 		case PRM_TYPE_FT4:
-			if (flags_is(poly.primitive->flag, PRM_SINGLE_SIDED)) {
-				coord0 = poly.ft4->coords[0];
-				coord1 = poly.ft4->coords[1];
-				coord2 = poly.ft4->coords[2];
-				coord3 = poly.ft4->coords[3];
+			coord0 = poly.ft4->coords[0];
+			coord1 = poly.ft4->coords[1];
+			coord2 = poly.ft4->coords[2];
+			coord3 = poly.ft4->coords[3];
 
-				render_push_tris((tris_t) {
-					.vertices = {
-						{
-							.pos = vertex[coord2],
-							.uv = {poly.ft4->u2, poly.ft4->v2},
-							.color = poly.ft4->color
-						},
-						{
-							.pos = vertex[coord1],
-							.uv = {poly.ft4->u1, poly.ft4->v1},
-							.color = poly.ft4->color
-						},
-						{
-							.pos = vertex[coord0],
-							.uv = {poly.ft4->u0, poly.ft4->v0},
-							.color = poly.ft4->color
-						},
-					}
-				}, poly.ft4->texture);
-				render_push_tris((tris_t) {
-					.vertices = {
-						{
-							.pos = vertex[coord2],
-							.uv = {poly.ft4->u2, poly.ft4->v2},
-							.color = poly.ft4->color
-						},
-						{
-							.pos = vertex[coord3],
-							.uv = {poly.ft4->u3, poly.ft4->v3},
-							.color = poly.ft4->color
-						},
-						{
-							.pos = vertex[coord1],
-							.uv = {poly.ft4->u1, poly.ft4->v1},
-							.color = poly.ft4->color
-						},
-					}
-				}, poly.ft4->texture);
-			}
+			render_push_tris((tris_t) {
+				.vertices = {
+					{
+						.pos = vertex[coord2],
+						.uv = {poly.ft4->u2, poly.ft4->v2},
+						.color = poly.ft4->color
+					},
+					{
+						.pos = vertex[coord1],
+						.uv = {poly.ft4->u1, poly.ft4->v1},
+						.color = poly.ft4->color
+					},
+					{
+						.pos = vertex[coord0],
+						.uv = {poly.ft4->u0, poly.ft4->v0},
+						.color = poly.ft4->color
+					},
+				}
+			}, poly.ft4->texture);
+			render_push_tris((tris_t) {
+				.vertices = {
+					{
+						.pos = vertex[coord2],
+						.uv = {poly.ft4->u2, poly.ft4->v2},
+						.color = poly.ft4->color
+					},
+					{
+						.pos = vertex[coord3],
+						.uv = {poly.ft4->u3, poly.ft4->v3},
+						.color = poly.ft4->color
+					},
+					{
+						.pos = vertex[coord1],
+						.uv = {poly.ft4->u1, poly.ft4->v1},
+						.color = poly.ft4->color
+					},
+				}
+			}, poly.ft4->texture);
+
 			poly.ft4 += 1;
 			break;
 
 		case PRM_TYPE_G3:
-			if (flags_is(poly.primitive->flag, PRM_SINGLE_SIDED)) {
-				coord0 = poly.g3->coords[0];
-				coord1 = poly.g3->coords[1];
-				coord2 = poly.g3->coords[2];
+			coord0 = poly.g3->coords[0];
+			coord1 = poly.g3->coords[1];
+			coord2 = poly.g3->coords[2];
 
-				render_push_tris((tris_t) {
-					.vertices = {
-						{
-							.pos = vertex[coord2],
-							.color = poly.g3->color[2]
-						},
-						{
-							.pos = vertex[coord1],
-							.color = poly.g3->color[1]
-						},
-						{
-							.pos = vertex[coord0],
-							.color = poly.g3->color[0]
-						},
-					}
-				}, RENDER_NO_TEXTURE);
-			}
+			render_push_tris((tris_t) {
+				.vertices = {
+					{
+						.pos = vertex[coord2],
+						.color = poly.g3->color[2]
+					},
+					{
+						.pos = vertex[coord1],
+						.color = poly.g3->color[1]
+					},
+					{
+						.pos = vertex[coord0],
+						.color = poly.g3->color[0]
+					},
+				}
+			}, RENDER_NO_TEXTURE);
+
 			poly.g3 += 1;
 			break;
 
 		case PRM_TYPE_G4:
-			if (flags_is(poly.primitive->flag, PRM_SINGLE_SIDED)) {
-				coord0 = poly.g4->coords[0];
-				coord1 = poly.g4->coords[1];
-				coord2 = poly.g4->coords[2];
-				coord3 = poly.g4->coords[3];
+			coord0 = poly.g4->coords[0];
+			coord1 = poly.g4->coords[1];
+			coord2 = poly.g4->coords[2];
+			coord3 = poly.g4->coords[3];
 
-				render_push_tris((tris_t) {
-					.vertices = {
-						{
-							.pos = vertex[coord2],
-							.color = poly.g4->color[2]
-						},
-						{
-							.pos = vertex[coord1],
-							.color = poly.g4->color[1]
-						},
-						{
-							.pos = vertex[coord0],
-							.color = poly.g4->color[0]
-						},
-					}
-				}, RENDER_NO_TEXTURE);
-				render_push_tris((tris_t) {
-					.vertices = {
-						{
-							.pos = vertex[coord2],
-							.color = poly.g4->color[2]
-						},
-						{
-							.pos = vertex[coord3],
-							.color = poly.g4->color[3]
-						},
-						{
-							.pos = vertex[coord1],
-							.color = poly.g4->color[1]
-						},
-					}
-				}, RENDER_NO_TEXTURE);
-			}
+			render_push_tris((tris_t) {
+				.vertices = {
+					{
+						.pos = vertex[coord2],
+						.color = poly.g4->color[2]
+					},
+					{
+						.pos = vertex[coord1],
+						.color = poly.g4->color[1]
+					},
+					{
+						.pos = vertex[coord0],
+						.color = poly.g4->color[0]
+					},
+				}
+			}, RENDER_NO_TEXTURE);
+			render_push_tris((tris_t) {
+				.vertices = {
+					{
+						.pos = vertex[coord2],
+						.color = poly.g4->color[2]
+					},
+					{
+						.pos = vertex[coord3],
+						.color = poly.g4->color[3]
+					},
+					{
+						.pos = vertex[coord1],
+						.color = poly.g4->color[1]
+					},
+				}
+			}, RENDER_NO_TEXTURE);
+
 			poly.g4 += 1;
 			break;
 
 		case PRM_TYPE_F3:
-			if (flags_is(poly.primitive->flag, PRM_SINGLE_SIDED)) {
-				coord0 = poly.f3->coords[0];
-				coord1 = poly.f3->coords[1];
-				coord2 = poly.f3->coords[2];
+			coord0 = poly.f3->coords[0];
+			coord1 = poly.f3->coords[1];
+			coord2 = poly.f3->coords[2];
 
-				render_push_tris((tris_t) {
-					.vertices = {
-						{
-							.pos = vertex[coord2],
-							.color = poly.f3->color
-						},
-						{
-							.pos = vertex[coord1],
-							.color = poly.f3->color
-						},
-						{
-							.pos = vertex[coord0],
-							.color = poly.f3->color
-						},
-					}
-				}, RENDER_NO_TEXTURE);
-			}
+			render_push_tris((tris_t) {
+				.vertices = {
+					{
+						.pos = vertex[coord2],
+						.color = poly.f3->color
+					},
+					{
+						.pos = vertex[coord1],
+						.color = poly.f3->color
+					},
+					{
+						.pos = vertex[coord0],
+						.color = poly.f3->color
+					},
+				}
+			}, RENDER_NO_TEXTURE);
+
 			poly.f3 += 1;
 			break;
 
 		case PRM_TYPE_F4:
-			if (flags_is(poly.primitive->flag, PRM_SINGLE_SIDED)) {
-				coord0 = poly.f4->coords[0];
-				coord1 = poly.f4->coords[1];
-				coord2 = poly.f4->coords[2];
-				coord3 = poly.f4->coords[3];
+			coord0 = poly.f4->coords[0];
+			coord1 = poly.f4->coords[1];
+			coord2 = poly.f4->coords[2];
+			coord3 = poly.f4->coords[3];
 
-				render_push_tris((tris_t) {
-					.vertices = {
-						{
-							.pos = vertex[coord2],
-							.color = poly.f4->color
-						},
-						{
-							.pos = vertex[coord1],
-							.color = poly.f4->color
-						},
-						{
-							.pos = vertex[coord0],
-							.color = poly.f4->color
-						},
-					}
-				}, RENDER_NO_TEXTURE);
-				render_push_tris((tris_t) {
-					.vertices = {
-						{
-							.pos = vertex[coord2],
-							.color = poly.f4->color
-						},
-						{
-							.pos = vertex[coord3],
-							.color = poly.f4->color
-						},
-						{
-							.pos = vertex[coord1],
-							.color = poly.f4->color
-						},
-					}
-				}, RENDER_NO_TEXTURE);
-			}
+			render_push_tris((tris_t) {
+				.vertices = {
+					{
+						.pos = vertex[coord2],
+						.color = poly.f4->color
+					},
+					{
+						.pos = vertex[coord1],
+						.color = poly.f4->color
+					},
+					{
+						.pos = vertex[coord0],
+						.color = poly.f4->color
+					},
+				}
+			}, RENDER_NO_TEXTURE);
+			render_push_tris((tris_t) {
+				.vertices = {
+					{
+						.pos = vertex[coord2],
+						.color = poly.f4->color
+					},
+					{
+						.pos = vertex[coord3],
+						.color = poly.f4->color
+					},
+					{
+						.pos = vertex[coord1],
+						.color = poly.f4->color
+					},
+				}
+			}, RENDER_NO_TEXTURE);
+
 			poly.f4 += 1;
 			break;
 
 		case PRM_TYPE_TSPR:
 		case PRM_TYPE_BSPR:
-			if (flags_is(poly.primitive->flag, PRM_SINGLE_SIDED)) {
-				coord0 = poly.spr->coord;
+			coord0 = poly.spr->coord;
 
-				render_push_sprite(
-					vec3(
-						vertex[coord0].x,
-						vertex[coord0].y + ((poly.primitive->type == PRM_TYPE_TSPR ? poly.spr->height : -poly.spr->height) >> 1),
-						vertex[coord0].z
-					),
-					vec2i(poly.spr->width, poly.spr->height),
-					poly.spr->color,
-					poly.spr->texture
-				);
-			}
+			render_push_sprite(
+				vec3(
+					vertex[coord0].x,
+					vertex[coord0].y + ((poly.primitive->type == PRM_TYPE_TSPR ? poly.spr->height : -poly.spr->height) >> 1),
+					vertex[coord0].z
+				),
+				vec2i(poly.spr->width, poly.spr->height),
+				poly.spr->color,
+				poly.spr->texture
+			);
+
 			poly.spr += 1;
 			break;
 
@@ -789,9 +893,10 @@ void object_draw(Object *object, mat4_t *mat) {
 		}
 	}
 
-	poly.primitive = object->primitives;
 	render_set_cull_backface(false);
-	for (int i = 0; i < primitives_len; i++) {
+	ppoly = object->primitives_doubleface;
+	for (int i = 0; i < doubleface_len; i++) {
+		Prm poly = {.primitive = ppoly[i]};
 		int coord0;
 		int coord1;
 		int coord2;
@@ -799,323 +904,313 @@ void object_draw(Object *object, mat4_t *mat) {
 
 		switch (poly.primitive->type) {
 		case PRM_TYPE_GT3:
-			if (flags_not(poly.primitive->flag, PRM_SINGLE_SIDED)) {
-				coord0 = poly.gt3->coords[0];
-				coord1 = poly.gt3->coords[1];
-				coord2 = poly.gt3->coords[2];
+			coord0 = poly.gt3->coords[0];
+			coord1 = poly.gt3->coords[1];
+			coord2 = poly.gt3->coords[2];
 
-				render_push_tris((tris_t) {
-					.vertices = {
-						{
-							.pos = vertex[coord2],
-							.uv = {poly.gt3->u2, poly.gt3->v2},
-							.color = poly.gt3->color[2]
-						},
-						{
-							.pos = vertex[coord1],
-							.uv = {poly.gt3->u1, poly.gt3->v1},
-							.color = poly.gt3->color[1]
-						},
-						{
-							.pos = vertex[coord0],
-							.uv = {poly.gt3->u0, poly.gt3->v0},
-							.color = poly.gt3->color[0]
-						},
-					}
-				}, poly.gt3->texture);
-			}
+			render_push_tris((tris_t) {
+				.vertices = {
+					{
+						.pos = vertex[coord2],
+						.uv = {poly.gt3->u2, poly.gt3->v2},
+						.color = poly.gt3->color[2]
+					},
+					{
+						.pos = vertex[coord1],
+						.uv = {poly.gt3->u1, poly.gt3->v1},
+						.color = poly.gt3->color[1]
+					},
+					{
+						.pos = vertex[coord0],
+						.uv = {poly.gt3->u0, poly.gt3->v0},
+						.color = poly.gt3->color[0]
+					},
+				}
+			}, poly.gt3->texture);
+
 			poly.gt3 += 1;
 			break;
 
 		case PRM_TYPE_GT4:
-			if (flags_not(poly.primitive->flag, PRM_SINGLE_SIDED)) {
-				coord0 = poly.gt4->coords[0];
-				coord1 = poly.gt4->coords[1];
-				coord2 = poly.gt4->coords[2];
-				coord3 = poly.gt4->coords[3];
+			coord0 = poly.gt4->coords[0];
+			coord1 = poly.gt4->coords[1];
+			coord2 = poly.gt4->coords[2];
+			coord3 = poly.gt4->coords[3];
 
-				render_push_tris((tris_t) {
-					.vertices = {
-						{
-							.pos = vertex[coord2],
-							.uv = {poly.gt4->u2, poly.gt4->v2},
-							.color = poly.gt4->color[2]
-						},
-						{
-							.pos = vertex[coord1],
-							.uv = {poly.gt4->u1, poly.gt4->v1},
-							.color = poly.gt4->color[1]
-						},
-						{
-							.pos = vertex[coord0],
-							.uv = {poly.gt4->u0, poly.gt4->v0},
-							.color = poly.gt4->color[0]
-						},
-					}
-				}, poly.gt4->texture);
-				render_push_tris((tris_t) {
-					.vertices = {
-						{
-							.pos = vertex[coord2],
-							.uv = {poly.gt4->u2, poly.gt4->v2},
-							.color = poly.gt4->color[2]
-						},
-						{
-							.pos = vertex[coord3],
-							.uv = {poly.gt4->u3, poly.gt4->v3},
-							.color = poly.gt4->color[3]
-						},
-						{
-							.pos = vertex[coord1],
-							.uv = {poly.gt4->u1, poly.gt4->v1},
-							.color = poly.gt4->color[1]
-						},
-					}
-				}, poly.gt4->texture);
-			}
+			render_push_tris((tris_t) {
+				.vertices = {
+					{
+						.pos = vertex[coord2],
+						.uv = {poly.gt4->u2, poly.gt4->v2},
+						.color = poly.gt4->color[2]
+					},
+					{
+						.pos = vertex[coord1],
+						.uv = {poly.gt4->u1, poly.gt4->v1},
+						.color = poly.gt4->color[1]
+					},
+					{
+						.pos = vertex[coord0],
+						.uv = {poly.gt4->u0, poly.gt4->v0},
+						.color = poly.gt4->color[0]
+					},
+				}
+			}, poly.gt4->texture);
+			render_push_tris((tris_t) {
+				.vertices = {
+					{
+						.pos = vertex[coord2],
+						.uv = {poly.gt4->u2, poly.gt4->v2},
+						.color = poly.gt4->color[2]
+					},
+					{
+						.pos = vertex[coord3],
+						.uv = {poly.gt4->u3, poly.gt4->v3},
+						.color = poly.gt4->color[3]
+					},
+					{
+						.pos = vertex[coord1],
+						.uv = {poly.gt4->u1, poly.gt4->v1},
+						.color = poly.gt4->color[1]
+					},
+				}
+			}, poly.gt4->texture);
+
 			poly.gt4 += 1;
 			break;
 
 		case PRM_TYPE_FT3:
-			if (flags_not(poly.primitive->flag, PRM_SINGLE_SIDED)) {
-				coord0 = poly.ft3->coords[0];
-				coord1 = poly.ft3->coords[1];
-				coord2 = poly.ft3->coords[2];
+			coord0 = poly.ft3->coords[0];
+			coord1 = poly.ft3->coords[1];
+			coord2 = poly.ft3->coords[2];
 
-				render_push_tris((tris_t) {
-					.vertices = {
-						{
-							.pos = vertex[coord2],
-							.uv = {poly.ft3->u2, poly.ft3->v2},
-							.color = poly.ft3->color
-						},
-						{
-							.pos = vertex[coord1],
-							.uv = {poly.ft3->u1, poly.ft3->v1},
-							.color = poly.ft3->color
-						},
-						{
-							.pos = vertex[coord0],
-							.uv = {poly.ft3->u0, poly.ft3->v0},
-							.color = poly.ft3->color
-						},
-					}
-				}, poly.ft3->texture);
-			}
+			render_push_tris((tris_t) {
+				.vertices = {
+					{
+						.pos = vertex[coord2],
+						.uv = {poly.ft3->u2, poly.ft3->v2},
+						.color = poly.ft3->color
+					},
+					{
+						.pos = vertex[coord1],
+						.uv = {poly.ft3->u1, poly.ft3->v1},
+						.color = poly.ft3->color
+					},
+					{
+						.pos = vertex[coord0],
+						.uv = {poly.ft3->u0, poly.ft3->v0},
+						.color = poly.ft3->color
+					},
+				}
+			}, poly.ft3->texture);
+
 			poly.ft3 += 1;
 			break;
 
 		case PRM_TYPE_FT4:
-			if (flags_not(poly.primitive->flag, PRM_SINGLE_SIDED)) {
-				coord0 = poly.ft4->coords[0];
-				coord1 = poly.ft4->coords[1];
-				coord2 = poly.ft4->coords[2];
-				coord3 = poly.ft4->coords[3];
+			coord0 = poly.ft4->coords[0];
+			coord1 = poly.ft4->coords[1];
+			coord2 = poly.ft4->coords[2];
+			coord3 = poly.ft4->coords[3];
 
-				render_push_tris((tris_t) {
-					.vertices = {
-						{
-							.pos = vertex[coord2],
-							.uv = {poly.ft4->u2, poly.ft4->v2},
-							.color = poly.ft4->color
-						},
-						{
-							.pos = vertex[coord1],
-							.uv = {poly.ft4->u1, poly.ft4->v1},
-							.color = poly.ft4->color
-						},
-						{
-							.pos = vertex[coord0],
-							.uv = {poly.ft4->u0, poly.ft4->v0},
-							.color = poly.ft4->color
-						},
-					}
-				}, poly.ft4->texture);
-				render_push_tris((tris_t) {
-					.vertices = {
-						{
-							.pos = vertex[coord2],
-							.uv = {poly.ft4->u2, poly.ft4->v2},
-							.color = poly.ft4->color
-						},
-						{
-							.pos = vertex[coord3],
-							.uv = {poly.ft4->u3, poly.ft4->v3},
-							.color = poly.ft4->color
-						},
-						{
-							.pos = vertex[coord1],
-							.uv = {poly.ft4->u1, poly.ft4->v1},
-							.color = poly.ft4->color
-						},
-					}
-				}, poly.ft4->texture);
-			}
+			render_push_tris((tris_t) {
+				.vertices = {
+					{
+						.pos = vertex[coord2],
+						.uv = {poly.ft4->u2, poly.ft4->v2},
+						.color = poly.ft4->color
+					},
+					{
+						.pos = vertex[coord1],
+						.uv = {poly.ft4->u1, poly.ft4->v1},
+						.color = poly.ft4->color
+					},
+					{
+						.pos = vertex[coord0],
+						.uv = {poly.ft4->u0, poly.ft4->v0},
+						.color = poly.ft4->color
+					},
+				}
+			}, poly.ft4->texture);
+			render_push_tris((tris_t) {
+				.vertices = {
+					{
+						.pos = vertex[coord2],
+						.uv = {poly.ft4->u2, poly.ft4->v2},
+						.color = poly.ft4->color
+					},
+					{
+						.pos = vertex[coord3],
+						.uv = {poly.ft4->u3, poly.ft4->v3},
+						.color = poly.ft4->color
+					},
+					{
+						.pos = vertex[coord1],
+						.uv = {poly.ft4->u1, poly.ft4->v1},
+						.color = poly.ft4->color
+					},
+				}
+			}, poly.ft4->texture);
+
 			poly.ft4 += 1;
 			break;
 
 		case PRM_TYPE_G3:
-			if (flags_not(poly.primitive->flag, PRM_SINGLE_SIDED)) {
-				coord0 = poly.g3->coords[0];
-				coord1 = poly.g3->coords[1];
-				coord2 = poly.g3->coords[2];
+			coord0 = poly.g3->coords[0];
+			coord1 = poly.g3->coords[1];
+			coord2 = poly.g3->coords[2];
 
-				render_push_tris((tris_t) {
-					.vertices = {
-						{
-							.pos = vertex[coord2],
-							.color = poly.g3->color[2]
-						},
-						{
-							.pos = vertex[coord1],
-							.color = poly.g3->color[1]
-						},
-						{
-							.pos = vertex[coord0],
-							.color = poly.g3->color[0]
-						},
-					}
-				}, RENDER_NO_TEXTURE);
-			}
+			render_push_tris((tris_t) {
+				.vertices = {
+					{
+						.pos = vertex[coord2],
+						.color = poly.g3->color[2]
+					},
+					{
+						.pos = vertex[coord1],
+						.color = poly.g3->color[1]
+					},
+					{
+						.pos = vertex[coord0],
+						.color = poly.g3->color[0]
+					},
+				}
+			}, RENDER_NO_TEXTURE);
+
 			poly.g3 += 1;
 			break;
 
 		case PRM_TYPE_G4:
-			if (flags_not(poly.primitive->flag, PRM_SINGLE_SIDED)) {
-				coord0 = poly.g4->coords[0];
-				coord1 = poly.g4->coords[1];
-				coord2 = poly.g4->coords[2];
-				coord3 = poly.g4->coords[3];
+			coord0 = poly.g4->coords[0];
+			coord1 = poly.g4->coords[1];
+			coord2 = poly.g4->coords[2];
+			coord3 = poly.g4->coords[3];
 
-				render_push_tris((tris_t) {
-					.vertices = {
-						{
-							.pos = vertex[coord2],
-							.color = poly.g4->color[2]
-						},
-						{
-							.pos = vertex[coord1],
-							.color = poly.g4->color[1]
-						},
-						{
-							.pos = vertex[coord0],
-							.color = poly.g4->color[0]
-						},
-					}
-				}, RENDER_NO_TEXTURE);
-				render_push_tris((tris_t) {
-					.vertices = {
-						{
-							.pos = vertex[coord2],
-							.color = poly.g4->color[2]
-						},
-						{
-							.pos = vertex[coord3],
-							.color = poly.g4->color[3]
-						},
-						{
-							.pos = vertex[coord1],
-							.color = poly.g4->color[1]
-						},
-					}
-				}, RENDER_NO_TEXTURE);
-			}
+			render_push_tris((tris_t) {
+				.vertices = {
+					{
+						.pos = vertex[coord2],
+						.color = poly.g4->color[2]
+					},
+					{
+						.pos = vertex[coord1],
+						.color = poly.g4->color[1]
+					},
+					{
+						.pos = vertex[coord0],
+						.color = poly.g4->color[0]
+					},
+				}
+			}, RENDER_NO_TEXTURE);
+			render_push_tris((tris_t) {
+				.vertices = {
+					{
+						.pos = vertex[coord2],
+						.color = poly.g4->color[2]
+					},
+					{
+						.pos = vertex[coord3],
+						.color = poly.g4->color[3]
+					},
+					{
+						.pos = vertex[coord1],
+						.color = poly.g4->color[1]
+					},
+				}
+			}, RENDER_NO_TEXTURE);
+
 			poly.g4 += 1;
 			break;
 
 		case PRM_TYPE_F3:
-			if (flags_not(poly.primitive->flag, PRM_SINGLE_SIDED)) {
-				coord0 = poly.f3->coords[0];
-				coord1 = poly.f3->coords[1];
-				coord2 = poly.f3->coords[2];
+			coord0 = poly.f3->coords[0];
+			coord1 = poly.f3->coords[1];
+			coord2 = poly.f3->coords[2];
 
-				render_push_tris((tris_t) {
-					.vertices = {
-						{
-							.pos = vertex[coord2],
-							.color = poly.f3->color
-						},
-						{
-							.pos = vertex[coord1],
-							.color = poly.f3->color
-						},
-						{
-							.pos = vertex[coord0],
-							.color = poly.f3->color
-						},
-					}
-				}, RENDER_NO_TEXTURE);
-			}
+			render_push_tris((tris_t) {
+				.vertices = {
+					{
+						.pos = vertex[coord2],
+						.color = poly.f3->color
+					},
+					{
+						.pos = vertex[coord1],
+						.color = poly.f3->color
+					},
+					{
+						.pos = vertex[coord0],
+						.color = poly.f3->color
+					},
+				}
+			}, RENDER_NO_TEXTURE);
+
 			poly.f3 += 1;
 			break;
 
 		case PRM_TYPE_F4:
-			if (flags_not(poly.primitive->flag, PRM_SINGLE_SIDED)) {
-				coord0 = poly.f4->coords[0];
-				coord1 = poly.f4->coords[1];
-				coord2 = poly.f4->coords[2];
-				coord3 = poly.f4->coords[3];
+			coord0 = poly.f4->coords[0];
+			coord1 = poly.f4->coords[1];
+			coord2 = poly.f4->coords[2];
+			coord3 = poly.f4->coords[3];
 
-				render_push_tris((tris_t) {
-					.vertices = {
-						{
-							.pos = vertex[coord2],
-							.color = poly.f4->color
-						},
-						{
-							.pos = vertex[coord1],
-							.color = poly.f4->color
-						},
-						{
-							.pos = vertex[coord0],
-							.color = poly.f4->color
-						},
-					}
-				}, RENDER_NO_TEXTURE);
-				render_push_tris((tris_t) {
-					.vertices = {
-						{
-							.pos = vertex[coord2],
-							.color = poly.f4->color
-						},
-						{
-							.pos = vertex[coord3],
-							.color = poly.f4->color
-						},
-						{
-							.pos = vertex[coord1],
-							.color = poly.f4->color
-						},
-					}
-				}, RENDER_NO_TEXTURE);
-			}
+			render_push_tris((tris_t) {
+				.vertices = {
+					{
+						.pos = vertex[coord2],
+						.color = poly.f4->color
+					},
+					{
+						.pos = vertex[coord1],
+						.color = poly.f4->color
+					},
+					{
+						.pos = vertex[coord0],
+						.color = poly.f4->color
+					},
+				}
+			}, RENDER_NO_TEXTURE);
+			render_push_tris((tris_t) {
+				.vertices = {
+					{
+						.pos = vertex[coord2],
+						.color = poly.f4->color
+					},
+					{
+						.pos = vertex[coord3],
+						.color = poly.f4->color
+					},
+					{
+						.pos = vertex[coord1],
+						.color = poly.f4->color
+					},
+				}
+			}, RENDER_NO_TEXTURE);
+
 			poly.f4 += 1;
 			break;
 
 		case PRM_TYPE_TSPR:
 		case PRM_TYPE_BSPR:
-			if (flags_not(poly.primitive->flag, PRM_SINGLE_SIDED)) {
-				coord0 = poly.spr->coord;
+			coord0 = poly.spr->coord;
 
-				render_push_sprite(
-					vec3(
-						vertex[coord0].x,
-						vertex[coord0].y + ((poly.primitive->type == PRM_TYPE_TSPR ? poly.spr->height : -poly.spr->height) >> 1),
-						vertex[coord0].z
-					),
-					vec2i(poly.spr->width, poly.spr->height),
-					poly.spr->color,
-					poly.spr->texture
-				);
-			}
+			render_push_sprite(
+				vec3(
+					vertex[coord0].x,
+					vertex[coord0].y + ((poly.primitive->type == PRM_TYPE_TSPR ? poly.spr->height : -poly.spr->height) >> 1),
+					vertex[coord0].z
+				),
+				vec2i(poly.spr->width, poly.spr->height),
+				poly.spr->color,
+				poly.spr->texture
+			);
+
 			poly.spr += 1;
 			break;
 
 		default:
 			break;
 
-		}
+		}		
 	}
-
 }
 
