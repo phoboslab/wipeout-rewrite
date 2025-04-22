@@ -46,11 +46,10 @@ void render_set_depth_test(bool enabled);
 void render_set_depth_offset(float offset);
 void render_set_screen_position(vec2_t pos);
 void render_set_blend_mode(render_blend_mode_t mode);
-void render_set_cull_backface(bool enabled);
 
 vec3_t render_transform(vec3_t pos);
 void render_push_tris(tris_t tris, uint16_t texture);
-void render_push_sprite(vec3_t pos, vec2i_t size, rgba_t color, uint16_t texture);
+void render_push_sprite(vec3_t pos, vec2i_t size, rgba_t color, uint16_t texture, int16_t prm_flag);
 void render_push_2d(vec2i_t pos, vec2i_t size, rgba_t color, uint16_t texture);
 void render_push_2d_tile(vec2i_t pos, vec2i_t uv_offset, vec2i_t uv_size, vec2i_t size, rgba_t color, uint16_t texture_index);
 

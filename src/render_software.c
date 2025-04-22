@@ -4,6 +4,8 @@
 #include "utils.h"
 #include "platform.h"
 
+#include "wipeout/object.h"
+
 #define NEAR_PLANE 16.0
 #define FAR_PLANE (RENDER_FADEOUT_FAR)
 #define TEXTURES_MAX 1024
@@ -121,7 +123,6 @@ void render_set_depth_test(bool enabled) {}
 void render_set_depth_offset(float offset) {}
 void render_set_screen_position(vec2_t pos) {}
 void render_set_blend_mode(render_blend_mode_t mode) {}
-void render_set_cull_backface(bool enabled) {}
 
 vec3_t render_transform(vec3_t pos) {
 	return vec3_transform(vec3_transform(pos, &view_mat), &projection_mat);
@@ -153,7 +154,7 @@ void render_push_tris(tris_t tris, uint16_t texture_index) {
 	line(sc2, sc0, color);
 }
 
-void render_push_sprite(vec3_t pos, vec2i_t size, rgba_t color, uint16_t texture_index) {
+void render_push_sprite(vec3_t pos, vec2i_t size, rgba_t color, uint16_t texture_index, int16_t prm_flag) {
 	error_if(texture_index >= textures_len, "Invalid texture %d", texture_index);
 
 	vec3_t p0 = vec3_add(pos, vec3_transform(vec3(-size.x * 0.5, -size.y * 0.5, 0), &sprite_mat));
@@ -176,6 +177,23 @@ void render_push_sprite(vec3_t pos, vec2i_t size, rgba_t color, uint16_t texture
 			{.pos = p3, .uv = {0 + t->size.x, 0 + t->size.y}, .color = color},
 		}
 	}, texture_index);
+
+	if (flags_not(prm_flag, PRM_SINGLE_SIDED)) {
+		render_push_tris((tris_t){
+			.vertices = {
+				{.pos = p2, .uv = {0, 0 + t->size.y}, .color = color},
+				{.pos = p1, .uv = {0 + t->size.x ,0}, .color = color},
+				{.pos = p0, .uv = {0, 0}, .color = color},
+			}
+		}, texture_index);
+		render_push_tris((tris_t){
+			.vertices = {
+				{.pos = p3, .uv = {0 + t->size.x, 0 + t->size.y}, .color = color},
+				{.pos = p1, .uv = {0 + t->size.x, 0}, .color = color},
+				{.pos = p2, .uv = {0, 0 + t->size.y}, .color = color},
+			}
+		}, texture_index);
+	}
 }
 
 void render_push_2d(vec2i_t pos, vec2i_t size, rgba_t color, uint16_t texture_index) {

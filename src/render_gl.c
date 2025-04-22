@@ -30,6 +30,7 @@
 #include "mem.h"
 #include "utils.h"
 
+#include "wipeout/object.h"
 
 #define ATLAS_SIZE 64
 #define ATLAS_GRID 32
@@ -720,26 +721,13 @@ void render_set_blend_mode(render_blend_mode_t new_mode) {
 	}
 }
 
-void render_set_cull_backface(bool enabled) {
-	render_flush();
-	if (enabled) {
-		glEnable(GL_CULL_FACE);
-	}
-	else {
-		glDisable(GL_CULL_FACE);
-	}
-}
-
-
-
-
 vec3_t render_transform(vec3_t pos) {
 	return vec3_transform(vec3_transform(pos, &view_mat), &projection_mat_3d);
 }
 
 void render_push_tris(tris_t tris, uint16_t texture_index) {
 	error_if(texture_index >= textures_len, "Invalid texture %d", texture_index);
-	
+
 	if (tris_len >= RENDER_TRIS_BUFFER_CAPACITY) {
 		render_flush();
 	}
@@ -753,7 +741,7 @@ void render_push_tris(tris_t tris, uint16_t texture_index) {
 	tris_buffer[tris_len++] = tris;
 }
 
-void render_push_sprite(vec3_t pos, vec2i_t size, rgba_t color, uint16_t texture_index) {
+void render_push_sprite(vec3_t pos, vec2i_t size, rgba_t color, uint16_t texture_index, int16_t prm_flag) {
 	error_if(texture_index >= textures_len, "Invalid texture %d", texture_index);
 
 	vec3_t p1 = vec3_add(pos, vec3_transform(vec3(-size.x * 0.5, -size.y * 0.5, 0), &sprite_mat));
@@ -800,6 +788,47 @@ void render_push_sprite(vec3_t pos, vec2i_t size, rgba_t color, uint16_t texture
 			},
 		}
 	}, texture_index);
+
+	if (flags_not(prm_flag, PRM_SINGLE_SIDED)) {
+		render_push_tris((tris_t){
+			.vertices = {
+				{
+					.pos = p3,
+					.uv = {0, 0 + t->size.y},
+					.color = color
+				},
+				{
+					.pos = p2,
+					.uv = {0 + t->size.x ,0},
+					.color = color
+				},
+				{
+					.pos = p1,
+					.uv = {0, 0},
+					.color = color
+				},
+			}
+		}, texture_index);
+		render_push_tris((tris_t){
+			.vertices = {
+				{
+					.pos = p4,
+					.uv = {0 + t->size.x, 0 + t->size.y},
+					.color = color
+				},
+				{
+					.pos = p2,
+					.uv = {0 + t->size.x, 0},
+					.color = color
+				},
+				{
+					.pos = p3,
+					.uv = {0, 0 + t->size.y},
+					.color = color
+				},
+			}
+		}, texture_index);
+	}
 }
 
 void render_push_2d(vec2i_t pos, vec2i_t size, rgba_t color, uint16_t texture_index) {

@@ -341,11 +341,6 @@ typedef struct Object {
 	int16_t primitives_len; // Number of Primitives
 	Primitive *primitives; // Pointer to Z Sort Primitives
 
-	int16_t primitives_singleface_len; // Number of Primitives
-	Primitive **primitives_singleface;
-	int16_t primitives_doubleface_len; // Number of Primitives
-	Primitive **primitives_doubleface;
-
 	vec3_t origin;
 	int32_t extent; // Flags for object characteristics
 	int16_t flags; // Next object in list

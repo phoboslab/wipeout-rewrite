@@ -4,6 +4,7 @@
 #include "../render.h"
 
 #include "particle.h"
+#include "object.h"
 #include "image.h"
 
 static particle_t *particles;
@@ -45,7 +46,7 @@ void particles_draw(void) {
 
 	for (int i = 0; i < particles_active; i++) {
 		particle_t *p = &particles[i];
-		render_push_sprite(p->position, p->size, p->color, p->texture);
+		render_push_sprite(p->position, p->size, p->color, p->texture, PRM_SINGLE_SIDED);
 	}
 
 	render_set_depth_offset(0.0);
