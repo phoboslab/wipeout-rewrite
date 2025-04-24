@@ -185,11 +185,11 @@ void ship_player_update_race(ship_t *self) {
 			if (turn_rate_target > self->angular_velocity.y) {	
 				self->angular_acceleration.y += self->turn_rate;
 			}
-			else if(turn_rate_target < self->angular_velocity.y) {
+			else {
 				self->angular_acceleration.y -= self->turn_rate;
 			}
 		}
-		else if (self->angular_velocity.y < 0) {
+		else {
 			self->angular_acceleration.y += self->turn_rate * 2;
 		}
 	}
@@ -199,11 +199,11 @@ void ship_player_update_race(ship_t *self) {
 			if (-turn_rate_target < self->angular_velocity.y) {	
 				self->angular_acceleration.y -= self->turn_rate;
 			}
-			else if(-turn_rate_target > self->angular_velocity.y) {
+			else {
 				self->angular_acceleration.y += self->turn_rate;
 			}
 		}
-		else if (self->angular_velocity.y > 0) {
+		else {
 			self->angular_acceleration.y -= self->turn_rate * 2;
 		}
 	}
