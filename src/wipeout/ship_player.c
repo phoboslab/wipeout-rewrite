@@ -176,22 +176,34 @@ void ship_player_update_race(ship_t *self) {
 		// FIXME_PL: make sure revconned is honored
 	}
 
+
+	// Turning
+	// For analog input we set a turn_target (exponentiated by the analog_response 
+	// curve) and stop adding to angular acceleration once we exceed that target. 
+	// For digital input (0|1) the powf() and multiplication with turn_rate_max 
+	// will have no influence on the original behavior.
 	self->angular_acceleration = vec3(0, 0, 0);
 
 	if (input_state(A_LEFT)) {
-		if (self->angular_velocity.y >= 0) {
-			self->angular_acceleration.y += input_state(A_LEFT) * self->turn_rate;
+		if (self->angular_velocity.y < 0) {
+			self->angular_acceleration.y += self->turn_rate * 2;
 		}
-		else if (self->angular_velocity.y < 0) {
-			self->angular_acceleration.y += input_state(A_LEFT) * self->turn_rate * 2;
+		else {
+			float turn_target = powf(input_state(A_LEFT), save.analog_response);
+			if (turn_target * self->turn_rate_max > self->angular_velocity.y) {
+				self->angular_acceleration.y += self->turn_rate;
+			}
 		}
 	}
 	else if (input_state(A_RIGHT)) {
-		if (self->angular_velocity.y <= 0) {
-			self->angular_acceleration.y -= input_state(A_RIGHT) * self->turn_rate;
+		if (self->angular_velocity.y > 0) {
+			self->angular_acceleration.y -= self->turn_rate * 2;
 		}
-		else if (self->angular_velocity.y > 0) {
-			self->angular_acceleration.y -= input_state(A_RIGHT) * self->turn_rate * 2;
+		else {
+			float turn_target = powf(input_state(A_RIGHT), save.analog_response);
+			if (turn_target * -self->turn_rate_max < self->angular_velocity.y) {	
+				self->angular_acceleration.y -= self->turn_rate;
+			}
 		}
 	}
 	

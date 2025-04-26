@@ -212,7 +212,7 @@ static void page_options_control_draw(menu_t *menu, int data) {
 
 	for (int action = 0; action < NUM_GAME_ACTIONS; action++) {
 		rgba_t text_color = UI_COLOR_DEFAULT;
-		if (action == data) {
+		if (action == page->index) {
 			text_color = UI_COLOR_ACCENT;
 		}
 
@@ -236,6 +236,13 @@ static void page_options_control_draw(menu_t *menu, int data) {
 	}
 }
 
+static void toggle_analog_response(menu_t *menu, int data) {
+	save.analog_response = (float)data + 1;
+	save.is_dirty = true;
+}
+
+static const char *analog_response[] = {"LINEAR", "MODERATE", "HEAVY"};
+
 static void page_options_controls_init(menu_t *menu) {
 	menu_page_t *page = menu_push(menu, "CONTROLS", page_options_control_draw);
 	flags_set(page->layout_flags, MENU_VERTICAL | MENU_FIXED);
@@ -256,6 +263,8 @@ static void page_options_controls_init(menu_t *menu) {
 	menu_page_add_button(page, A_THRUST, "THRUST", page_options_controls_set_init);
 	menu_page_add_button(page, A_FIRE, "FIRE", page_options_controls_set_init);
 	menu_page_add_button(page, A_CHANGE_VIEW, "VIEW", page_options_controls_set_init);
+
+	menu_page_add_toggle(page, save.analog_response - 1, "ANALOG RESPONSE", analog_response, len(analog_response), toggle_analog_response);
 }
 
 // -----------------------------------------------------------------------------

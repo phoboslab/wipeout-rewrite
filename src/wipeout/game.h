@@ -252,6 +252,7 @@ typedef struct {
 	uint32_t has_bonus_circuts;
 	
 	uint8_t buttons[NUM_GAME_ACTIONS][2];
+	float analog_response;
 
 	char highscores_name[4];
 	highscores_t highscores[NUM_RACE_CLASSES][NUM_CIRCUTS][NUM_HIGHSCORE_TABS];

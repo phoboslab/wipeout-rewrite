@@ -418,6 +418,7 @@ save_t save = {
 		[A_FIRE] = {INPUT_KEY_Z, INPUT_GAMEPAD_X},
 		[A_CHANGE_VIEW] = {INPUT_KEY_A, INPUT_GAMEPAD_Y},
 	},
+	.analog_response = 2, // Exponent for stick turn input
 
 	.highscores_name = {0,0,0,0},
 	.highscores = {
@@ -512,7 +513,7 @@ void game_init(void) {
 			memcpy(&save, save_file, sizeof(save_t));
 		}
 		else {
-			printf("unexpected size/magic for save data");
+			printf("unexpected size/magic for save data\n");
 		}
 		mem_temp_free(save_file);
 	}
