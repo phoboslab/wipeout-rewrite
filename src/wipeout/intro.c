@@ -95,7 +95,7 @@ static void audio_cb(plm_t *plm, plm_samples_t *samples, void *user) {
 }
 
 static void audio_mix(float *samples, uint32_t len) {
-	int i;
+	unsigned int i;
 	for (i = 0; i < len && audio_buffer_read_pos < audio_buffer_write_pos; i++) {
 		samples[i] = audio_buffer[audio_buffer_read_pos % INTRO_AUDIO_BUFFER_LEN];
 		audio_buffer_read_pos++;

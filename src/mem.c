@@ -63,7 +63,7 @@ void mem_temp_free(void *p) {
 
 	bool found = false;
 	uint32_t remaining_max = 0;
-	for (int i = 0; i < temp_objects_len; i++) {
+	for (unsigned int i = 0; i < temp_objects_len; i++) {
 		if (temp_objects[i] == offset) {
 			temp_objects[i--] = temp_objects[--temp_objects_len];
 			found = true;

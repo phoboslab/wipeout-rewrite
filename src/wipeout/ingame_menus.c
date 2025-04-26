@@ -80,7 +80,7 @@ static void button_music_random(menu_t *menu, int data) {
 static void button_music(menu_t *menu, int data) {
 	menu_page_t *page = menu_push(menu, "MUSIC", NULL);
 
-	for (int i = 0; i < len(def.music); i++) {
+	for (unsigned int i = 0; i < len(def.music); i++) {
 		menu_page_add_button(page, i, def.music[i].name, button_music_track);
 	}
 	menu_page_add_button(page, 0, "RANDOM", button_music_random);
@@ -237,7 +237,7 @@ static void page_race_points_draw(menu_t *menu, int data) {
 
 	pos.y += 24;
 
-	for (int i = 0; i < len(g.race_ranks); i++) {
+	for (unsigned int i = 0; i < len(g.race_ranks); i++) {
 		rgba_t color = g.race_ranks[i].pilot == g.pilot ? UI_COLOR_ACCENT : UI_COLOR_DEFAULT;
 		ui_draw_text(def.pilots[g.race_ranks[i].pilot].name, ui_scaled_pos(anchor, pos), UI_SIZE_8, color);
 		int w = ui_number_width(g.race_ranks[i].points, UI_SIZE_8);
@@ -282,7 +282,7 @@ static void page_championship_points_draw(menu_t *menu, int data) {
 
 	pos.y += 24;
 
-	for (int i = 0; i < len(g.championship_ranks); i++) {
+	for (unsigned int i = 0; i < len(g.championship_ranks); i++) {
 		rgba_t color = g.championship_ranks[i].pilot == g.pilot ? UI_COLOR_ACCENT : UI_COLOR_DEFAULT;
 		ui_draw_text(def.pilots[g.championship_ranks[i].pilot].name, ui_scaled_pos(anchor, pos), UI_SIZE_8, color);
 		int w = ui_number_width(g.championship_ranks[i].points, UI_SIZE_8);
