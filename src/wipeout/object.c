@@ -1300,8 +1300,7 @@ void object_draw(Object *object, mat4_t *mat) {
 				),
 				vec2i(poly.spr->width, poly.spr->height),
 				poly.spr->color,
-				poly.spr->texture,
-				poly.primitive->flag
+				poly.spr->texture
 			);
 
 			poly.spr += 1;
