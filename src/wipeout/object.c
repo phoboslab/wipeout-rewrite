@@ -932,6 +932,8 @@ void object_draw(Object *object, mat4_t *mat) {
 
 	render_set_model_mat(mat);
 
+	// TODO: check for PRM_SINGLE_SIDED
+
 	for (int i = 0; i < primitives_len; i++) {
 		int coord0;
 		int coord1;
