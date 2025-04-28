@@ -38,7 +38,7 @@ Object *objects_load(char *name, texture_list_t tl) {
 		for (int i = 0; i < 16; i++) {
 			object->name[i] = get_i8(bytes, &p);
 		}
-		
+
 		object->mat = mat4_identity();
 		object->vertices_len = get_i16(bytes, &p); p += 2;
 		object->vertices = NULL; get_i32(bytes, &p);
@@ -964,28 +964,6 @@ void object_draw(Object *object, mat4_t *mat) {
 				}
 			}, poly.gt3->texture);
 
-			if (flags_not(poly.primitive->flag, PRM_SINGLE_SIDED)) {
-				render_push_tris((tris_t) {
-					.vertices = {
-						{
-							.pos = vertex[coord0],
-							.uv = {poly.gt3->u0, poly.gt3->v0},
-							.color = poly.gt3->color[0]
-						},
-						{
-							.pos = vertex[coord1],
-							.uv = {poly.gt3->u1, poly.gt3->v1},
-							.color = poly.gt3->color[1]
-						},
-						{
-							.pos = vertex[coord2],
-							.uv = {poly.gt3->u2, poly.gt3->v2},
-							.color = poly.gt3->color[2]
-						},
-					}
-				}, poly.gt3->texture);
-			}
-
 			poly.gt3 += 1;
 			break;
 
@@ -1033,47 +1011,6 @@ void object_draw(Object *object, mat4_t *mat) {
 					},
 				}
 			}, poly.gt4->texture);
-
-			if (flags_not(poly.primitive->flag, PRM_SINGLE_SIDED)) {
-				render_push_tris((tris_t) {
-					.vertices = {
-						{
-							.pos = vertex[coord0],
-							.uv = {poly.gt4->u0, poly.gt4->v0},
-							.color = poly.gt4->color[0]
-						},
-						{
-							.pos = vertex[coord1],
-							.uv = {poly.gt4->u1, poly.gt4->v1},
-							.color = poly.gt4->color[1]
-						},
-						{
-							.pos = vertex[coord2],
-							.uv = {poly.gt4->u2, poly.gt4->v2},
-							.color = poly.gt4->color[2]
-						},
-					}
-				}, poly.gt4->texture);
-				render_push_tris((tris_t) {
-					.vertices = {
-						{
-							.pos = vertex[coord1],
-							.uv = {poly.gt4->u1, poly.gt4->v1},
-							.color = poly.gt4->color[1]
-						},
-						{
-							.pos = vertex[coord3],
-							.uv = {poly.gt4->u3, poly.gt4->v3},
-							.color = poly.gt4->color[3]
-						},
-						{
-							.pos = vertex[coord2],
-							.uv = {poly.gt4->u2, poly.gt4->v2},
-							.color = poly.gt4->color[2]
-						},
-					}
-				}, poly.gt4->texture);
-			}
 
 			poly.gt4 += 1;
 			break;
