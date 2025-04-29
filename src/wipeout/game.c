@@ -33,6 +33,7 @@ const game_def_t def = {
 	.race_types = {
 		[RACE_TYPE_CHAMPIONSHIP] = {.name = "CHAMPIONSHIP RACE"},
 		[RACE_TYPE_SINGLE]       = {.name = "SINGLE RACE"},
+		[RACE_TYPE_NETWORK]      = {.name = "NETWORK"},
 		[RACE_TYPE_TIME_TRIAL]   = {.name = "TIME TRIAL"},
 	},
 

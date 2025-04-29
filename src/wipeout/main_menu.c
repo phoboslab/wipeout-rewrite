@@ -10,6 +10,10 @@
 #include "image.h"
 #include "ui.h"
 
+#include <arpa/inet.h>
+#include <network.h>
+#include <addr_conversions.h>
+
 static void page_main_init(menu_t *menu);
 static void page_options_init(menu_t *menu);
 static void page_race_class_init(menu_t *menu);
@@ -17,6 +21,7 @@ static void page_race_type_init(menu_t *menu);
 static void page_team_init(menu_t *menu);
 static void page_pilot_init(menu_t *menu);
 static void page_circut_init(menu_t *menu);
+static void page_network_init(menu_t *menu);
 static void page_options_controls_init(menu_t *menu);
 static void page_options_video_init(menu_t *menu);
 static void page_options_audio_init(menu_t *menu);
@@ -94,6 +99,85 @@ static void page_main_init(menu_t *menu) {
 	#endif
 }
 
+// -----------------------------------------------------------------------------
+// Network
+
+static void page_network_draw(menu_t *menu, int data) {
+	menu_page_t *page = &menu->pages[menu->index];
+
+	int col_width = 100;
+
+	int name_col = page->items_pos.x + page->block_width - 200;
+	int server_ip_col = page->items_pos.x + page->block_width - 100;
+	int server_ping_col = page->items_pos.x + page->block_width;
+
+	int line_y = page->items_pos.y - 20;
+
+	vec2i_t col0_pos = vec2i(name_col - ui_text_width("NAME", UI_SIZE_8), line_y);
+	ui_draw_text("NAME", ui_scaled_pos(page->items_anchor, col0_pos), UI_SIZE_8, UI_COLOR_DEFAULT);
+
+	vec2i_t col1_pos = vec2i(server_ip_col - ui_text_width("IP", UI_SIZE_8), line_y);
+	ui_draw_text("IP", ui_scaled_pos(page->items_anchor, col1_pos), UI_SIZE_8, UI_COLOR_DEFAULT);
+
+	vec2i_t col2_pos = vec2i(server_ping_col - ui_text_width("PING", UI_SIZE_8), line_y);
+	ui_draw_text("PING", ui_scaled_pos(page->items_anchor, col2_pos), UI_SIZE_8, UI_COLOR_DEFAULT);
+	line_y += 20;
+
+	// TODO a list of servers
+
+	// for (int action = 0; action < NUM_GAME_ACTIONS; action++) {
+	// 	rgba_t text_color = UI_COLOR_DEFAULT;
+	// 	if (action == data) {
+	// 		text_color = UI_COLOR_ACCENT;
+	// 	}
+
+	// 	if (save.buttons[action][0] != INPUT_INVALID) {
+	// 		const char *name = input_button_to_name(save.buttons[action][0]);
+	// 		if (!name) {
+	// 			name = "UNKNWN";
+	// 		}
+	// 		vec2i_t pos = vec2i(left - ui_text_width(name, UI_SIZE_8), line_y);
+	// 		ui_draw_text(name, ui_scaled_pos(page->items_anchor, pos), UI_SIZE_8, text_color);
+	// 	}
+	// 	if (save.buttons[action][1] != INPUT_INVALID) {
+	// 		const char *name = input_button_to_name(save.buttons[action][1]);
+	// 		if (!name) {
+	// 			name = "UNKNWN";
+	// 		}
+	// 		vec2i_t pos = vec2i(right - ui_text_width(name, UI_SIZE_8), line_y);
+	// 		ui_draw_text(name, ui_scaled_pos(page->items_anchor, pos), UI_SIZE_8, text_color);
+	// 	}
+	// 	line_y += 12;
+	// }
+}
+
+static void page_network_query(menu_t *menu, int data) {
+	if(!network_has_ip_socket()) {
+		return;
+	}
+
+	netadr_t dest;
+	string_to_addr("localhost", &dest);
+	dest.port = htons(8000);
+
+	network_send_packet(CLIENT, 5, "hello", dest);
+}
+
+static void page_network_init(menu_t *menu) {
+	menu_page_t *page = menu_push(menu, "NETWORK", page_network_draw);
+	flags_set(page->layout_flags, MENU_VERTICAL | MENU_FIXED);
+	page->title_pos = vec2i(-160, -100);
+	page->title_anchor = UI_POS_MIDDLE | UI_POS_CENTER;
+	page->items_pos = vec2i(-160, -50);
+	page->block_width = 320;
+	page->items_anchor = UI_POS_MIDDLE | UI_POS_CENTER;
+
+	// TODO: this should be populated by some query
+	menu_page_add_button(page, 0, "SERVER 1", page_network_query);
+	menu_page_add_button(page, 1, "SERVER 2", page_network_query);
+	menu_page_add_button(page, 2, "SERVER 3", page_network_query);
+	menu_page_add_button(page, 3, "SERVER 4", page_network_query);
+}
 
 
 // -----------------------------------------------------------------------------
@@ -504,9 +588,9 @@ static void button_race_type_select(menu_t *menu, int data) {
 
 static void page_race_type_draw(menu_t *menu, int data) {
 	switch (data) {
-		case 0: draw_model(models.misc.championship, vec2(0, -0.2), vec3(0, 0, -400), system_cycle_time()); break;
-		case 1: draw_model(models.misc.single_race, vec2(0, -0.2), vec3(0, 0, -400), system_cycle_time()); break;
-		case 2: draw_model(models.options.stopwatch, vec2(0, -0.2), vec3(0, 0, -400), system_cycle_time()); break;
+		case RACE_TYPE_CHAMPIONSHIP: draw_model(models.misc.championship, vec2(0, -0.2), vec3(0, 0, -400), system_cycle_time()); break;
+		case RACE_TYPE_SINGLE: draw_model(models.misc.single_race, vec2(0, -0.2), vec3(0, 0, -400), system_cycle_time()); break;
+		case RACE_TYPE_TIME_TRIAL: draw_model(models.options.stopwatch, vec2(0, -0.2), vec3(0, 0, -400), system_cycle_time()); break;
 	}
 }
 
@@ -558,8 +642,11 @@ static void page_team_init(menu_t *menu) {
 
 static void button_pilot_select(menu_t *menu, int data) {
 	g.pilot = data;
-	if (g.race_type != RACE_TYPE_CHAMPIONSHIP) {
+	if (g.race_type == RACE_TYPE_CHAMPIONSHIP) {
 		page_circut_init(menu);
+	}
+	else if (g.race_type == RACE_TYPE_NETWORK) {
+		page_network_init(menu);
 	}
 	else {
 		g.circut = 0;

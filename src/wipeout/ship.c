@@ -944,7 +944,7 @@ bool ship_intersects_ship(ship_t *self, ship_t *other) {
 			float dp1 = vec3_dot(vec3_sub(p1, other_points[vi]), plane1);
 			float dp2 = vec3_dot(other_lines[vi], plane1);
 			
-			if (dp2 != 0) {
+			if (dp2 != 0.0F) {
 				float norm = dp1 / dp2;
 
 				if ((norm >= 0) && (norm <= 1)) {

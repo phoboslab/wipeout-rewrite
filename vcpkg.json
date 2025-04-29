@@ -12,6 +12,10 @@
       "version>=": "2.2.0#3"
     },
     "sokol",
-    "stb"
+    "stb",
+    {
+      "name": "protobuf-c",
+      "features": ["tools"]
+    }
   ]
 }

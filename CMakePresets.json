@@ -11,7 +11,7 @@
             "generator": "Ninja",
             "binaryDir": "${sourceDir}/build",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_BUILD_TYPE": "Debug",
                 "CMAKE_TOOLCHAIN_FILE": "vcpkg/scripts/buildsystems/vcpkg.cmake",
                 "DEV_BUILD": "ON"
             }
@@ -30,7 +30,7 @@
         {
             "name": "build",
             "configurePreset": "windows-clang-cl",
-            "configuration": "Release"
+            "configuration": "Debug"
         }
     ]
 }
