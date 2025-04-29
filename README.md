@@ -258,7 +258,6 @@ PRs Welcome.
 
 Some things from the original game are not yet implemented in this rewrite. This includes
 
-- screen shake effect
 - game-end animations, formerly `Spline.cpp` (the end messages are just shown over the attract mode cameras)
 - reverb for sfx and music when there's more than 4 track faces (tunnels and such)
 - some more? grep the source for `TODO` and `FIXME`

@@ -397,6 +397,7 @@ save_t save = {
 	.sfx_volume = 0.6,
 	.music_volume = 0.5,
 	.internal_roll = 0.6,
+	.screen_shake = 0.5,
 	.ui_scale = 0,
 	.show_fps = false,
 	.fullscreen = false,
@@ -420,6 +421,7 @@ save_t save = {
 		[A_SBS_MORE] = {INPUT_KEY_P, INPUT_INVALID},
 		[A_SBS_LESS] = {INPUT_KEY_O, INPUT_INVALID},
 	},
+	.analog_response = 2, // Exponent for stick turn input
 
 	.highscores_name = {0,0,0,0},
 	.highscores = {
@@ -514,7 +516,7 @@ void game_init(void) {
 			memcpy(&save, save_file, sizeof(save_t));
 		}
 		else {
-			printf("unexpected size/magic for save data");
+			printf("unexpected size/magic for save data\n");
 		}
 		mem_temp_free(save_file);
 	}

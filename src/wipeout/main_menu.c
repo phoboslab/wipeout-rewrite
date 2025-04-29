@@ -212,7 +212,7 @@ static void page_options_control_draw(menu_t *menu, int data) {
 
 	for (int action = 0; action < NUM_GAME_ACTIONS; action++) {
 		rgba_t text_color = UI_COLOR_DEFAULT;
-		if (action == data) {
+		if (action == page->index) {
 			text_color = UI_COLOR_ACCENT;
 		}
 
@@ -235,6 +235,13 @@ static void page_options_control_draw(menu_t *menu, int data) {
 		line_y += 12;
 	}
 }
+
+static void toggle_analog_response(menu_t *menu, int data) {
+	save.analog_response = (float)data + 1;
+	save.is_dirty = true;
+}
+
+static const char *analog_response[] = {"LINEAR", "MODERATE", "HEAVY"};
 
 static void page_options_controls_init(menu_t *menu) {
 	menu_page_t *page = menu_push(menu, "CONTROLS", page_options_control_draw);
@@ -259,6 +266,7 @@ static void page_options_controls_init(menu_t *menu) {
 	menu_page_add_button(page, A_TOGGLE_SBS, "3D SBS", page_options_controls_set_init);
 	menu_page_add_button(page, A_SBS_MORE, "SBS MORE", page_options_controls_set_init);
 	menu_page_add_button(page, A_SBS_LESS, "SBS LESS", page_options_controls_set_init);
+	menu_page_add_toggle(page, save.analog_response - 1, "ANALOG RESPONSE", analog_response, len(analog_response), toggle_analog_response);
 }
 
 // -----------------------------------------------------------------------------
@@ -297,11 +305,17 @@ static void toggle_post(menu_t *menu, int data) {
 	save.is_dirty = true;
 }
 
+static void toggle_screen_shake(menu_t *menu, int data) {
+	save.screen_shake = (float)data * 0.5;
+	save.is_dirty = true;
+}
+
 static const char *opts_off_on[] = {"OFF", "ON"};
 static const char *opts_roll[] = {"0", "10", "20", "30", "40", "50", "60", "70", "80", "90", "100"};
 static const char *opts_ui_sizes[] = {"AUTO", "1X", "2X", "3X", "4X"};
 static const char *opts_res[] = {"NATIVE", "240P", "480P"};
 static const char *opts_post[] = {"NONE", "CRT EFFECT"};
+static const char *opts_screen_shake[] = {"DISABLED", "REDUCED", "FULL"};
 
 static void page_options_video_init(menu_t *menu) {
 	menu_page_t *page = menu_push(menu, "VIDEO OPTIONS", NULL);
@@ -316,6 +330,7 @@ static void page_options_video_init(menu_t *menu) {
 		menu_page_add_toggle(page, save.fullscreen, "FULLSCREEN", opts_off_on, len(opts_off_on), toggle_fullscreen);
 	#endif
 	menu_page_add_toggle(page, save.internal_roll * 10, "INTERNAL VIEW ROLL", opts_roll, len(opts_roll), toggle_internal_roll);
+	menu_page_add_toggle(page, save.screen_shake * 2, "SCREEN SHAKE", opts_screen_shake, len(opts_screen_shake), toggle_screen_shake);
 	menu_page_add_toggle(page, save.ui_scale, "UI SCALE", opts_ui_sizes, len(opts_ui_sizes), toggle_ui_scale);
 	menu_page_add_toggle(page, save.show_fps, "SHOW FPS", opts_off_on, len(opts_off_on), toggle_show_fps);
 	menu_page_add_toggle(page, save.screen_res, "SCREEN RESOLUTION", opts_res, len(opts_res), toggle_res);
