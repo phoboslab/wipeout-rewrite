@@ -29,6 +29,7 @@ static bool menu_is_scroll_text = false;
 static bool has_show_credits = false;
 static float attract_start_time;
 static menu_t *active_menu = NULL;
+static float lrdist = 150;
 
 void race_init(void) {
 	ingame_menus_load();
@@ -68,6 +69,8 @@ void race_init(void) {
 }
 
 void race_update(void) {
+  if (sbs <= 0)
+  {
 	if (is_paused) {
 		if (!active_menu) {
 			active_menu = pause_menu_init();
@@ -101,9 +104,22 @@ void race_update(void) {
 		}
 	}
 
+    if (input_pressed(A_TOGGLE_SBS)) {
+        sbs = sbs? 0: -1;
+    }
+    if (input_pressed(A_SBS_MORE)) {
+        lrdist += 10;
+        printf("+sbs = %g\n", lrdist);
+    }
+    if (input_pressed(A_SBS_LESS)) {
+        lrdist -= 10;
+        printf("-sbs = %g\n", lrdist);
+    }
+  }
+
 
 	// Draw 3D
-	render_set_view(g.camera.position, g.camera.angle);
+	render_set_view(g.camera.position, g.camera.angle, lrdist * sbs);
 	render_set_screen_position(g.camera.shake);
 
 	render_set_cull_backface(false);
