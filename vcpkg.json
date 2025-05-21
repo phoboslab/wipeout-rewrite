@@ -16,6 +16,7 @@
     {
       "name": "protobuf-c",
       "features": ["tools"]
-    }
+    },
+    "pkgconf"
   ]
 }
