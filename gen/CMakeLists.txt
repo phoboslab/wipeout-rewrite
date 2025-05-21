@@ -4,6 +4,12 @@ file(GLOB PROTO_PROTOBUFS ${CMAKE_SOURCE_DIR}/protos/*.proto)
 set(GENERATED_SRCS "")
 set(GENERATED_HDRS "")
 
+if(WIN32)
+    set(PATHENV "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/tools/protobuf-c;$ENV{PATH}")
+else()
+    set(PATHENV "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/tools/protobuf-c:$ENV{PATH}")
+endif()
+
 foreach(PROTO_FILE ${PROTO_PROTOBUFS})
 
     get_filename_component(PROTO_NAME ${PROTO_FILE} NAME_WE)
@@ -16,7 +22,7 @@ foreach(PROTO_FILE ${PROTO_PROTOBUFS})
     add_custom_command(
         OUTPUT ${GENERATED_SRC} ${GENERATED_HDR}
         COMMAND ${CMAKE_COMMAND} -E env
-            PATH=${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/tools/protobuf-c:$ENV{PATH}
+            "PATH=${PATHENV}"
             ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/tools/protobuf/protoc
         ARGS --c_out=${CMAKE_CURRENT_BINARY_DIR} -I ${CMAKE_SOURCE_DIR}/protos ${PROTO_FILE}
         DEPENDS ${PROTO_FILE}
