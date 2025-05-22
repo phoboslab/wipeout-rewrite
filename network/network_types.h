@@ -1,6 +1,5 @@
 
-#ifndef NETWORK_TYPES_H
-#define NETWORK_TYPES_H
+#pragma once
 
 #include <stdbool.h>
 
@@ -28,5 +27,3 @@ typedef enum {
     CLIENT,
     SERVER
 } netsrc_t;
-
-#endif

@@ -1,6 +1,5 @@
 
-#ifndef CLIENT_H
-#define CLIENT_H
+#pragma once
 
 #include <network_types.h>
 
@@ -11,5 +10,3 @@ void server_connect_client(netadr_t from);
  * and kick off any commands as appopriate
  */
 void server_parse_msg(msg_t *msg);
-
-#endif

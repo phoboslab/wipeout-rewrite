@@ -1,18 +1,21 @@
 
 #include "network.h"
 
+#include "addr_conversions.h"
+
 #include <errno.h>
 #include <stdarg.h>
+#include <stdlib.h>
 #include <stdbool.h>
 #include <stdio.h>
+
 
 #if defined(WIN32)
 #define WIN32_LEAN_AND_MEAN
 #include <winsock2.h>
-#include <Windows.h>
+#include <ws2tcpip.h>
 #else
 #include <arpa/inet.h>
-#include <errno.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <string.h>
@@ -20,12 +23,13 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
+#define INVALID_SOCKET -1
+#endif
+
 #include <ServerInfo.pb-c.h>
 
-#define INVALID_SOCKET -1
 #define SERVER_PORT "8000"
 
-#endif
 
 #if defined(WIN32)
 static WSADATA winsockdata;

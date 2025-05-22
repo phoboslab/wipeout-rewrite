@@ -1,7 +1,5 @@
 
-#ifndef MSG_H
-#define MSG_H
-
+#pragma once
 // server to client
 enum svc_ops_e
 {
@@ -31,4 +29,4 @@ int msg_read_byte(msg_t *msg);
 
 char *msg_read_string_line(msg_t *msg);
 
-#endif
+void msg_bitstream(msg_t* buf);

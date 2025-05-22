@@ -10,7 +10,11 @@
 #include "image.h"
 #include "ui.h"
 
-#include <arpa/inet.h>
+#if defined (WIN32)
+#include <winsock2.h>
+#else
+	#include <arpa/inet.h>
+#endif
 #include <network.h>
 #include <addr_conversions.h>
 

@@ -7,7 +7,10 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
+#if defined(WIN32)
+#else
 #include <unistd.h>
+#endif
 
 #define PACKET_HDR_SIZE 4
 
