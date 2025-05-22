@@ -22,7 +22,8 @@
             "description": "Configuration for clang-cl on Windows using vcpkg",
             "cacheVariables": {
                 "CMAKE_C_COMPILER": "clang-cl",
-                "CMAKE_CXX_COMPILER": "clang-cl"
+                "CMAKE_CXX_COMPILER": "clang-cl",
+                "VCPKG_TARGET_TRIPLET": "x64-windows-static-md"
             }
         }
     ],
