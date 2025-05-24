@@ -646,11 +646,11 @@ static void page_team_init(menu_t *menu) {
 
 static void button_pilot_select(menu_t *menu, int data) {
 	g.pilot = data;
-	if (g.race_type == RACE_TYPE_CHAMPIONSHIP) {
-		page_circut_init(menu);
-	}
-	else if (g.race_type == RACE_TYPE_NETWORK) {
+	if (g.race_type == RACE_TYPE_NETWORK) {
 		page_network_init(menu);
+	}
+	else if (g.race_type != RACE_TYPE_CHAMPIONSHIP) {
+		page_circut_init(menu);
 	}
 	else {
 		g.circut = 0;
