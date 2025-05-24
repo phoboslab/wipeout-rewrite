@@ -3,6 +3,7 @@
 #include "../platform.h"
 #include "../system.h"
 #include "../utils.h"
+#include "../render.h"
 
 #include "object.h"
 #include "track.h"
@@ -41,21 +42,20 @@ void race_init(void) {
 		scene_init_aurora_borealis();	
 	} 
 
+	if (g.is_attract_mode) {
+		g.pilot = rand_int(0, len(def.pilots));
+	}
 	race_start();
 	// render_textures_dump("texture_atlas.png");
 
 	if (g.is_attract_mode) {
 		attract_start_time = system_time();
-		for (unsigned int i = 0; i < len(g.ships); i++) {
-			// FIXME: this is needed to initializes the engine sound. Should 
-			// maybe be done in a separate step?
-			ship_ai_update_intro(&g.ships[i]); 
 
-			g.ships[i].update_func = ship_ai_update_race;
+		for (int i = 0; i < len(g.ships); i++) {
 			flags_rm(g.ships[i].flags, SHIP_VIEW_INTERNAL);
 			flags_rm(g.ships[i].flags, SHIP_RACING);
 		}
-		g.pilot = rand_int(0, len(def.pilots));
+
 		g.camera.update_func = camera_update_attract_random;
 		if (!has_show_credits || rand_int(0, 10) == 0) {
 			active_menu = text_scroll_menu_init(def.credits, len(def.credits));
@@ -104,9 +104,10 @@ void race_update(void) {
 
 	// Draw 3D
 	render_set_view(g.camera.position, g.camera.angle);
+	render_set_screen_position(g.camera.shake);
 
 	render_set_cull_backface(false);
-	scene_draw(&g.camera);	
+	scene_draw(&g.camera);
 	track_draw(&g.camera);
 	render_set_cull_backface(true);
 
@@ -116,7 +117,12 @@ void race_update(void) {
 	particles_draw();
 
 	// Draw 2d
+	render_set_screen_position(vec2(0,0));
 	render_set_view_2d();
+
+	if (g.is_attract_mode && !active_menu) {
+		ui_draw_text("DEMO MODE", ui_scaled_pos(UI_POS_TOP | UI_POS_CENTER, vec2i(-56, 24)), UI_SIZE_8, UI_COLOR_ACCENT);
+	}
 
 	if (flags_is(g.ships[g.pilot].flags, SHIP_RACING)) {
 		hud_draw(&g.ships[g.pilot]);

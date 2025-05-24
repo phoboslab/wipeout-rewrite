@@ -342,7 +342,7 @@ static void hall_of_fame_draw_name_entry(menu_t *menu, ui_pos_t anchor, vec2i_t 
 	// DEL
 	if (hs_char_index == 36) {
 		ui_draw_icon(UI_ICON_DEL, c_pos, UI_COLOR_ACCENT);
-		if (input_pressed(A_MENU_SELECT)) {
+		if (input_pressed(A_MENU_SELECT) || input_pressed(A_MENU_START)) {
 			sfx_play(SFX_MENU_SELECT);
 			if (entry_len > 0) {
 				hs_new_entry.name[entry_len-1] = '\0';
@@ -353,7 +353,7 @@ static void hall_of_fame_draw_name_entry(menu_t *menu, ui_pos_t anchor, vec2i_t 
 	// END
 	else if (hs_char_index == 37) {
 		ui_draw_icon(UI_ICON_END, c_pos, UI_COLOR_ACCENT);
-		if (input_pressed(A_MENU_SELECT)) {
+		if (input_pressed(A_MENU_SELECT) || input_pressed(A_MENU_START)) {
 			hs_entry_complete = true;
 		}
 	}
@@ -363,7 +363,7 @@ static void hall_of_fame_draw_name_entry(menu_t *menu, ui_pos_t anchor, vec2i_t 
 		char selector[2] = {hs_charset[hs_char_index], '\0'};
 		ui_draw_text(selector, c_pos, UI_SIZE_16, UI_COLOR_ACCENT);
 
-		if (input_pressed(A_MENU_SELECT)) {
+		if (input_pressed(A_MENU_SELECT) || input_pressed(A_MENU_START)) {
 			sfx_play(SFX_MENU_SELECT);
 			hs_new_entry.name[entry_len] = hs_charset[hs_char_index];
 			hs_new_entry.name[entry_len+1] = '\0';

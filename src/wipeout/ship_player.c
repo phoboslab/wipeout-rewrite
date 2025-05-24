@@ -176,22 +176,34 @@ void ship_player_update_race(ship_t *self) {
 		// FIXME_PL: make sure revconned is honored
 	}
 
+
+	// Turning
+	// For analog input we set a turn_target (exponentiated by the analog_response 
+	// curve) and stop adding to angular acceleration once we exceed that target. 
+	// For digital input (0|1) the powf() and multiplication with turn_rate_max 
+	// will have no influence on the original behavior.
 	self->angular_acceleration = vec3(0, 0, 0);
 
 	if (input_state(A_LEFT)) {
-		if (self->angular_velocity.y >= 0) {
-			self->angular_acceleration.y += input_state(A_LEFT) * self->turn_rate;
+		if (self->angular_velocity.y < 0) {
+			self->angular_acceleration.y += self->turn_rate * 2;
 		}
-		else if (self->angular_velocity.y < 0) {
-			self->angular_acceleration.y += input_state(A_LEFT) * self->turn_rate * 2;
+		else {
+			float turn_target = powf(input_state(A_LEFT), save.analog_response);
+			if (turn_target * self->turn_rate_max > self->angular_velocity.y) {
+				self->angular_acceleration.y += self->turn_rate;
+			}
 		}
 	}
 	else if (input_state(A_RIGHT)) {
-		if (self->angular_velocity.y <= 0) {
-			self->angular_acceleration.y -= input_state(A_RIGHT) * self->turn_rate;
+		if (self->angular_velocity.y > 0) {
+			self->angular_acceleration.y -= self->turn_rate * 2;
 		}
-		else if (self->angular_velocity.y > 0) {
-			self->angular_acceleration.y -= input_state(A_RIGHT) * self->turn_rate * 2;
+		else {
+			float turn_target = powf(input_state(A_RIGHT), save.analog_response);
+			if (turn_target * -self->turn_rate_max < self->angular_velocity.y) {	
+				self->angular_acceleration.y -= self->turn_rate;
+			}
 		}
 	}
 	
@@ -202,7 +214,7 @@ void ship_player_update_race(ship_t *self) {
 		if (self->ebolt_effect_timer > 0.1) {
 			self->ebolt_effect_timer -= 0.1;
 			if (flags_is(self->flags, SHIP_VIEW_INTERNAL)) {
-				// SetShake(2); // FIXME
+				camera_set_shake(&g.camera, CAMERA_SHAKE_SHORT);
 			}
 			self->angular_velocity.y += rand_float(-0.5, 0.5);
 
@@ -316,7 +328,7 @@ void ship_player_update_race(ship_t *self) {
 			vec3_angle(vec2, vec3) +
 			vec3_angle(vec3, vec1) +
 			vec3_angle(vec1, vec0);
-		if (angle < M_PI * 2 - 0.01) {
+		if (angle < (0.91552734375 * M_PI * 2)) {
 			flags_add(self->flags, SHIP_FLYING);
 		}
 	}
@@ -347,10 +359,10 @@ void ship_player_update_race(ship_t *self) {
 			}
 			self->velocity = vec3_reflect(self->velocity, face->normal, 2);
 			self->velocity = vec3_sub(self->velocity, vec3_mulf(self->velocity, 0.125));
-			self->velocity = vec3_sub(self->velocity, face->normal);
+			self->velocity = vec3_sub(self->velocity, vec3_mulf(face->normal, 64.0 * 30 * system_tick()));
 		}
 		else if (height < 30) {
-			self->velocity = vec3_add(self->velocity, vec3_mulf(face->normal, 4096.0 * 30 * system_tick()));
+			self->velocity = vec3_add(self->velocity, vec3_mulf(face->normal, 64.0 * 30 * system_tick()));
 		}
 
 		if (height < 50) {
@@ -434,8 +446,7 @@ void ship_player_update_race(ship_t *self) {
 	self->position = vec3_add(self->position, vec3_mulf(self->velocity, 0.015625 * 30 * system_tick()));
 
 	self->angular_acceleration.x -= self->angular_velocity.x * 0.25 * 30;
-	self->angular_acceleration.z += (self->angular_velocity.y - 0.5 * self->angular_velocity.z) * 30;
-
+	self->angular_acceleration.z += (self->angular_velocity.y - (0.5 * self->angular_velocity.z)) * 30;
 
 	// Orientation
 	if (self->angular_acceleration.y == 0) {
@@ -472,16 +483,16 @@ void ship_player_update_rescue(ship_t *self) {
 	section_t *next = self->section->next;
 
 	if (flags_is(self->flags, SHIP_IN_TOW)) {
-		self->temp_target = vec3_add(self->temp_target, vec3_mulf(vec3_sub(next->center, self->temp_target), 0.0078125));
+		self->temp_target = vec3_add(self->temp_target, vec3_mulf(vec3_sub(next->center, self->temp_target), 0.0078125)); // >> 7
 		self->velocity = vec3_sub(self->temp_target, self->position);
 		vec3_t target_dir = vec3_sub(next->center, self->section->center);
 
-		self->angular_velocity.y = wrap_angle(-atan2(target_dir.x, target_dir.z) - self->angle.y) * (1.0/16.0) * 30;
+		self->angular_velocity.y = wrap_angle(-atan2(target_dir.x, target_dir.z) - self->angle.y) * 0.015625 * 30; // >> 6
 		self->angle.y = wrap_angle(self->angle.y + self->angular_velocity.y * system_tick());
 	}
 
-	self->angle.x -= self->angle.x * 0.125 * 30 * system_tick();
-	self->angle.z -= self->angle.z * 0.03125 * 30 * system_tick();
+	self->angle.x -= self->angle.x * 0.125 * 30 * system_tick(); // >> 3
+	self->angle.z -= self->angle.z * 0.03125 * 30 * system_tick(); // >> 5
 
 	self->velocity = vec3_sub(self->velocity, vec3_mulf(self->velocity, 0.0625 * 30 * system_tick()));
 	self->position = vec3_add(self->position, vec3_mulf(self->velocity, 0.03125 * 30 * system_tick()));
