@@ -59,7 +59,7 @@ static void draw_model(Object *model, vec2_t offset, vec3_t pos, float rotation)
 // Main Menu
 
 static void button_start_game(menu_t *menu, int data) {
-	page_race_class_init(menu);
+	page_race_type_init(menu);
 }
 
 static void button_options(menu_t *menu, int data) {
@@ -569,7 +569,7 @@ static void button_race_class_select(menu_t *menu, int data) {
 		return;
 	}
 	g.race_class = data;
-	page_race_type_init(menu);
+	page_team_init(menu);
 }
 
 static void page_race_class_draw(menu_t *menu, int data) {
@@ -603,7 +603,12 @@ static void page_race_class_init(menu_t *menu) {
 static void button_race_type_select(menu_t *menu, int data) {
 	g.race_type = data;
 	g.highscore_tab = g.race_type == RACE_TYPE_TIME_TRIAL ? HIGHSCORE_TAB_TIME_TRIAL : HIGHSCORE_TAB_RACE;
-	page_team_init(menu);
+
+	if(g.race_type != RACE_TYPE_NETWORK) {
+		page_race_class_init(menu);
+	} else {
+		page_network_init(menu);
+	}
 }
 
 static void page_race_type_draw(menu_t *menu, int data) {
@@ -662,10 +667,7 @@ static void page_team_init(menu_t *menu) {
 
 static void button_pilot_select(menu_t *menu, int data) {
 	g.pilot = data;
-	if (g.race_type == RACE_TYPE_NETWORK) {
-		page_network_init(menu);
-	}
-	else if (g.race_type != RACE_TYPE_CHAMPIONSHIP) {
+	if (g.race_type != RACE_TYPE_CHAMPIONSHIP) {
 		page_circut_init(menu);
 	}
 	else {
