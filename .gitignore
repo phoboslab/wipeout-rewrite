@@ -5,6 +5,7 @@
 /build/
 
 /wipegame
+/wipegame.exe
 /save.dat
 .DS_STORE
 gamecontrollerdb.txt
