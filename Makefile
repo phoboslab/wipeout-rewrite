@@ -74,7 +74,7 @@ else ifeq ($(shell uname -o), Msys)
 	endif
 
 	C_FLAGS := $(C_FLAGS) -DSDL_MAIN_HANDLED -D__MSYS__
-	L_FLAGS_SDL = -lSDL2 -lSDL2main
+	L_FLAGS_SDL := $(shell sdl2-config --libs)
 	L_FLAGS_SOKOL = --pthread -ldl -lasound
 
 
