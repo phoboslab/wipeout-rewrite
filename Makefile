@@ -73,9 +73,9 @@ else ifeq ($(shell uname -o), Msys)
 		L_FLAGS := $(L_FLAGS) -lglew32 -lopengl32
 	endif
 
-	C_FLAGS := $(C_FLAGS) -DSDL_MAIN_HANDLED -D__MSYS__
-	L_FLAGS_SDL = -lSDL2 -lSDL2main
-	L_FLAGS_SOKOL = --pthread -ldl -lasound
+	C_FLAGS := $(C_FLAGS) -DSDL_MAIN_HANDLED
+	L_FLAGS_SDL := $(shell sdl2-config --libs)
+	L_FLAGS_SOKOL = --pthread -lgdi32 -lole32
 
 
 # Windows NON-MSYS ---------------------------------------------------------------
