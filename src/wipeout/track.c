@@ -248,7 +248,7 @@ void track_load_sections(char *file_name) {
 
 void track_draw_section(section_t *section) {
 	track_face_t *face = g.track.faces + section->face_start;
-	int16_t face_count = section->face_count;
+	uint16_t face_count = section->face_count;
 	
 	for (uint32_t j = 0; j < face_count; j++) {
 		uint16_t tex_index = texture_from_list(g.track.textures, face->texture);
@@ -266,8 +266,6 @@ void track_draw(camera_t *camera) {
 	vec3_t cam_pos = camera->position;
 	vec3_t cam_dir = camera_forward(camera);
 	
-	int drawn = 0;
-	int skipped = 0;
 	for(int32_t i = 0; i < g.track.section_count; i++) {
 		section_t *s = &g.track.sections[i];
 		vec3_t diff = vec3_sub(cam_pos, s->center);

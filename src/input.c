@@ -229,7 +229,7 @@ void input_textinput(int32_t ascii_char) {
 
 void input_bind(input_layer_t layer, button_t button, uint8_t action) {
 	error_if(button < 0 || button >= INPUT_BUTTON_MAX, "Invalid input button %d", button);
-	error_if(action < 0 || action >= INPUT_ACTION_MAX, "Invalid input action %d", action);
+	error_if(action >= INPUT_ACTION_MAX, "Invalid input action %d", action);
 	error_if(layer < 0 || layer >= INPUT_LAYER_MAX, "Invalid input layer %d", layer);
 
 	actions_state[action] = 0;
@@ -259,19 +259,19 @@ void input_unbind_all(input_layer_t layer) {
 
 
 float input_state(uint8_t action) {
-	error_if(action < 0 || action >= INPUT_ACTION_MAX, "Invalid input action %d", action);
+	error_if(action >= INPUT_ACTION_MAX, "Invalid input action %d", action);
 	return actions_state[action];
 }
 
 
 bool input_pressed(uint8_t action) {
-	error_if(action < 0 || action >= INPUT_ACTION_MAX, "Invalid input action %d", action);
+	error_if(action >= INPUT_ACTION_MAX, "Invalid input action %d", action);
 	return actions_pressed[action];
 }
 
 
 bool input_released(uint8_t action) {
-	error_if(action < 0 || action >= INPUT_ACTION_MAX, "Invalid input action %d", action);
+	error_if(action >= INPUT_ACTION_MAX, "Invalid input action %d", action);
 	return actions_released[action];
 }
 

@@ -1,20 +1,23 @@
 
 #include "network.h"
+#include "network_wrapper.h"
 
 #include "addr_conversions.h"
+#include "msg.h"
 
 #include <errno.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdio.h>
-
+#include <stdlib.h>
 
 #if defined(WIN32)
-#define WIN32_LEAN_AND_MEAN
-#include <winsock2.h>
-#include <ws2tcpip.h>
+#include <iphlpapi.h>
+#include <WinSock2.h>
+#include <WS2tcpip.h>
 #else
+#include <net/if.h>
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <netinet/in.h>
@@ -22,25 +25,26 @@
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
+#include <ifaddrs.h>
 
-#define INVALID_SOCKET -1
 #endif
 
 #include <ServerInfo.pb-c.h>
 
-#define SERVER_PORT "8000"
-
-
 #if defined(WIN32)
 static WSADATA winsockdata;
+static bool winsock_initialized = false;
 #endif
 
-int ip_socket;
+static msg_queue_item_t msg_queue[10];
+static int msg_queue_size = 0;
 
-const char *network_get_last_error()
+static int client_sockfd = INVALID_SOCKET;
+
+static const char *network_get_last_error(void)
 {
 #if defined(WIN32)
-    DWORD code = WSAGetLastError();
+    int code = WSAGetLastError();
 
     char *errorMsg = NULL;
 
@@ -60,23 +64,20 @@ const char *network_get_last_error()
 #endif
 }
 
-
-// perhaps a platform specific interface to send a packet? it's really sent here
-static void system_send_packet(int length, const void *data, netadr_t dest_net)
+static void system_send_packet(int sockfd, int length, const void *data, netadr_t dest_net)
 {
 
-    if (!ip_socket)
+    if(sockfd == INVALID_SOCKET)
     {
-        printf("ip connection hasn't been established...");
+        printf("unable to get socket for sending packet: %s\n", network_get_last_error());
         return;
     }
 
-    int net_socket = ip_socket;
     struct sockaddr_in dest_addr;
 
     netadr_to_sockadr(&dest_net, &dest_addr);
 
-    int ret = sendto(net_socket, data, length, 0, (struct sockaddr *)&dest_addr, sizeof(dest_addr));
+    int ret = wrap_sendto(sockfd, data, length, 0, (struct sockaddr *)&dest_addr, sizeof(dest_addr));
 
     if (ret == -1)
     {
@@ -88,11 +89,12 @@ static bool system_get_packet(netadr_t *net_from, msg_t *net_msg)
 {
     struct sockaddr_in from;
 
-    if (!ip_socket)
+    if (client_sockfd == INVALID_SOCKET) {
         return false;
+    }
 
-    int fromlen = sizeof(from);
-    int ret = recvfrom(ip_socket, net_msg->data, net_msg->maxsize, 0, (struct sockaddr *)&from, &fromlen);
+    unsigned int fromlen = sizeof(from);
+    int ret = wrap_recvfrom(client_sockfd, net_msg->data, net_msg->maxsize, 0, (struct sockaddr *)&from, &fromlen);
 
     sockadr_to_netadr(&from, net_from);
     net_msg->readcount = 0;
@@ -118,162 +120,204 @@ static bool system_get_packet(netadr_t *net_from, msg_t *net_msg)
     return true;
 }
 
-// attempt to open network connection
-int network_ip_socket(char *ip_addr, int port)
-{
-
 #if defined(WIN32)
-    SOCKET new_socket;
-#else
-    int new_socket;
+bool system_init_winsock(void) {
+    if (!winsock_initialized) {
+        if ((WSAStartup(MAKEWORD(2, 2), &winsockdata) != 0)) {
+            printf("unable to init windows socket: %s\n",
+                   network_get_last_error());
+            return false;
+        }
+        winsock_initialized = true;
+    }
+
+    return true;
+}
+
+void system_cleanup_winsock(void) {
+    if (winsock_initialized) {
+        WSACleanup();
+        winsock_initialized = false;
+    }
+}
 #endif
 
-    struct sockaddr_in address;
+int network_get_client_socket(void) {
 
-    string_to_socket_addr(ip_addr, (struct sockaddr *)&address);
+#if defined(WIN32)
+    if(!system_init_winsock()) {
+        return INVALID_SOCKET;
+    }
+#endif
 
-    address.sin_port = htons((short)port);
-    address.sin_family = AF_INET;
 
-    bool _true = true;
-    int i = 1;
+#if defined(WIN32)
+    SOCKET new_socket = INVALID_SOCKET;
+#else
+    int new_socket = INVALID_SOCKET;
+#endif
 
-    if ((new_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == INVALID_SOCKET)
-    {
+    struct addrinfo hints, *res;
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_DGRAM;
+    hints.ai_flags = AI_PASSIVE;     // fill in my IP for me
+
+    getaddrinfo(NULL, "8000", &hints, &res);
+
+    if ((new_socket = socket(res->ai_family, res->ai_socktype, res->ai_protocol)) ==
+        INVALID_SOCKET) {
         printf("unable to open socket: %s\n", network_get_last_error());
-        return 0;
+        return INVALID_SOCKET;
     }
 
 #if defined(WIN32)
-    if (ioctlsocket(new_socket, FIONBIO, &_true) == -1)
-    {
+    unsigned long _true = 1;
+    if (ioctlsocket(new_socket, FIONBIO, &_true) == -1) {
 #else
-    if (ioctl(new_socket, FIONBIO, &_true) == -1)
-    {
+    bool _true = true;
+    if (ioctl(new_socket, FIONBIO, &_true) == -1) {
 #endif
-        printf("can't make socket non-blocking: %s\n", network_get_last_error());
-        return 0;
+        printf("can't make socket non-blocking: %s\n",
+               network_get_last_error());
+
+        network_close_socket(&new_socket);
+        return INVALID_SOCKET;
     }
 
-    if (setsockopt(new_socket, SOL_SOCKET, SO_BROADCAST, (char *)&i, sizeof(i)) == -1)
-    {
-        printf("can't make socket broadcastable: %s\n", network_get_last_error());
-        return 0;
+    int i = 1;
+    if (setsockopt(new_socket, SOL_SOCKET, SO_BROADCAST, (char *)&i,
+                   sizeof(i)) == -1) {
+        printf("can't make socket broadcastable: %s\n",
+               network_get_last_error());
+        network_close_socket(&new_socket);
+        return INVALID_SOCKET;
     }
 
-    if (bind(new_socket, (void *)&address, sizeof(address)) == -1)
-    {
-        printf("couldn't bind address and port: %s\n", network_get_last_error());
-#if defined(WIN32)
-        closesocket(new_socket);
-#else
-        close(new_socket);
-#endif
-        return 0;
-    }
+    // Set receive timeout
+    // TODO: can this fail?
+    struct timeval timeout;
+    timeout.tv_sec = CLIENT_SOCKET_TIMEOUT / 1000; // convert milliseconds to seconds
+    timeout.tv_usec = 0;
+    setsockopt(new_socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
 
     return new_socket;
 }
 
-bool network_has_ip_socket(void)
+bool network_bind_socket(int sockfd, char *ip_addr, char* port)
 {
-    return ip_socket;
-}
-
-void network_bind_ip(void)
-{
-
-#if defined(WIN32)
-    if ((WSAStartup(MAKEWORD(1, 1), &winsockdata)))
+    if(client_sockfd != INVALID_SOCKET)
     {
-        printf("unable to init windows socket: %s\n", network_get_last_error());
-        return;
+        printf("socket already bound, cannot bind again\n");
+        return true;
     }
-#endif
 
-    char *address = "localhost";
-    int port = 8000;
-
-    // make several attempts to grab an open port
-    for (int i = 0; i < 10; i++)
+    if(sockfd == INVALID_SOCKET)
     {
-        port += i;
-        ip_socket = network_ip_socket(address, port);
-
-        if (ip_socket)
-        {
-            printf("established connection at %s:%d\n", address, port);
-            return;
-        }
+        printf("could not create socket: %s\n", network_get_last_error());
+        return false;
     }
-    perror("could not establish network connection... quitting.\n");
-}
 
-void network_connect_ip(const char* addr)
-{
     struct addrinfo hints;
-    struct addrinfo* servinfo;
-    
+    struct addrinfo* res;
+
     memset(&hints, 0, sizeof hints);
-    hints.ai_family = AF_UNSPEC;
+    hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_DGRAM;
+    hints.ai_flags = AI_PASSIVE;
 
-    int ret;
+    getaddrinfo(NULL, port, &hints, &res);
 
-    if((ret = getaddrinfo(addr, SERVER_PORT, &hints, &servinfo)) != 0) {
-        printf("getaddrinfo error: %s\n", network_get_last_error());
+    if (bind(sockfd, res->ai_addr, res->ai_addrlen) == -1)
+    {
+        printf("couldn't bind address and port: %s\n", network_get_last_error());
+        return false;
+    }
+
+    char ipstr[INET_ADDRSTRLEN];
+    struct sockaddr_in *addr = (struct sockaddr_in *)res->ai_addr;
+    inet_ntop(AF_INET, &(addr->sin_addr), ipstr, sizeof(ipstr));
+
+    printf("established connection at %s:%s\n", ipstr, port);
+    network_set_bound_ip_socket(sockfd);
+
+    return true;
+}
+
+bool network_has_bound_ip_socket(void)
+{
+    return client_sockfd != INVALID_SOCKET;
+}
+
+void network_set_bound_ip_socket(int sockfd)
+{
+    client_sockfd = sockfd;
+}
+
+int network_get_bound_ip_socket(void) { 
+    return client_sockfd; 
+}
+
+void network_close_socket(int* sockfd) {
+    if(*sockfd == INVALID_SOCKET) {
+        return;
+    }
+#if defined(WIN32)
+    closesocket(*sockfd);
+#else
+    close(*sockfd);
+#endif
+
+    *sockfd = INVALID_SOCKET;
+}
+
+static void network_add_msg_queue_item(const char *buf, int numbytes, const struct sockaddr_storage *their_addr) {
+    msg_queue_item_t *item = (msg_queue_item_t *)malloc(sizeof(msg_queue_item_t));
+    if (!item) {
+        perror("Failed to allocate memory for message queue item");
         return;
     }
 
-    // loop through all the results and connect to the first we can
-    for(struct addrinfo* p = servinfo; p != NULL; p = p->ai_next) {
-        if ((ip_socket = socket(p->ai_family, p->ai_socktype,
-                p->ai_protocol)) == -1) {
-            perror("client: socket");
-            continue;
-        }
-
-        if (connect(ip_socket, p->ai_addr, p->ai_addrlen) == -1) {
-            //close(ip_socket);
-            perror("client: connect");
-            continue;
-        }
-
-        break;
+    item->command = strdup(buf);
+    if (!item->command) {
+        perror("Failed to allocate memory for command string");
+        free(item);
+        return;
     }
 
-    freeaddrinfo(servinfo);
+    memcpy(&item->dest_addr, their_addr, sizeof(struct sockaddr_storage));
+    msg_queue[msg_queue_size++] = *item;
 }
 
-void network_close_connection()
-{
-    // TODO: how to confirm it's an open socket?
-    if(ip_socket > 0) {
-#if defined(WIN32)
-        closesocket(ip_socket);
-#else
-        close(ip_socket);
-#endif
+int network_get_msg_queue_size() {
+    return msg_queue_size;
+}
+
+void network_clear_msg_queue() {
+    for (int i = 0; i < msg_queue_size; i++) {
+        free(msg_queue[i].command);
+    }
+    msg_queue_size = 0;
+}
+
+void network_popleft_msg_queue() {
+    if (msg_queue_size > 0) {
+        free(msg_queue[0].command);
+        memmove(&msg_queue[0], &msg_queue[1], (msg_queue_size - 1) * sizeof(msg_queue_item_t));
+        msg_queue_size--;
     }
 }
 
-void network_out_of_band_print(netsrc_t sock, netadr_t adr, const char *format, ...)
-{
-    va_list argptr;
-    char str[1024];
+bool network_get_msg_queue_item(msg_queue_item_t *item) {
+    if (msg_queue_size == 0) {
+        return false;
+    }
 
-    // header
-    str[0] = -1;
-    str[1] = -1;
-    str[2] = -1;
-    str[3] = -1;
+    *item = msg_queue[0];
 
-    va_start(argptr, format);
-    vsprintf(str + 4, format, argptr);
-    va_end(argptr);
-
-    network_send_packet(sock, strlen(str), str, adr);
+    return true;
 }
+
 
 bool network_get_packet()
 {
@@ -285,105 +329,44 @@ bool network_get_packet()
 
     char s[INET_ADDRSTRLEN];
 
-    if ((numbytes = recvfrom(ip_socket, buf, MAXBUFLEN-1 , 0,
+    if ((numbytes = wrap_recvfrom(client_sockfd, buf, MAXBUFLEN-1 , 0,
         (struct sockaddr *)&their_addr, &addr_len)) == -1) {
-        perror("recvfrom");
-        exit(1);
+        if (errno == EAGAIN || errno == EWOULDBLOCK) {
+            // No data available right now, not a fatal error
+            return false;
+        } else {
+            perror("recvfrom");
+            exit(1);
+        }
     }
 
     struct sockaddr* addr = &((struct sockaddr_in*)&their_addr)->sin_addr;
 
+    /*
     printf("listener: got packet from %s\n",
-        inet_ntop(their_addr.ss_family,
+    inet_ntop(their_addr.ss_family,
             addr,
             s, sizeof s));
     printf("listener: packet is %d bytes long\n", numbytes);
-    buf[numbytes] = '\0';
+
     printf("listener: packet contains \"%s\"\n", buf);
-    return true;
-}
+    */
 
-void network_send_packet(netsrc_t sock, int length, const void *data, netadr_t dest_net)
-{
-    system_send_packet(length, data, dest_net);
-}
-
-// there needs to be enough loopback messages to hold a complete
-// gamestate of maximum size
-#define MAX_LOOPBACK 16
-#define MAX_PACKETLEN 1024
-
-typedef struct
-{
-    byte data[MAX_PACKETLEN];
-    int datalen;
-} loopmsg_t;
-
-typedef struct
-{
-    loopmsg_t msgs[MAX_LOOPBACK];
-    int get, send;
-} loopback_t;
-
-// one for client, one for server
-loopback_t loopbacks[2];
-
-bool network_get_loop_packet(netsrc_t sock, netadr_t *net_from, msg_t *net_message)
-{
-    loopback_t *loop = &loopbacks[sock];
-
-    if (loop->send - loop->get > MAX_LOOPBACK)
-    {
-        loop->get = loop->send - MAX_LOOPBACK;
-    }
-
-    if (loop->get >= loop->send) {
-        return false;
-    }
-
-    int i = loop->get & (MAX_LOOPBACK - 1);
-    loop->get++;
-
-    memcpy(net_message->data, loop->msgs[i].data, loop->msgs[i].datalen);
-    net_message->cursize = loop->msgs[i].datalen;
-    memset(net_from, 0, sizeof(*net_from));
+    buf[numbytes] = '\0';
+    network_add_msg_queue_item(buf, numbytes, &their_addr);
 
     return true;
 }
 
-void network_send_loop_packet(netsrc_t sock, int length, const void *data, netadr_t to)
+void network_send_packet(int sockfd, int length, const void *data, netadr_t dest_net)
 {
-    loopback_t *loop = &loopbacks[sock ^ 1];
-
-    int i = loop->send & (MAX_LOOPBACK - 1);
-    loop->send++;
-
-    memcpy(loop->msgs[i].data, data, length);
-    loop->msgs[i].datalen = length;
+    system_send_packet(sockfd, length, data, dest_net);
 }
 
 void network_send_command(const char *command, netadr_t dest)
 {
     if(strcmp(command, "server_info") == 0) {
-        Wipeout__ServerInfo* msg;
-        wipeout__server_info__init(msg);
-        network_send_packet(ip_socket, strlen(command), "server_info", dest);
-
-    }
-}
-
-void network_process_command(const char* command) 
-{
-    if(strcmp(command, "server_info") == 0) {
-        Wipeout__ServerInfo* msg;
-        wipeout__server_info__init(msg);
-        msg->name = "my server";
-        msg->port = 8000;
-
-        unsigned char* out = (unsigned char*)malloc(wipeout__server_info__get_packed_size(msg));
-        if(out) {
-            wipeout__server_info__pack(msg, out);
-        }
+        network_send_packet(network_get_bound_ip_socket(), strlen(command), "server_info", dest);
     }
 }
 
@@ -392,13 +375,115 @@ int network_sleep(int msec)
     struct timeval timeout;
     fd_set fdset;
 
-    if (!ip_socket) {
-        return 0;
+    if(!network_has_bound_ip_socket()) {
+        printf("no socket bound, nothing to wait for\n");
+        return 0; // no socket bound, nothing to wait for
     }
 
     FD_ZERO(&fdset);
-    FD_SET(ip_socket, &fdset); // network socket
+    FD_SET(client_sockfd, &fdset); // network socket
     timeout.tv_sec = msec / 1000;
     timeout.tv_usec = (msec % 1000) * 1000;
-    return select(ip_socket + 1, &fdset, NULL, NULL, &timeout);
+    return select(client_sockfd + 1, &fdset, NULL, NULL, &timeout);
+}
+
+void network_get_my_ip(char *subnet, size_t len) {
+
+    struct sockaddr_in dest = {0};
+    dest.sin_family = AF_INET;
+    dest.sin_port = htons(53); // DNS
+    inet_pton(AF_INET, "8.8.8.8", &dest.sin_addr);
+
+    int sockfd = network_get_client_socket();
+    if(sockfd == INVALID_SOCKET) {
+        perror("could not get ip address, quitting\n");
+        return;
+    }
+
+    connect(sockfd, (struct sockaddr *)&dest, sizeof(dest));
+
+    struct sockaddr_in local;
+    len = sizeof(local);
+    getsockname(sockfd, (struct sockaddr *)&local, &len);
+
+    strncpy(subnet, inet_ntoa(local.sin_addr), len);
+
+    network_close_socket(&sockfd);
+}
+
+/**
+ * @brief Get broadcast addresses for LAN
+ * 
+ * @return broadcast_list_t 
+ */
+broadcast_list_t network_get_broadcast_addresses(void) {
+    broadcast_list_t result = {0};
+    size_t capacity = 8;
+
+#if defined(WIN32)
+    DWORD size = 0;
+    GetAdaptersAddresses(AF_INET, GAA_FLAG_INCLUDE_PREFIX, NULL, NULL, &size);
+    IP_ADAPTER_ADDRESSES* adapters = (IP_ADAPTER_ADDRESSES*)malloc(size);
+    if (!adapters || GetAdaptersAddresses(AF_INET, GAA_FLAG_INCLUDE_PREFIX, NULL, adapters, &size) != NO_ERROR) {
+        free(adapters);
+        return result;
+    }
+
+    result.list = (broadcast_addr_t*)malloc(sizeof(broadcast_addr_t) * capacity);
+
+    for (IP_ADAPTER_ADDRESSES* adapter = adapters; adapter; adapter = adapter->Next) {
+        if (adapter->IfType != IF_TYPE_ETHERNET_CSMACD && adapter->IfType != IF_TYPE_IEEE80211)
+            continue;
+
+        for (IP_ADAPTER_UNICAST_ADDRESS* ua = adapter->FirstUnicastAddress; ua; ua = ua->Next) {
+            SOCKADDR_IN* sa = (SOCKADDR_IN*)ua->Address.lpSockaddr;
+            uint32_t ip = ntohl(sa->sin_addr.S_un.S_addr);
+            uint32_t mask = (0xFFFFFFFF << (32 - ua->OnLinkPrefixLength)) & 0xFFFFFFFF;
+            uint32_t bcast = (ip & mask) | (~mask);
+            
+            if (result.count >= capacity) {
+                capacity *= 2;
+                result.list = realloc(result.list, sizeof(broadcast_addr_t) * capacity);
+            }
+
+            result.list[result.count++].broadcast.s_addr = htonl(bcast);
+        }
+    }
+
+    free(adapters);
+#else
+    struct ifaddrs* ifaddr = NULL;
+    if (getifaddrs(&ifaddr) == -1) {
+        return result;
+    }
+
+    result.list = (broadcast_addr_t*)malloc(sizeof(broadcast_addr_t) * capacity);
+
+    for (struct ifaddrs* ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
+        if (!ifa->ifa_addr || ifa->ifa_addr->sa_family != AF_INET)
+            continue;
+
+        if ((ifa->ifa_flags & IFF_LOOPBACK) || !(ifa->ifa_flags & IFF_BROADCAST))
+            continue;
+
+        struct ifreq ifr;
+        memset(&ifr, 0, sizeof(ifr));
+        strncpy(ifr.ifr_name, ifa->ifa_name, IFNAMSIZ - 1);
+
+        if (ioctl(network_get_client_socket(), SIOCGIFBRDADDR, &ifr) < 0)
+            continue;
+
+        struct sockaddr_in* baddr = (struct sockaddr_in*)&ifr.ifr_broadaddr;
+        if (result.count >= capacity) {
+            capacity *= 2;
+            result.list = realloc(result.list, sizeof(broadcast_addr_t) * capacity);
+        }
+
+        result.list[result.count++].broadcast = baddr->sin_addr;
+    }
+
+    freeifaddrs(ifaddr);
+#endif
+
+    return result;
 }

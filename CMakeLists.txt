@@ -37,6 +37,8 @@ cmake_dependent_option(MINIMAL_BUNDLE "Do not include music/movies for web build
 option(PATH_ASSETS "Path to where the game assets should be located.")
 option(PATH_USERDATA "Path to where user data (e.g. game saves) should be located.")
 option(DEV_BUILD "Set asset/userdata paths to the source directory for testing" OFF)
+option(USE_ASAN "Enable AddressSanitizer" OFF)
+
 if (DEV_BUILD)
 	set(PATH_ASSETS "${CMAKE_SOURCE_DIR}/")
 	set(PATH_USERDATA "${CMAKE_SOURCE_DIR}/")
@@ -47,6 +49,7 @@ find_package(PkgConfig REQUIRED)
 find_package(OpenGL)
 find_package(GLEW REQUIRED)
 find_package(SDL2 CONFIG REQUIRED)
+find_package(cmocka REQUIRED)
 pkg_check_modules(libprotobuf-c REQUIRED IMPORTED_TARGET libprotobuf-c)
 
 include_directories(${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/include)
@@ -58,6 +61,19 @@ add_compile_options(
     $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall>
     $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wextra>
 )
+
+if(DEV_BUILD AND NOT WIN32)
+	add_compile_options(-g -Og)
+	if(NOT WIN32)
+		add_compile_options(--coverage)
+		add_link_options(--coverage)
+	endif()
+endif()
+
+if(USE_ASAN)
+	add_compile_options(-fsanitize=address)
+	add_link_options(-fsanitize=address)
+endif()
 
 # INTERNAL LIBRARIES
 # PROTOBUF MSGS
@@ -72,7 +88,7 @@ add_subdirectory(server)
 # MAIN GAME TARGET
 set(common_src
 	src/wipeout/camera.c
-	src/wipeout/client.c
+	src/wipeout/server_com.c
 	src/wipeout/droid.c
 	src/wipeout/game.c
 	src/wipeout/hud.c
@@ -223,5 +239,8 @@ if("${PLATFORM}" STREQUAL SDL2)
 elseif("${PLATFORM}" STREQUAL SOKOL)
 	target_sources(wipeout PRIVATE src/platform_sokol.c)
 endif()
+
+# UNIT TESTS TARGET
+add_subdirectory(tests)
 
 install(TARGETS wipeout)

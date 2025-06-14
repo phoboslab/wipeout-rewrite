@@ -1,6 +1,6 @@
 #include "system.h"
 
-#include "wipeout/client.h"
+#include "wipeout/server_com.h"
 #include "input.h"
 #include "render.h"
 #include "platform.h"
@@ -19,7 +19,6 @@ void system_init(void) {
 	time_real = platform_now();
 	input_init();
 	render_init(platform_screen_size());
-	client_init();
 	game_init();
 }
 

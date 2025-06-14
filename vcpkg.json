@@ -3,6 +3,7 @@
   "version-string": "1.0.0",
   "builtin-baseline": "0fa8459cf3a7caca7adc58f992bc32ff13630684",
   "dependencies": [
+    "cmocka",
     {
       "name": "sdl2",
       "version>=": "2.26.5"

@@ -10,8 +10,8 @@
 #include "image.h"
 #include "game.h"
 
-void free_dummmy(void *p) {}
-void *realloc_dummmy(void *p, size_t sz) {
+void free_dummmy(void*) {}
+void *realloc_dummmy(void*, size_t) {
 	die("pl_mpeg needed to realloc. Not implemented. Maybe increase PLM_BUFFER_DEFAULT_SIZE");
 	return NULL;
 }
@@ -86,7 +86,7 @@ void intro_update(void) {
 	}
 }
 
-static void audio_cb(plm_t *plm, plm_samples_t *samples, void *user) {
+static void audio_cb(plm_t*, plm_samples_t *samples, void*) {
 	int len = samples->count * 2;
 	for (int i = 0; i < len; i++) {
 		audio_buffer[audio_buffer_write_pos % INTRO_AUDIO_BUFFER_LEN] = samples->interleaved[i];
@@ -105,7 +105,7 @@ static void audio_mix(float *samples, uint32_t len) {
 	}
 }
 
-static void video_cb(plm_t *plm, plm_frame_t *frame, void *user) {
+static void video_cb(plm_t *plm, plm_frame_t *frame, void*) {
 	plm_frame_to_rgba(frame, (uint8_t *)frame_buffer, plm_get_width(plm) * sizeof(rgba_t));
 	render_texture_replace_pixels(texture, frame_buffer);
 }

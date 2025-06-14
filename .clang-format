@@ -1,0 +1,11 @@
+
+IndentWidth: 4
+UseTab: Never
+
+BraceWrapping:
+  AfterFunction: false
+  AfterControlStatement: false
+  AfterEnum: true
+  AfterStruct: true
+  BeforeElse: true
+  IndentBraces: false

@@ -1,6 +1,8 @@
 
 #include "network_types.h"
 
+#include "msg.h"
+
 #include <stdbool.h>
 
 unsigned short msg_short_flip_endian(unsigned short value)

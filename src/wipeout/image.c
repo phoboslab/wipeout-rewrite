@@ -47,7 +47,7 @@ image_t *image_alloc(uint32_t width, uint32_t height) {
 image_t *image_load_from_bytes(uint8_t *bytes, bool transparent) {
 	uint32_t p = 0;
 
-	uint32_t magic = get_i32_le(bytes, &p);
+	get_i32_le(bytes, &p); // magic
 	uint32_t type = get_i32_le(bytes, &p);
 	rgba_t palette[256];
 
@@ -55,17 +55,17 @@ image_t *image_load_from_bytes(uint8_t *bytes, bool transparent) {
 		type == TIM_TYPE_PALETTED_4_BPP ||
 		type == TIM_TYPE_PALETTED_8_BPP
 	) {
-		uint32_t header_length = get_i32_le(bytes, &p);
-		uint16_t palette_x = get_i16_le(bytes, &p);
-		uint16_t palette_y = get_i16_le(bytes, &p);
+		get_i32_le(bytes, &p); // header length
+		get_i16_le(bytes, &p); // palette x
+		get_i16_le(bytes, &p); // palette y
 		uint16_t palette_colors = get_i16_le(bytes, &p);
-		uint16_t palettes = get_i16_le(bytes, &p);
+		get_i16_le(bytes, &p); // palettes
 		for (int i = 0; i < palette_colors; i++) {
 			palette[i] = tim_16bit_to_rgba(get_u16_le(bytes, &p), transparent);
 		}
 	}
 
-	uint32_t data_size = get_i32_le(bytes, &p);
+	get_i32_le(bytes, &p); // data size
 
 	int32_t pixels_per_16bit = 1;
 	if (type == TIM_TYPE_PALETTED_8_BPP) {
@@ -75,8 +75,8 @@ image_t *image_load_from_bytes(uint8_t *bytes, bool transparent) {
 		pixels_per_16bit = 4;
 	}
 
-	uint16_t skip_x = get_i16_le(bytes, &p);
-	uint16_t skip_y = get_i16_le(bytes, &p);
+	get_i16_le(bytes, &p); // ship x
+	get_i16_le(bytes, &p); // ship y
 	uint16_t entries_per_row  = get_i16_le(bytes, &p);
 	uint16_t rows = get_i16_le(bytes, &p);
 
@@ -288,7 +288,6 @@ texture_list_t image_get_compressed_textures(char *name) {
 	texture_list_t list = {.start = render_textures_len(), .len = cmp->len};
 
 	for (unsigned int i = 0; i < cmp->len; i++) {
-		int32_t width, height;
 		image_t *image = image_load_from_bytes(cmp->entries[i], false);
 
 		// char png_name[1024] = {0};

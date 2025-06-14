@@ -199,7 +199,7 @@ typedef struct {
 	int race_type;
 	int highscore_tab;
 	int team;
-	int pilot;
+	unsigned short pilot;
 	int circut;
 	bool is_attract_mode;
 	bool show_credits;
@@ -247,6 +247,7 @@ typedef struct {
 	bool fullscreen;
 	int screen_res;
 	int post_effect;
+	int network_interface;
 	float screen_shake;
 
 	uint32_t has_rapier_class;

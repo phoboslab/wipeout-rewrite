@@ -2,6 +2,11 @@
 #pragma once
 
 #include <stdbool.h>
+#if defined(WIN32)
+#include <WinSock2.h>
+#else
+#include <netinet/in.h>
+#endif
 
 typedef unsigned char byte;
 
@@ -25,5 +30,14 @@ typedef struct {
 
 typedef enum {
     CLIENT,
-    SERVER
-} netsrc_t;
+    SERVER,
+} network_role_t;
+
+typedef struct {
+    struct in_addr broadcast;
+} broadcast_addr_t;
+
+typedef struct {
+    broadcast_addr_t* list;
+    size_t count;
+} broadcast_list_t;
