@@ -10,6 +10,7 @@
 
 typedef struct Primitive {
 	int16_t type; // Type of Primitive
+	int16_t flag;
 } Primitive;
 
 

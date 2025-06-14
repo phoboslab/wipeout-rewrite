@@ -26,6 +26,7 @@ Object *objects_load(char *name, texture_list_t tl) {
 	Object *objectList = mem_mark();
 	Object *prevObject = NULL;
 	uint32_t p = 0;
+	uint32_t p_at_first_prim;
 
 	while (p < length) {
 		Object *object = mem_bump(sizeof(Object));
@@ -37,7 +38,7 @@ Object *objects_load(char *name, texture_list_t tl) {
 		for (int i = 0; i < 16; i++) {
 			object->name[i] = get_i8(bytes, &p);
 		}
-		
+
 		object->mat = mat4_identity();
 		object->vertices_len = get_i16(bytes, &p); p += 2;
 		object->vertices = NULL; get_i32(bytes, &p);
@@ -97,8 +98,16 @@ Object *objects_load(char *name, texture_list_t tl) {
 			p += 2; // padding
 		}
 
+		// do two iterations of primitives in `bytes`
+		// first pass gets everything that isn't flagged `PRM_SHIP_ENGINE`
+		// we need to rewind the pointer into bytes after
+		// second pass gets everything flagged `PRM_SHIP_ENGINE`
+		// putting them at the end of the list fixes #65
+		// (Track image bleeds through ship engine area)
+		p_at_first_prim = p;
 		object->primitives = mem_mark();
 		for (int i = 0; i < object->primitives_len; i++) {
+			int exhaust_skipped = 0;
 			Prm prm;
 			int16_t prm_type = get_i16(bytes, &p);
 			int16_t prm_flag = get_i16(bytes, &p);
@@ -123,23 +132,43 @@ Object *objects_load(char *name, texture_list_t tl) {
 				break;
 
 			case PRM_TYPE_FT3:
-				prm.ptr = mem_bump(sizeof(FT3));
-				prm.ft3->coords[0] = get_i16(bytes, &p);
-				prm.ft3->coords[1] = get_i16(bytes, &p);
-				prm.ft3->coords[2] = get_i16(bytes, &p);
+				if (flags_is(prm_flag, PRM_SHIP_ENGINE)) {
+					exhaust_skipped = 1;
+					// skip the `bytes` of the exhaust `FT3`
+					get_i16(bytes, &p);
+					get_i16(bytes, &p);
+					get_i16(bytes, &p);
 
-				prm.ft3->texture = texture_from_list(tl, get_i16(bytes, &p));
-				prm.ft3->cba = get_i16(bytes, &p);
-				prm.ft3->tsb = get_i16(bytes, &p);
-				prm.ft3->u0 = get_i8(bytes, &p);
-				prm.ft3->v0 = get_i8(bytes, &p);
-				prm.ft3->u1 = get_i8(bytes, &p);
-				prm.ft3->v1 = get_i8(bytes, &p);
-				prm.ft3->u2 = get_i8(bytes, &p);
-				prm.ft3->v2 = get_i8(bytes, &p);
+					get_u16(bytes, &p);
+					get_i16(bytes, &p);
+					get_i16(bytes, &p);
+					get_i8(bytes, &p);
+					get_i8(bytes, &p);
+					get_i8(bytes, &p);
+					get_i8(bytes, &p);
+					get_i8(bytes, &p);
+					get_i8(bytes, &p);
+					get_i16(bytes, &p);
+					get_u32(bytes, &p);
+				} else {
+					prm.ptr = mem_bump(sizeof(FT3));
+					prm.ft3->coords[0] = get_i16(bytes, &p);
+					prm.ft3->coords[1] = get_i16(bytes, &p);
+					prm.ft3->coords[2] = get_i16(bytes, &p);
 
-				prm.ft3->pad1 = get_i16(bytes, &p);
-				prm.ft3->color = rgba_from_u32(get_u32(bytes, &p));
+					prm.ft3->texture = texture_from_list(tl, get_i16(bytes, &p));
+					prm.ft3->cba = get_i16(bytes, &p);
+					prm.ft3->tsb = get_i16(bytes, &p);
+					prm.ft3->u0 = get_i8(bytes, &p);
+					prm.ft3->v0 = get_i8(bytes, &p);
+					prm.ft3->u1 = get_i8(bytes, &p);
+					prm.ft3->v1 = get_i8(bytes, &p);
+					prm.ft3->u2 = get_i8(bytes, &p);
+					prm.ft3->v2 = get_i8(bytes, &p);
+
+					prm.ft3->pad1 = get_i16(bytes, &p);
+					prm.ft3->color = rgba_from_u32(get_u32(bytes, &p));
+				}
 				break;
 
 			case PRM_TYPE_FT4:
@@ -188,24 +217,46 @@ Object *objects_load(char *name, texture_list_t tl) {
 				break;
 
 			case PRM_TYPE_GT3:
-				prm.ptr = mem_bump(sizeof(GT3));
-				prm.gt3->coords[0] = get_i16(bytes, &p);
-				prm.gt3->coords[1] = get_i16(bytes, &p);
-				prm.gt3->coords[2] = get_i16(bytes, &p);
+				if (flags_is(prm_flag, PRM_SHIP_ENGINE)) {
+					exhaust_skipped = 1;
+					// skip the `bytes` of the exhaust `GT3`
+					get_i16(bytes, &p);
+					get_i16(bytes, &p);
+					get_i16(bytes, &p);
 
-				prm.gt3->texture = texture_from_list(tl, get_i16(bytes, &p));
-				prm.gt3->cba = get_i16(bytes, &p);
-				prm.gt3->tsb = get_i16(bytes, &p);
-				prm.gt3->u0 = get_i8(bytes, &p);
-				prm.gt3->v0 = get_i8(bytes, &p);
-				prm.gt3->u1 = get_i8(bytes, &p);
-				prm.gt3->v1 = get_i8(bytes, &p);
-				prm.gt3->u2 = get_i8(bytes, &p);
-				prm.gt3->v2 = get_i8(bytes, &p);
-				prm.gt3->pad1 = get_i16(bytes, &p);
-				prm.gt3->color[0] = rgba_from_u32(get_u32(bytes, &p));
-				prm.gt3->color[1] = rgba_from_u32(get_u32(bytes, &p));
-				prm.gt3->color[2] = rgba_from_u32(get_u32(bytes, &p));
+					get_u16(bytes, &p);
+					get_i16(bytes, &p);
+					get_i16(bytes, &p);
+					get_i8(bytes, &p);
+					get_i8(bytes, &p);
+					get_i8(bytes, &p);
+					get_i8(bytes, &p);
+					get_i8(bytes, &p);
+					get_i8(bytes, &p);
+					get_i16(bytes, &p);
+					get_u32(bytes, &p);
+					get_u32(bytes, &p);
+					get_u32(bytes, &p);
+				} else {
+					prm.ptr = mem_bump(sizeof(GT3));
+					prm.gt3->coords[0] = get_i16(bytes, &p);
+					prm.gt3->coords[1] = get_i16(bytes, &p);
+					prm.gt3->coords[2] = get_i16(bytes, &p);
+
+					prm.gt3->texture = texture_from_list(tl, get_i16(bytes, &p));
+					prm.gt3->cba = get_i16(bytes, &p);
+					prm.gt3->tsb = get_i16(bytes, &p);
+					prm.gt3->u0 = get_i8(bytes, &p);
+					prm.gt3->v0 = get_i8(bytes, &p);
+					prm.gt3->u1 = get_i8(bytes, &p);
+					prm.gt3->v1 = get_i8(bytes, &p);
+					prm.gt3->u2 = get_i8(bytes, &p);
+					prm.gt3->v2 = get_i8(bytes, &p);
+					prm.gt3->pad1 = get_i16(bytes, &p);
+					prm.gt3->color[0] = rgba_from_u32(get_u32(bytes, &p));
+					prm.gt3->color[1] = rgba_from_u32(get_u32(bytes, &p));
+					prm.gt3->color[2] = rgba_from_u32(get_u32(bytes, &p));
+				}
 				break;
 
 			case PRM_TYPE_GT4:
@@ -444,8 +495,427 @@ Object *objects_load(char *name, texture_list_t tl) {
 				die("bad primitive type %x \n", prm_type);
 			} // switch
 
-			prm.f3->type = prm_type;
-			prm.f3->flag = prm_flag;
+			if (!exhaust_skipped) {
+				prm.primitive->type = prm_type;
+				prm.primitive->flag = prm_flag;
+			}
+		} // each prim
+
+		// set p back to start of primitives in `bytes`
+		p = p_at_first_prim;
+		for (int i = 0; i < object->primitives_len; i++) {
+			Prm prm;
+			int16_t prm_type = get_i16(bytes, &p);
+			int16_t prm_flag = get_i16(bytes, &p);
+			switch (prm_type) {
+			case PRM_TYPE_F3:
+				// skip `F3`
+				get_i16(bytes, &p);
+				get_i16(bytes, &p);
+				get_i16(bytes, &p);
+				get_i16(bytes, &p);
+				get_u32(bytes, &p);
+				break;
+
+			case PRM_TYPE_F4:
+				// skip `F4`
+				get_i16(bytes, &p);
+				get_i16(bytes, &p);
+				get_i16(bytes, &p);
+				get_i16(bytes, &p);
+				get_u32(bytes, &p);
+				break;
+
+			case PRM_TYPE_FT3:
+				// now add the exhaust `FT3`
+				if (flags_is(prm_flag, PRM_SHIP_ENGINE)) {
+					prm.ptr = mem_bump(sizeof(FT3));
+					prm.ft3->type = prm_type;
+					prm.ft3->flag = prm_flag;
+					prm.ft3->coords[0] = get_i16(bytes, &p);
+					prm.ft3->coords[1] = get_i16(bytes, &p);
+					prm.ft3->coords[2] = get_i16(bytes, &p);
+
+					prm.ft3->texture = texture_from_list(tl, get_u16(bytes, &p));
+					prm.ft3->cba = get_i16(bytes, &p);
+					prm.ft3->tsb = get_i16(bytes, &p);
+					prm.ft3->u0 = get_i8(bytes, &p);
+					prm.ft3->v0 = get_i8(bytes, &p);
+					prm.ft3->u1 = get_i8(bytes, &p);
+					prm.ft3->v1 = get_i8(bytes, &p);
+					prm.ft3->u2 = get_i8(bytes, &p);
+					prm.ft3->v2 = get_i8(bytes, &p);
+
+					prm.ft3->pad1 = get_i16(bytes, &p);
+					prm.ft3->color = rgba_from_u32(get_u32(bytes, &p));
+				} else {
+					get_i16(bytes, &p);
+					get_i16(bytes, &p);
+					get_i16(bytes, &p);
+
+					get_u16(bytes, &p);
+					get_i16(bytes, &p);
+					get_i16(bytes, &p);
+					get_i8(bytes, &p);
+					get_i8(bytes, &p);
+					get_i8(bytes, &p);
+					get_i8(bytes, &p);
+					get_i8(bytes, &p);
+					get_i8(bytes, &p);
+					get_i16(bytes, &p);
+					get_u32(bytes, &p);
+				}
+				break;
+
+			case PRM_TYPE_FT4:
+				// skip `FT4`
+				get_i16(bytes, &p);
+				get_i16(bytes, &p);
+				get_i16(bytes, &p);
+				get_i16(bytes, &p);
+
+				get_u16(bytes, &p);
+				get_i16(bytes, &p);
+				get_i16(bytes, &p);
+				get_i8(bytes, &p);
+				get_i8(bytes, &p);
+				get_i8(bytes, &p);
+				get_i8(bytes, &p);
+				get_i8(bytes, &p);
+				get_i8(bytes, &p);
+				get_i8(bytes, &p);
+				get_i8(bytes, &p);
+				get_i16(bytes, &p);
+				get_u32(bytes, &p);
+
+				break;
+
+			case PRM_TYPE_G3:
+				// skip `G3`
+				get_i16(bytes, &p);
+				get_i16(bytes, &p);
+				get_i16(bytes, &p);
+				get_i16(bytes, &p);
+				get_u32(bytes, &p);
+				get_u32(bytes, &p);
+				get_u32(bytes, &p);
+				break;
+
+			case PRM_TYPE_G4:
+				// skip `G4`
+				get_i16(bytes, &p);
+				get_i16(bytes, &p);
+				get_i16(bytes, &p);
+				get_i16(bytes, &p);
+				get_u32(bytes, &p);
+				get_u32(bytes, &p);
+				get_u32(bytes, &p);
+				get_u32(bytes, &p);
+				break;
+
+			case PRM_TYPE_GT3:
+				// now add the exhaust `GT3`
+				if (flags_is(prm_flag, PRM_SHIP_ENGINE)) {
+					prm.ptr = mem_bump(sizeof(GT3));
+					prm.gt3->type = prm_type;
+					prm.gt3->flag = prm_flag;
+					prm.gt3->coords[0] = get_i16(bytes, &p);
+					prm.gt3->coords[1] = get_i16(bytes, &p);
+					prm.gt3->coords[2] = get_i16(bytes, &p);
+
+					prm.gt3->texture = texture_from_list(tl, get_u16(bytes, &p));
+					prm.gt3->cba = get_i16(bytes, &p);
+					prm.gt3->tsb = get_i16(bytes, &p);
+					prm.gt3->u0 = get_i8(bytes, &p);
+					prm.gt3->v0 = get_i8(bytes, &p);
+					prm.gt3->u1 = get_i8(bytes, &p);
+					prm.gt3->v1 = get_i8(bytes, &p);
+					prm.gt3->u2 = get_i8(bytes, &p);
+					prm.gt3->v2 = get_i8(bytes, &p);
+					prm.gt3->pad1 = get_i16(bytes, &p);
+					prm.gt3->color[0] = rgba_from_u32(get_u32(bytes, &p));
+					prm.gt3->color[1] = rgba_from_u32(get_u32(bytes, &p));
+					prm.gt3->color[2] = rgba_from_u32(get_u32(bytes, &p));
+				} else {
+					get_i16(bytes, &p);
+					get_i16(bytes, &p);
+					get_i16(bytes, &p);
+
+					get_u16(bytes, &p);
+					get_i16(bytes, &p);
+					get_i16(bytes, &p);
+					get_i8(bytes, &p);
+					get_i8(bytes, &p);
+					get_i8(bytes, &p);
+					get_i8(bytes, &p);
+					get_i8(bytes, &p);
+					get_i8(bytes, &p);
+					get_i16(bytes, &p);
+					get_u32(bytes, &p);
+					get_u32(bytes, &p);
+					get_u32(bytes, &p);
+				}
+				break;
+
+			case PRM_TYPE_GT4:
+				// skip `GT4`
+				get_i16(bytes, &p);
+				get_i16(bytes, &p);
+				get_i16(bytes, &p);
+				get_i16(bytes, &p);
+
+				get_u16(bytes, &p);
+				get_i16(bytes, &p);
+				get_i16(bytes, &p);
+				get_i8(bytes, &p);
+				get_i8(bytes, &p);
+				get_i8(bytes, &p);
+				get_i8(bytes, &p);
+				get_i8(bytes, &p);
+				get_i8(bytes, &p);
+				get_i8(bytes, &p);
+				get_i8(bytes, &p);
+				get_i16(bytes, &p);
+				get_u32(bytes, &p);
+				get_u32(bytes, &p);
+				get_u32(bytes, &p);
+				get_u32(bytes, &p);
+
+				break;
+
+
+			case PRM_TYPE_TSPR:
+			case PRM_TYPE_BSPR:
+				get_i16(bytes, &p);
+				get_i16(bytes, &p);
+				get_i16(bytes, &p);
+				get_i16(bytes, &p);
+				get_u32(bytes, &p);
+				break;
+
+			// I did not have patience to write code to skip things
+			// that don't actually exist in the Wipeout data
+
+/*			case PRM_TYPE_LSF3:
+				prm.ptr = mem_bump(sizeof(LSF3));
+				prm.lsf3->type = prm_type;
+				prm.lsf3->flag = prm_flag;
+				prm.lsf3->coords[0] = get_i16(bytes, &p);
+				prm.lsf3->coords[1] = get_i16(bytes, &p);
+				prm.lsf3->coords[2] = get_i16(bytes, &p);
+				prm.lsf3->normal = get_i16(bytes, &p);
+				prm.lsf3->color = argb_from_u32(get_u32(bytes, &p));
+				break;
+
+			case PRM_TYPE_LSF4:
+				prm.ptr = mem_bump(sizeof(LSF4));
+				prm.lsf4->type = prm_type;
+				prm.lsf4->flag = prm_flag;
+				prm.lsf4->coords[0] = get_i16(bytes, &p);
+				prm.lsf4->coords[1] = get_i16(bytes, &p);
+				prm.lsf4->coords[2] = get_i16(bytes, &p);
+				prm.lsf4->coords[3] = get_i16(bytes, &p);
+				prm.lsf4->normal = get_i16(bytes, &p);
+				prm.lsf4->pad1 = get_i16(bytes, &p);
+				prm.lsf4->color = argb_from_u32(get_u32(bytes, &p));
+				break;
+
+			case PRM_TYPE_LSFT3:
+				prm.ptr = mem_bump(sizeof(LSFT3));
+				prm.lsft3->type = prm_type;
+				prm.lsft3->flag = prm_flag;
+				prm.lsft3->coords[0] = get_i16(bytes, &p);
+				prm.lsft3->coords[1] = get_i16(bytes, &p);
+				prm.lsft3->coords[2] = get_i16(bytes, &p);
+				prm.lsft3->normal = get_i16(bytes, &p);
+
+				prm.lsft3->texture = texture_from_list(tl, get_i16(bytes, &p));
+				prm.lsft3->cba = get_i16(bytes, &p);
+				prm.lsft3->tsb = get_i16(bytes, &p);
+				prm.lsft3->u0 = get_i8(bytes, &p);
+				prm.lsft3->v0 = get_i8(bytes, &p);
+				prm.lsft3->u1 = get_i8(bytes, &p);
+				prm.lsft3->v1 = get_i8(bytes, &p);
+				prm.lsft3->u2 = get_i8(bytes, &p);
+				prm.lsft3->v2 = get_i8(bytes, &p);
+				prm.lsft3->color = argb_from_u32(get_u32(bytes, &p));
+				break;
+
+			case PRM_TYPE_LSFT4:
+				prm.ptr = mem_bump(sizeof(LSFT4));
+				prm.lsft4->type = prm_type;
+				prm.lsft4->flag = prm_flag;
+				prm.lsft4->coords[0] = get_i16(bytes, &p);
+				prm.lsft4->coords[1] = get_i16(bytes, &p);
+				prm.lsft4->coords[2] = get_i16(bytes, &p);
+				prm.lsft4->coords[3] = get_i16(bytes, &p);
+				prm.lsft4->normal = get_i16(bytes, &p);
+
+				prm.lsft4->texture = texture_from_list(tl, get_i16(bytes, &p));
+				prm.lsft4->cba = get_i16(bytes, &p);
+				prm.lsft4->tsb = get_i16(bytes, &p);
+				prm.lsft4->u0 = get_i8(bytes, &p);
+				prm.lsft4->v0 = get_i8(bytes, &p);
+				prm.lsft4->u1 = get_i8(bytes, &p);
+				prm.lsft4->v1 = get_i8(bytes, &p);
+				prm.lsft4->u2 = get_i8(bytes, &p);
+				prm.lsft4->v2 = get_i8(bytes, &p);
+				prm.lsft4->u3 = get_i8(bytes, &p);
+				prm.lsft4->v3 = get_i8(bytes, &p);
+				prm.lsft4->color = argb_from_u32(get_u32(bytes, &p));
+				break;
+
+			case PRM_TYPE_LSG3:
+				prm.ptr = mem_bump(sizeof(LSG3));
+				prm.lsg3->type = prm_type;
+				prm.lsg3->flag = prm_flag;
+				prm.lsg3->coords[0] = get_i16(bytes, &p);
+				prm.lsg3->coords[1] = get_i16(bytes, &p);
+				prm.lsg3->coords[2] = get_i16(bytes, &p);
+				prm.lsg3->normals[0] = get_i16(bytes, &p);
+				prm.lsg3->normals[1] = get_i16(bytes, &p);
+				prm.lsg3->normals[2] = get_i16(bytes, &p);
+				prm.lsg3->color[0] = argb_from_u32(get_u32(bytes, &p));
+				prm.lsg3->color[1] = argb_from_u32(get_u32(bytes, &p));
+				prm.lsg3->color[2] = argb_from_u32(get_u32(bytes, &p));
+				break;
+
+			case PRM_TYPE_LSG4:
+				prm.ptr = mem_bump(sizeof(LSG4));
+				prm.lsg4->type = prm_type;
+				prm.lsg4->flag = prm_flag;
+				prm.lsg4->coords[0] = get_i16(bytes, &p);
+				prm.lsg4->coords[1] = get_i16(bytes, &p);
+				prm.lsg4->coords[2] = get_i16(bytes, &p);
+				prm.lsg4->coords[3] = get_i16(bytes, &p);
+				prm.lsg4->normals[0] = get_i16(bytes, &p);
+				prm.lsg4->normals[1] = get_i16(bytes, &p);
+				prm.lsg4->normals[2] = get_i16(bytes, &p);
+				prm.lsg4->normals[3] = get_i16(bytes, &p);
+				prm.lsg4->color[0] = argb_from_u32(get_u32(bytes, &p));
+				prm.lsg4->color[1] = argb_from_u32(get_u32(bytes, &p));
+				prm.lsg4->color[2] = argb_from_u32(get_u32(bytes, &p));
+				prm.lsg4->color[3] = argb_from_u32(get_u32(bytes, &p));
+				break;
+
+			case PRM_TYPE_LSGT3:
+				prm.ptr = mem_bump(sizeof(LSGT3));
+				prm.lsgt3->type = prm_type;
+				prm.lsgt3->flag = prm_flag;
+				prm.lsgt3->coords[0] = get_i16(bytes, &p);
+				prm.lsgt3->coords[1] = get_i16(bytes, &p);
+				prm.lsgt3->coords[2] = get_i16(bytes, &p);
+				prm.lsgt3->normals[0] = get_i16(bytes, &p);
+				prm.lsgt3->normals[1] = get_i16(bytes, &p);
+				prm.lsgt3->normals[2] = get_i16(bytes, &p);
+
+				prm.lsgt3->texture = texture_from_list(tl, get_i16(bytes, &p));
+				prm.lsgt3->cba = get_i16(bytes, &p);
+				prm.lsgt3->tsb = get_i16(bytes, &p);
+				prm.lsgt3->u0 = get_i8(bytes, &p);
+				prm.lsgt3->v0 = get_i8(bytes, &p);
+				prm.lsgt3->u1 = get_i8(bytes, &p);
+				prm.lsgt3->v1 = get_i8(bytes, &p);
+				prm.lsgt3->u2 = get_i8(bytes, &p);
+				prm.lsgt3->v2 = get_i8(bytes, &p);
+				prm.lsgt3->color[0] = argb_from_u32(get_u32(bytes, &p));
+				prm.lsgt3->color[1] = argb_from_u32(get_u32(bytes, &p));
+				prm.lsgt3->color[2] = argb_from_u32(get_u32(bytes, &p));
+				break;
+
+			case PRM_TYPE_LSGT4:
+				prm.ptr = mem_bump(sizeof(LSGT4));
+				prm.lsgt4->type = prm_type;
+				prm.lsgt4->flag = prm_flag;
+				prm.lsgt4->coords[0] = get_i16(bytes, &p);
+				prm.lsgt4->coords[1] = get_i16(bytes, &p);
+				prm.lsgt4->coords[2] = get_i16(bytes, &p);
+				prm.lsgt4->coords[3] = get_i16(bytes, &p);
+				prm.lsgt4->normals[0] = get_i16(bytes, &p);
+				prm.lsgt4->normals[1] = get_i16(bytes, &p);
+				prm.lsgt4->normals[2] = get_i16(bytes, &p);
+				prm.lsgt4->normals[3] = get_i16(bytes, &p);
+
+				prm.lsgt4->texture = texture_from_list(tl, get_i16(bytes, &p));
+				prm.lsgt4->cba = get_i16(bytes, &p);
+				prm.lsgt4->tsb = get_i16(bytes, &p);
+				prm.lsgt4->u0 = get_i8(bytes, &p);
+				prm.lsgt4->v0 = get_i8(bytes, &p);
+				prm.lsgt4->u1 = get_i8(bytes, &p);
+				prm.lsgt4->v1 = get_i8(bytes, &p);
+				prm.lsgt4->u2 = get_i8(bytes, &p);
+				prm.lsgt4->v2 = get_i8(bytes, &p);
+				prm.lsgt4->pad1 = get_i16(bytes, &p);
+				prm.lsgt4->color[0] = argb_from_u32(get_u32(bytes, &p));
+				prm.lsgt4->color[1] = argb_from_u32(get_u32(bytes, &p));
+				prm.lsgt4->color[2] = argb_from_u32(get_u32(bytes, &p));
+				prm.lsgt4->color[3] = argb_from_u32(get_u32(bytes, &p));
+				break;
+
+ 			case PRM_TYPE_SPLINE:
+				prm.ptr = mem_bump(sizeof(Spline));
+				prm.spline->type = prm_type;
+				prm.spline->flag = prm_flag;
+				prm.spline->control1.x = get_i32(bytes, &p);
+				prm.spline->control1.y = get_i32(bytes, &p);
+				prm.spline->control1.z = get_i32(bytes, &p);
+				p += 4; // padding
+				prm.spline->position.x = get_i32(bytes, &p);
+				prm.spline->position.y = get_i32(bytes, &p);
+				prm.spline->position.z = get_i32(bytes, &p);
+				p += 4; // padding
+				prm.spline->control2.x = get_i32(bytes, &p);
+				prm.spline->control2.y = get_i32(bytes, &p);
+				prm.spline->control2.z = get_i32(bytes, &p);
+				p += 4; // padding
+				prm.spline->color = argb_from_u32(get_u32(bytes, &p));
+				break;
+
+			case PRM_TYPE_POINT_LIGHT:
+				prm.ptr = mem_bump(sizeof(PointLight));
+				prm.pointLight->type = prm_type;
+				prm.pointLight->flag = prm_flag;
+				prm.pointLight->position.x = get_i32(bytes, &p);
+				prm.pointLight->position.y = get_i32(bytes, &p);
+				prm.pointLight->position.z = get_i32(bytes, &p);
+				p += 4; // padding
+				prm.pointLight->color = argb_from_u32(get_u32(bytes, &p));
+				prm.pointLight->startFalloff = get_i16(bytes, &p);
+				prm.pointLight->endFalloff = get_i16(bytes, &p);
+				break;
+
+			case PRM_TYPE_SPOT_LIGHT:
+				prm.ptr = mem_bump(sizeof(SpotLight));
+				prm.spotLight->type = prm_type;
+				prm.spotLight->flag = prm_flag;
+				prm.spotLight->position.x = get_i32(bytes, &p);
+				prm.spotLight->position.y = get_i32(bytes, &p);
+				prm.spotLight->position.z = get_i32(bytes, &p);
+				p += 4; // padding
+				prm.spotLight->direction.x = get_i16(bytes, &p);
+				prm.spotLight->direction.y = get_i16(bytes, &p);
+				prm.spotLight->direction.z = get_i16(bytes, &p);
+				p += 2; // padding
+				prm.spotLight->color = argb_from_u32(get_u32(bytes, &p));
+				prm.spotLight->startFalloff = get_i16(bytes, &p);
+				prm.spotLight->endFalloff = get_i16(bytes, &p);
+				prm.spotLight->coneAngle = get_i16(bytes, &p);
+				prm.spotLight->spreadAngle = get_i16(bytes, &p);
+				break;
+
+			case PRM_TYPE_INFINITE_LIGHT:
+				prm.ptr = mem_bump(sizeof(InfiniteLight));
+				prm.infiniteLight->type = prm_type;
+				prm.infiniteLight->flag = prm_flag;
+				prm.infiniteLight->direction.x = get_i16(bytes, &p);
+				prm.infiniteLight->direction.y = get_i16(bytes, &p);
+				prm.infiniteLight->direction.z = get_i16(bytes, &p);
+				p += 2; // padding
+				prm.infiniteLight->color = argb_from_u32(get_u32(bytes, &p));
+				break; */
+			default:
+				die("bad primitive type %x \n", prm_type);
+			} // switch
 		} // each prim
 	} // each object
 
@@ -469,6 +939,7 @@ void object_draw(Object *object, mat4_t *mat) {
 		int coord1;
 		int coord2;
 		int coord3;
+
 		switch (poly.primitive->type) {
 		case PRM_TYPE_GT3:
 			coord0 = poly.gt3->coords[0];
@@ -780,3 +1251,4 @@ void object_draw(Object *object, mat4_t *mat) {
 		}
 	}
 }
+
