@@ -15,6 +15,10 @@ uint8_t *platform_load_asset(const char *name, uint32_t *bytes_read);
 uint8_t *platform_load_userdata(const char *name, uint32_t *bytes_read);
 uint32_t platform_store_userdata(const char *name, void *bytes, int32_t len);
 
+void platform_force_feedback(double strength, uint32_t duration);
+
+void platform_set_force_feedback(bool enabled);
+
 #if defined(RENDERER_SOFTWARE)
 	rgba_t *platform_get_screenbuffer(int32_t *pitch);
 #endif

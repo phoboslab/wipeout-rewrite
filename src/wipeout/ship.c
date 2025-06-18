@@ -1,6 +1,7 @@
 #include "../mem.h"
 #include "../utils.h"
 #include "../system.h"
+#include "../platform.h"
 
 #include "object.h"
 #include "scene.h"
@@ -643,6 +644,7 @@ void ship_resolve_wing_collision(ship_t *self, track_face_t *face, float directi
 	self->velocity = vec3_add(self->velocity, vec3_mulf(face->normal, 4096.0)); // div by 4096?
 
 	float magnitude = (fabsf(angle) * self->speed) * 2 * M_PI / 4096.0; // (6 velocity shift, 12 angle shift?)
+	platform_force_feedback(magnitude, 500);
 
 	vec3_t wing_pos;
 	if (direction > 0) {
@@ -670,6 +672,8 @@ void ship_resolve_nose_collision(ship_t *self, track_face_t *face, float directi
 	self->velocity = vec3_add(self->velocity, vec3_mulf(face->normal, 4096)); // div by 4096?
 
 	float magnitude = ((self->speed * 0.0625) + 400) * 2 * M_PI / 4096.0;
+	platform_force_feedback(magnitude, 500);
+
 	if (direction > 0) {
 		self->angular_velocity.y += magnitude;
 	}
@@ -996,6 +1000,8 @@ void ship_collide_with_ship(ship_t *self, ship_t *other) {
 		),
 		self->mass + other->mass
 	);
+
+	platform_force_feedback(1.0, 500);
 
 	vec3_t ship_react = vec3_mulf(vec3_sub(vc, self->velocity), 0.5); // >> 1
 	vec3_t other_react = vec3_mulf(vec3_sub(vc, other->velocity), 0.5); // >> 1

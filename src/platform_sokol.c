@@ -264,6 +264,17 @@ void platform_set_audio_mix_cb(void (*cb)(float *buffer, uint32_t len)) {
 	audio_callback = cb;
 }
 
+void platform_force_feedback(double strength, uint32_t duration) {
+	// Sokol does not support haptic feedback
+	(void)strength; // avoid unused variable warning
+	(void)duration; // avoid unused variable warning
+}
+
+void platform_set_force_feedback(bool enable) {
+	// Sokol does not support haptic feedback
+	(void)enable; // avoid unused variable warning
+}
+
 FILE *platform_open_asset(const char *name, const char *mode) {
 	char *path = strcat(strcpy(temp_path, path_assets), name);
 	return fopen(path, mode);
