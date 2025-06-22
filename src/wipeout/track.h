@@ -48,7 +48,7 @@ typedef struct section_t {
 	vec3_t center;
 
 	int16_t face_start;
-	int16_t face_count;
+	uint16_t face_count;
 
 	int16_t flags;
 	int16_t num;
