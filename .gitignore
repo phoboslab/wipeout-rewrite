@@ -1,8 +1,16 @@
-/wipeout.sublime-project
-/wipeout.sublime-workspace
 
+# ide stuff
+.vscode
+
+# game data
 /wipeout/
+/save.dat
+gamecontrollerdb.txt
+
+# build artifacts
 /build/
+coverage-report/
+*.info
 
 /wipegame
 /wipegame.exe

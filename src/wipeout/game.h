@@ -61,6 +61,7 @@ enum race_class {
 enum race_type {
 	RACE_TYPE_CHAMPIONSHIP,
 	RACE_TYPE_SINGLE,
+	RACE_TYPE_NETWORK,
 	RACE_TYPE_TIME_TRIAL,
 	NUM_RACE_TYPES,
 };
@@ -198,7 +199,7 @@ typedef struct {
 	int race_type;
 	int highscore_tab;
 	int team;
-	int pilot;
+	unsigned short pilot;
 	int circut;
 	bool is_attract_mode;
 	bool show_credits;
@@ -248,6 +249,7 @@ typedef struct {
 	int post_effect;
 	float screen_shake;
 	bool enable_force_feedback;
+	int network_interface;
 
 	uint32_t has_rapier_class;
 	uint32_t has_bonus_circuts;

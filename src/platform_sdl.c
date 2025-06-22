@@ -233,7 +233,7 @@ void platform_set_fullscreen(bool fullscreen) {
 	}
 }
 
-void platform_audio_callback(void* userdata, uint8_t* stream, int len) {
+void platform_audio_callback(void*, uint8_t* stream, int len) {
 	if (audio_callback) {
 		audio_callback((float *)stream, len/sizeof(float));
 	}
@@ -364,7 +364,7 @@ uint32_t platform_store_userdata(const char *name, void *bytes, int32_t len) {
 	#error "Unsupported renderer for platform SDL"
 #endif
 
-int main(int argc, char *argv[]) {
+int main(int, char**) {
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER);
 
 	// Figure out the absolute asset and userdata paths. These may either be

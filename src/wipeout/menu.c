@@ -16,7 +16,7 @@ void menu_reset(menu_t *menu) {
 	menu->index = -1;
 }
 
-menu_page_t *menu_push(menu_t *menu, char *title, void(*draw_func)(menu_t *, int)) {
+menu_page_t *menu_push(menu_t *menu, char *title, void(*draw_func)(menu_t *, int), void(*init_func)(), void(*exit_func)()) {
 	error_if(menu->index >= MENU_PAGES_MAX-1, "MENU_PAGES_MAX exceeded");
 	menu_page_t *page = &menu->pages[++menu->index];
 	page->layout_flags = MENU_VERTICAL | MENU_ALIGN_CENTER;
@@ -24,10 +24,17 @@ menu_page_t *menu_push(menu_t *menu, char *title, void(*draw_func)(menu_t *, int
 	page->title = title;
 	page->subtitle = NULL;
 	page->draw_func = draw_func;
+	page->init_func = init_func;
+	page->exit_func = exit_func;
 	page->entries_len = 0;
 	page->index = 0;
 	page->title_anchor = UI_POS_MIDDLE | UI_POS_CENTER;
 	page->items_anchor = UI_POS_MIDDLE | UI_POS_CENTER;
+
+	if(page->init_func) {
+		page->init_func();
+	}
+
 	return page;
 }
 
@@ -51,23 +58,28 @@ void menu_pop(menu_t *menu) {
 	if (menu->index == 0) {
 		return;
 	}
+
+	if(menu->pages[menu->index].exit_func) {
+		menu->pages[menu->index].exit_func();
+	}
+
 	menu->index--;
 }
 
-void menu_page_add_button(menu_page_t *page, int data, char *text, void(*select_func)(menu_t *, int)) {
+void menu_page_add_button(menu_page_t *page, int data, const char *text, void(*select_func)(menu_t *, int)) {
 	error_if(page->entries_len >= MENU_ENTRIES_MAX-1, "MENU_ENTRIES_MAX exceeded");
 	menu_entry_t *entry = &page->entries[page->entries_len++];
 	entry->data = data;
-	entry->text = text;
+	entry->text = strdup(text);
 	entry->select_func = select_func;
 	entry->type = MENU_ENTRY_BUTTON;
 }
 
-void menu_page_add_toggle(menu_page_t *page, int data, char *text, const char **options, int len, void(*select_func)(menu_t *, int)) {
+void menu_page_add_toggle(menu_page_t *page, int data, const char *text, const char **options, int len, void(*select_func)(menu_t *, int)) {
 	error_if(page->entries_len >= MENU_ENTRIES_MAX-1, "MENU_ENTRIES_MAX exceeded");
 	menu_entry_t *entry = &page->entries[page->entries_len++];
 	entry->data = data;
-	entry->text = text;
+	entry->text = strdup(text);
 	entry->select_func = select_func;
 	entry->type = MENU_ENTRY_TOGGLE;
 	entry->options = options;

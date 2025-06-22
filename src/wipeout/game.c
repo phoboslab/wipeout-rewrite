@@ -33,6 +33,7 @@ const game_def_t def = {
 	.race_types = {
 		[RACE_TYPE_CHAMPIONSHIP] = {.name = "CHAMPIONSHIP RACE"},
 		[RACE_TYPE_SINGLE]       = {.name = "SINGLE RACE"},
+		[RACE_TYPE_NETWORK]      = {.name = "NETWORK"},
 		[RACE_TYPE_TIME_TRIAL]   = {.name = "TIME TRIAL"},
 	},
 
@@ -404,6 +405,7 @@ save_t save = {
 	.screen_res = 0,
 	.post_effect = 0,
 	.enable_force_feedback = false,
+	.network_interface = 0,
 
 	.has_rapier_class = true,  // for testing; should be false in prod
 	.has_bonus_circuts = true, // for testing; should be false in prod
@@ -583,7 +585,7 @@ void game_init(void) {
 	
 
 	// User defined, loaded from the save struct
-	for (int action = 0; action < len(save.buttons); action++) {
+	for (unsigned int action = 0; action < len(save.buttons); action++) {
 		if (save.buttons[action][0] != INPUT_INVALID) {
 			input_bind(INPUT_LAYER_USER, save.buttons[action][0], action);
 		}
@@ -602,7 +604,7 @@ void game_set_scene(game_scene_t scene) {
 }
 
 void game_reset_championship(void) {
-	for (int i = 0; i < len(g.championship_ranks); i++) {
+	for (unsigned int i = 0; i < len(g.championship_ranks); i++) {
 		g.championship_ranks[i].points = 0;
 		g.championship_ranks[i].pilot = i;
 	}
