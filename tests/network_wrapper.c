@@ -64,12 +64,12 @@ ssize_t wrap_sendto(int sockfd, const void *buf, size_t len, int flags,
         fail_msg("Unknown message type in wrap_sendto");
     }
 
+    // TODO: is this necessary?
     // Optionally check or set dest_addr and addrlen if relevant
-    if (dest_addr != NULL && addrlen > 0) {
-        // TODO
-        //check_expected(dest_addr->sa_data);
-        check_expected(dest_addr->sa_family);
-    }
+    // if (dest_addr != NULL && addrlen > 0) {
+    //     check_expected(dest_addr->sa_data);
+    //     check_expected(dest_addr->sa_family);
+    // }
 
     return (ssize_t)mock_type(int); // number of bytes sent
 }

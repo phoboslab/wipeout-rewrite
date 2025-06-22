@@ -15,6 +15,7 @@
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 #include <setjmp.h>
 #include <cmocka.h>
 
@@ -34,11 +35,10 @@ void network_close_socket_sets_socket_invalid(void** state) {
     assert_int_equal(sockfd, INVALID_SOCKET);
 
     // cleanup
-    network_test_cleanup();
+    network_test_cleanup(state);
 }
 
 void test_network_get_packet(void** state) {
-    (void)state; // unused
 
     const char *mock_data = "Hello, World!";
     struct sockaddr_in mock_addr = {0};
@@ -64,10 +64,10 @@ void test_network_get_packet(void** state) {
     assert_int_equal(queue_size, 1);
 
     // cleanup
-    network_test_cleanup();
+    network_test_cleanup(state);
 }
 
-void test_network_get_packet_no_data(void**) {
+void test_network_get_packet_no_data(void** state) {
     network_clear_msg_queue();
 
     const char *mock_data = "Hello, World!";
@@ -92,11 +92,10 @@ void test_network_get_packet_no_data(void**) {
     assert_int_equal(queue_size, 0);
 
     // cleanup
-    network_test_cleanup();
+    network_test_cleanup(state);
 }
 
 void test_network_get_local_subnet(void** state) {
-    (void)state; // unused
 
     char my_ip[INET_ADDRSTRLEN];
     network_get_my_ip(my_ip, INET_ADDRSTRLEN);
@@ -110,5 +109,5 @@ void test_network_get_local_subnet(void** state) {
     assert_int_equal(sockfd, INVALID_SOCKET);
 
     // cleanup
-    network_test_cleanup();
+    network_test_cleanup(state);
 }

@@ -51,7 +51,7 @@ void race_init(void) {
 	if (g.is_attract_mode) {
 		attract_start_time = system_time();
 
-		for (int i = 0; i < len(g.ships); i++) {
+		for (unsigned int i = 0; i < len(g.ships); i++) {
 			flags_rm(g.ships[i].flags, SHIP_VIEW_INTERNAL);
 			flags_rm(g.ships[i].flags, SHIP_RACING);
 		}

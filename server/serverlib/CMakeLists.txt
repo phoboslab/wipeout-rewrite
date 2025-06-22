@@ -1,6 +1,6 @@
 
 add_library(serverlib STATIC
-    client.c
+    client_com.c
 )
 
 target_include_directories(serverlib PUBLIC

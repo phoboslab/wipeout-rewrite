@@ -8,9 +8,7 @@ client communication to server(s),
 including server discovery
 */
 
-typedef struct {
-    const char* name;
-} server_info_t;
+typedef struct server_info_t server_info_t;
 
 void server_com_set_menu_page(menu_page_t *page);
 

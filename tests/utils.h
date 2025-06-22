@@ -1,4 +1,8 @@
 
 #pragma once
 
-void network_test_cleanup(void);
+int network_test_cleanup(void** state);
+
+int server_test_setup(void** state);
+
+int server_test_cleanup(void** state);

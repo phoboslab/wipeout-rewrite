@@ -51,7 +51,7 @@ static void draw_model(Object *model, vec2_t offset, vec3_t pos, float rotation)
 // -----------------------------------------------------------------------------
 // Main Menu
 
-static void button_start_game(menu_t *menu, int data) {
+static void button_start_game(menu_t *menu, int) {
 	page_race_type_init(menu);
 }
 
@@ -119,7 +119,7 @@ static void page_network_draw(menu_t *menu, int) {
 	line_y += 40;
 
 	for (unsigned int i = 0; i < server_com_get_n_servers(); i++) {
-		server_info_t *server = &server_com_get_servers()[i];
+		//server_info_t *server = &server_com_get_servers()[i];
 
 		// TODO:
 		//pos.x = server_ip_col - ui_text_width(server->ip, UI_SIZE_8);
@@ -259,7 +259,7 @@ static void page_options_controls_set_init(menu_t *menu, int data) {
 }
 
 
-static void page_options_control_draw(menu_t *menu, int data) {
+static void page_options_control_draw(menu_t *menu, int) {
 	menu_page_t *page = &menu->pages[menu->index];
 
 	int left = page->items_pos.x + page->block_width - 100;
@@ -299,7 +299,7 @@ static void page_options_control_draw(menu_t *menu, int data) {
 	}
 }
 
-static void toggle_analog_response(menu_t *menu, int data) {
+static void toggle_analog_response(menu_t*, int data) {
 	save.analog_response = (float)data + 1;
 	save.is_dirty = true;
 }
@@ -366,7 +366,7 @@ static void toggle_post(menu_t*, int data) {
 	save.is_dirty = true;
 }
 
-static void toggle_screen_shake(menu_t *menu, int data) {
+static void toggle_screen_shake(menu_t*, int data) {
 	save.screen_shake = (float)data * 0.5;
 	save.is_dirty = true;
 }

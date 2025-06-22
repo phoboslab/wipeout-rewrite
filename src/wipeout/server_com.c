@@ -26,9 +26,14 @@ atomic_bool network_discovery_on = false;
 thrd_t network_discovery_thread;
 thrd_t network_discovery_response_thread;
 
-static int DISCOVERY_TIMEOUT = 30; // seconds
+static int DISCOVERY_TIMEOUT = 3; // seconds
 
 static int sockfd = INVALID_SOCKET;
+
+struct server_info_t{
+    const char* name;
+    struct sockaddr_in addr; // server address
+};
 
 static server_info_t* servers = NULL; // dynamically allocated array of server_info_t
 static unsigned int n_servers = 0;
@@ -40,8 +45,41 @@ void server_com_client_init(void) {
 }
 
 static void server_com_client_connect(menu_t*, int index) {
-    server_info_t server = servers[index];
+
+    // TODO: causes a problem if we try to connect
+    // before server discovery has terminated;
+    // should we just halt discovery when we connect?
+
+    if(!servers || n_servers == 0) {
+        printf("No servers available to connect to.\n");
+        return;
+    }
+
+    struct server_info_t server = servers[index];
     printf("Connecting to server: %s\n", server.name);
+
+    socklen_t fromlen = sizeof(server.addr);
+
+    const char* message = "connect";
+    network_send_packet(sockfd, strlen(message), message, server.addr);
+
+    char buffer[1024];
+    ssize_t len = wrap_recvfrom(sockfd, buffer, sizeof(buffer)-1, 0,
+                               (struct sockaddr*)(&server.addr), &fromlen);
+
+    if (len < 0) {
+        perror("recvfrom");
+        return;
+    }
+
+    buffer[len] = '\0'; // null-terminate the received data
+    printf("Received response from server: %s\n", buffer);
+    if (strcmp(buffer, "connected") == 0) {
+        printf("Successfully connected to server %s\n", server.name);
+    }
+    else {
+        printf("Failed to connect to server %s: %s\n", server.name, buffer);
+    }
 }
 
 static void server_com_update_servers() {
@@ -60,7 +98,7 @@ static void server_com_update_servers() {
     char name[32];
     snprintf(name, sizeof(name), "%s", server.name);
 
-    menu_page_add_button(server_menu_page, n_servers + 1, name, server_com_client_connect);
+    menu_page_add_button(server_menu_page, n_servers, name, server_com_client_connect);
 }
 
 /**
@@ -118,7 +156,12 @@ static int server_com_discovery_response(void* arg) {
 
             servers = realloc(servers, sizeof(server_info_t) * (n_servers + 1));
             servers[n_servers] = (server_info_t) {
-                .name = msg->name
+                .name = msg->name,
+                .addr = {
+                    .sin_family = AF_INET,
+                    .sin_port = htons(msg->port),
+                    .sin_addr = from.sin_addr
+                }
             };
             server_com_update_servers(); // update the menu with the new server
             n_servers++;
@@ -172,10 +215,7 @@ void server_com_init_network_discovery(void) {
         return;
     }
 
-    char my_ip[INET_ADDRSTRLEN];
-    network_get_my_ip(my_ip, INET_ADDRSTRLEN);
-
-    if(!network_bind_socket(sockfd, my_ip, "8001")) {
+    if(!network_bind_socket(sockfd, "8001")) {
         printf("unable to bind socket for network discovery\n");
         network_close_socket(&sockfd);
         return;

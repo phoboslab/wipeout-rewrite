@@ -13,6 +13,7 @@ coverage-report/
 *.info
 
 /wipegame
-
-# misc OS stuff
+/wipegame.exe
+/save.dat
 .DS_STORE
+gamecontrollerdb.txt

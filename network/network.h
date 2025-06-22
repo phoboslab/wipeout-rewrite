@@ -11,13 +11,13 @@
 #define INVALID_SOCKET -1
 #endif
 
-static int WIPEOUT_PORT = 8000;
-static int WIPEOUT_CLIENT_PORT = 8001;
-static int CLIENT_SOCKET_TIMEOUT = 3000; // 3 seconds
+#define WIPEOUT_PORT 8000
+#define WIPEOUT_CLIENT_PORT 8001
+#define CLIENT_SOCKET_TIMEOUT 3000 // 3 seconds
 
 typedef struct {
     const char* command;
-    struct sockaddr_storage dest_addr;
+    struct sockaddr_in dest_addr;
 } msg_queue_item_t;
 
 #if defined(WIN32)
@@ -79,10 +79,9 @@ void network_close_socket(int* sockfd);
  * listen for incoming packets.
  * 
  * @param sockfd the socket file descriptor
- * @param ip_addr the IP address to bind to
  * @param port the port to bind to
  */
-bool network_bind_socket(int sockfd, char *ip_addr, char* port);
+bool network_bind_socket(int sockfd, char* port);
 
 bool network_get_packet(void);
 
@@ -94,12 +93,7 @@ bool network_get_packet(void);
  * @param data the data to send
  * @param dest_net the destination netadr_t
  */
-void network_send_packet(int sockfd, int length, const void* data, netadr_t dest_net);
-
-/**
- * @brief Send a command to the server or to a client
- */
-void network_send_command(const char* command, netadr_t dest);
+void network_send_packet(int sockfd, int length, const void* data, struct sockaddr_in dest_net);
 
 /**
  * @brief clears the current message queue

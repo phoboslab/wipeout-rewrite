@@ -64,7 +64,7 @@ static const char *network_get_last_error(void)
 #endif
 }
 
-static void system_send_packet(int sockfd, int length, const void *data, netadr_t dest_net)
+static void system_send_packet(int sockfd, int length, const void *data, struct sockaddr_in dest_net)
 {
 
     if(sockfd == INVALID_SOCKET)
@@ -73,52 +73,15 @@ static void system_send_packet(int sockfd, int length, const void *data, netadr_
         return;
     }
 
-    struct sockaddr_in dest_addr;
 
-    netadr_to_sockadr(&dest_net, &dest_addr);
-
-    int ret = wrap_sendto(sockfd, data, length, 0, (struct sockaddr *)&dest_addr, sizeof(dest_addr));
+    int ret = wrap_sendto(sockfd, data, length, 0, (struct sockaddr *)&dest_net, sizeof(dest_net));
 
     if (ret == -1)
     {
-        printf("unable to send packet to %s: %s\n", addr_to_string(dest_net), network_get_last_error());
+       // printf("unable to send packet to %s: %s\n", addr_to_string(dest_net), network_get_last_error());
     }
 }
 
-static bool system_get_packet(netadr_t *net_from, msg_t *net_msg)
-{
-    struct sockaddr_in from;
-
-    if (client_sockfd == INVALID_SOCKET) {
-        return false;
-    }
-
-    unsigned int fromlen = sizeof(from);
-    int ret = wrap_recvfrom(client_sockfd, net_msg->data, net_msg->maxsize, 0, (struct sockaddr *)&from, &fromlen);
-
-    sockadr_to_netadr(&from, net_from);
-    net_msg->readcount = 0;
-
-    if (ret == -1)
-    {
-        int err = errno;
-
-        if (err == EWOULDBLOCK || err == ECONNREFUSED) {
-            return false;
-        }
-        
-        printf("%s from %s\n", network_get_last_error(), addr_to_string(*net_from));
-    }
-
-    if (ret == net_msg->maxsize)
-    {
-        printf("oversize packet from %s\n", addr_to_string(*net_from));
-        return false;
-    }
-
-    net_msg->cursize = ret;
-    return true;
-}
 
 #if defined(WIN32)
 bool system_init_winsock(void) {
@@ -204,7 +167,7 @@ int network_get_client_socket(void) {
     return new_socket;
 }
 
-bool network_bind_socket(int sockfd, char *ip_addr, char* port)
+bool network_bind_socket(int sockfd, char* port)
 {
     if(client_sockfd != INVALID_SOCKET)
     {
@@ -271,7 +234,7 @@ void network_close_socket(int* sockfd) {
     *sockfd = INVALID_SOCKET;
 }
 
-static void network_add_msg_queue_item(const char *buf, int numbytes, const struct sockaddr_storage *their_addr) {
+static void network_add_msg_queue_item(const char *buf, const struct sockaddr_in* their_addr) {
     msg_queue_item_t *item = (msg_queue_item_t *)malloc(sizeof(msg_queue_item_t));
     if (!item) {
         perror("Failed to allocate memory for message queue item");
@@ -285,7 +248,7 @@ static void network_add_msg_queue_item(const char *buf, int numbytes, const stru
         return;
     }
 
-    memcpy(&item->dest_addr, their_addr, sizeof(struct sockaddr_storage));
+    memcpy(&item->dest_addr, their_addr, sizeof(struct sockaddr_in));
     msg_queue[msg_queue_size++] = *item;
 }
 
@@ -327,8 +290,6 @@ bool network_get_packet()
     socklen_t addr_len = sizeof their_addr;
     int numbytes = 0;
 
-    char s[INET_ADDRSTRLEN];
-
     if ((numbytes = wrap_recvfrom(client_sockfd, buf, MAXBUFLEN-1 , 0,
         (struct sockaddr *)&their_addr, &addr_len)) == -1) {
         if (errno == EAGAIN || errno == EWOULDBLOCK) {
@@ -340,34 +301,15 @@ bool network_get_packet()
         }
     }
 
-    struct sockaddr* addr = &((struct sockaddr_in*)&their_addr)->sin_addr;
-
-    /*
-    printf("listener: got packet from %s\n",
-    inet_ntop(their_addr.ss_family,
-            addr,
-            s, sizeof s));
-    printf("listener: packet is %d bytes long\n", numbytes);
-
-    printf("listener: packet contains \"%s\"\n", buf);
-    */
-
     buf[numbytes] = '\0';
-    network_add_msg_queue_item(buf, numbytes, &their_addr);
+    network_add_msg_queue_item(buf, (struct sockaddr_in*)&their_addr);
 
     return true;
 }
 
-void network_send_packet(int sockfd, int length, const void *data, netadr_t dest_net)
+void network_send_packet(int sockfd, int length, const void *data, struct sockaddr_in dest_net)
 {
     system_send_packet(sockfd, length, data, dest_net);
-}
-
-void network_send_command(const char *command, netadr_t dest)
-{
-    if(strcmp(command, "server_info") == 0) {
-        network_send_packet(network_get_bound_ip_socket(), strlen(command), "server_info", dest);
-    }
 }
 
 int network_sleep(int msec)
