@@ -84,6 +84,8 @@ void menu_update(menu_t *menu) {
 	// Handle menu entry selecting
 	int last_index = page->index;
 	int selected_data = 0;
+  if (sbs <= 0)
+  {
 	if (page->entries_len > 0) {
 		if (flags_is(page->layout_flags, MENU_HORIZONTAL)) {
 			if (input_pressed(A_MENU_LEFT)) {
@@ -114,7 +116,7 @@ void menu_update(menu_t *menu) {
 		}
 		selected_data = page->entries[page->index].data;
 	}
-
+  }
 	if (page->draw_func) {
 		page->draw_func(menu, selected_data);
 	}
@@ -193,6 +195,8 @@ void menu_update(menu_t *menu) {
 		}
 	}
 
+  if (sbs <= 0)
+  {
 	// Handle back buttons
 	if (input_pressed(A_MENU_BACK) || input_pressed(A_MENU_QUIT)) {
 		if (menu->index != 0) {
@@ -201,6 +205,7 @@ void menu_update(menu_t *menu) {
 		}
 		return;
 	}
+  }
 
 	if (page->entries_len == 0) {
 		return;
@@ -210,6 +215,8 @@ void menu_update(menu_t *menu) {
 	// Handle toggle entries
 	menu_entry_t *entry = &page->entries[page->index];
 
+  if (sbs <= 0)
+  {
 	if (entry->type == MENU_ENTRY_TOGGLE) {
 		if (input_pressed(A_MENU_LEFT)) {
 			sfx_play(SFX_MENU_SELECT);
@@ -242,4 +249,5 @@ void menu_update(menu_t *menu) {
 			}
 		}
 	}
+  }
 }
