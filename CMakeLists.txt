@@ -47,67 +47,10 @@ find_package(OpenGL)
 find_package(GLEW)
 find_package(SDL2)
 
-set(common_src
-	src/wipeout/camera.c
-	src/wipeout/camera.h
-	src/wipeout/droid.c
-	src/wipeout/droid.h
-	src/wipeout/game.c
-	src/wipeout/game.h
-	src/wipeout/hud.c
-	src/wipeout/hud.h
-	src/wipeout/image.c
-	src/wipeout/image.h
-	src/wipeout/ingame_menus.c
-	src/wipeout/ingame_menus.h
-	src/wipeout/intro.c
-	src/wipeout/intro.h
-	src/wipeout/main_menu.c
-	src/wipeout/main_menu.h
-	src/wipeout/menu.c
-	src/wipeout/menu.h
-	src/wipeout/object.c
-	src/wipeout/object.h
-	src/wipeout/particle.c
-	src/wipeout/particle.h
-	src/wipeout/race.c
-	src/wipeout/race.h
-	src/wipeout/scene.c
-	src/wipeout/scene.h
-	src/wipeout/sfx.c
-	src/wipeout/sfx.h
-	src/wipeout/ship.c
-	src/wipeout/ship.h
-	src/wipeout/ship_ai.c
-	src/wipeout/ship_ai.h
-	src/wipeout/ship_player.c
-	src/wipeout/ship_player.h
-	src/wipeout/title.c
-	src/wipeout/title.h
-	src/wipeout/track.c
-	src/wipeout/track.h
-	src/wipeout/ui.c
-	src/wipeout/ui.h
-	src/wipeout/weapon.c
-	src/wipeout/weapon.h
-	src/input.c
-	src/input.h
-	src/mem.c
-	src/mem.h
-	src/platform.h
-	src/render.h
-	src/system.c
-	src/system.h
-	src/types.c
-	src/types.h
-	src/utils.c
-	src/utils.h
+set(WIPEOUT_ROOT "${CMAKE_SOURCE_DIR}")
+include("${CMAKE_SOURCE_DIR}/cmake/wipeout_sources.cmake")
 
-	packaging/windows/wipeout.exe.manifest
-	packaging/windows/wipeout.rc
-)
-
-add_executable(wipeout WIN32 ${common_src})
+add_executable(wipeout WIN32 ${WIPEOUT_COMMON_SRC})
 set_property(TARGET wipeout PROPERTY C_STANDARD 11)
 target_include_directories(wipeout PRIVATE src)
 target_include_directories(wipeout SYSTEM PRIVATE src/libs)

@@ -8,6 +8,25 @@
 	#define glBindVertexArray glBindVertexArrayAPPLE
 	#define glDeleteVertexArrays glDeleteVertexArraysAPPLE
 
+// Android (GLES2)
+#elif defined(__ANDROID__)
+	#define GL_GLEXT_PROTOTYPES
+	#include <GLES2/gl2.h>
+	#include <GLES2/gl2ext.h>
+
+	#define glGenVertexArrays glGenVertexArraysOES
+	#define glBindVertexArray glBindVertexArrayOES
+	#define glDeleteVertexArrays glDeleteVertexArraysOES
+
+	#ifndef GL_OES_vertex_array_object
+		#undef glGenVertexArrays
+		#undef glBindVertexArray
+		#undef glDeleteVertexArrays
+		#define glGenVertexArrays(n, arrays) ((void)0)
+		#define glBindVertexArray(array) ((void)0)
+		#define glDeleteVertexArrays(n, arrays) ((void)0)
+	#endif
+
 // Linux
 #elif defined(__unix__)
 	#include <GL/glew.h>
@@ -390,6 +409,8 @@ void render_init(vec2i_t screen_size) {
 	#if defined(__APPLE__) && defined(__MACH__)
 		// OSX
 		// (nothing to do here)
+	#elif defined(__ANDROID__)
+		// GLES uses system-provided symbols.
 	#else
 		// Windows, Linux
 		glewExperimental = GL_TRUE;
@@ -988,6 +1009,7 @@ void render_textures_reset(uint16_t len) {
 	}
 }
 
+#if !defined(USE_GLES2)
 void render_textures_dump(const char *path) {
 	int width = ATLAS_SIZE * ATLAS_GRID;
 	int height = ATLAS_SIZE * ATLAS_GRID;
@@ -996,3 +1018,8 @@ void render_textures_dump(const char *path) {
 	stbi_write_png(path, width, height, 4, pixels, 0);
 	free(pixels);
 }
+#else
+void render_textures_dump(const char *path) {
+	(void)path;
+}
+#endif

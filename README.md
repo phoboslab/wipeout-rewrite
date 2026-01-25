@@ -216,6 +216,11 @@ emcmake cmake -S path/to/wipeout-rewrite -B path/to/build-dir -DPLATFORM=SOKOL
 cmake --build path/to/build-dir
 ```
 
+## Android
+
+See `android/README.md` for the Android Studio/NDK build, SDL2 setup, and asset
+packing instructions.
+
 ## Build Flags for cmake
 
 The following is a table for project specific build flags using CMake:
