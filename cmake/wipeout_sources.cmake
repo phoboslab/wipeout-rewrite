@@ -1,0 +1,68 @@
+# Shared source list for Wipeout targets.
+if(NOT DEFINED WIPEOUT_ROOT)
+	set(WIPEOUT_ROOT "${CMAKE_SOURCE_DIR}")
+endif()
+
+set(WIPEOUT_COMMON_SRC
+	"${WIPEOUT_ROOT}/src/wipeout/camera.c"
+	"${WIPEOUT_ROOT}/src/wipeout/camera.h"
+	"${WIPEOUT_ROOT}/src/wipeout/droid.c"
+	"${WIPEOUT_ROOT}/src/wipeout/droid.h"
+	"${WIPEOUT_ROOT}/src/wipeout/game.c"
+	"${WIPEOUT_ROOT}/src/wipeout/game.h"
+	"${WIPEOUT_ROOT}/src/wipeout/hud.c"
+	"${WIPEOUT_ROOT}/src/wipeout/hud.h"
+	"${WIPEOUT_ROOT}/src/wipeout/image.c"
+	"${WIPEOUT_ROOT}/src/wipeout/image.h"
+	"${WIPEOUT_ROOT}/src/wipeout/ingame_menus.c"
+	"${WIPEOUT_ROOT}/src/wipeout/ingame_menus.h"
+	"${WIPEOUT_ROOT}/src/wipeout/intro.c"
+	"${WIPEOUT_ROOT}/src/wipeout/intro.h"
+	"${WIPEOUT_ROOT}/src/wipeout/main_menu.c"
+	"${WIPEOUT_ROOT}/src/wipeout/main_menu.h"
+	"${WIPEOUT_ROOT}/src/wipeout/menu.c"
+	"${WIPEOUT_ROOT}/src/wipeout/menu.h"
+	"${WIPEOUT_ROOT}/src/wipeout/object.c"
+	"${WIPEOUT_ROOT}/src/wipeout/object.h"
+	"${WIPEOUT_ROOT}/src/wipeout/particle.c"
+	"${WIPEOUT_ROOT}/src/wipeout/particle.h"
+	"${WIPEOUT_ROOT}/src/wipeout/race.c"
+	"${WIPEOUT_ROOT}/src/wipeout/race.h"
+	"${WIPEOUT_ROOT}/src/wipeout/scene.c"
+	"${WIPEOUT_ROOT}/src/wipeout/scene.h"
+	"${WIPEOUT_ROOT}/src/wipeout/sfx.c"
+	"${WIPEOUT_ROOT}/src/wipeout/sfx.h"
+	"${WIPEOUT_ROOT}/src/wipeout/ship.c"
+	"${WIPEOUT_ROOT}/src/wipeout/ship.h"
+	"${WIPEOUT_ROOT}/src/wipeout/ship_ai.c"
+	"${WIPEOUT_ROOT}/src/wipeout/ship_ai.h"
+	"${WIPEOUT_ROOT}/src/wipeout/ship_player.c"
+	"${WIPEOUT_ROOT}/src/wipeout/ship_player.h"
+	"${WIPEOUT_ROOT}/src/wipeout/title.c"
+	"${WIPEOUT_ROOT}/src/wipeout/title.h"
+	"${WIPEOUT_ROOT}/src/wipeout/track.c"
+	"${WIPEOUT_ROOT}/src/wipeout/track.h"
+	"${WIPEOUT_ROOT}/src/wipeout/ui.c"
+	"${WIPEOUT_ROOT}/src/wipeout/ui.h"
+	"${WIPEOUT_ROOT}/src/wipeout/weapon.c"
+	"${WIPEOUT_ROOT}/src/wipeout/weapon.h"
+	"${WIPEOUT_ROOT}/src/input.c"
+	"${WIPEOUT_ROOT}/src/input.h"
+	"${WIPEOUT_ROOT}/src/mem.c"
+	"${WIPEOUT_ROOT}/src/mem.h"
+	"${WIPEOUT_ROOT}/src/platform.h"
+	"${WIPEOUT_ROOT}/src/render.h"
+	"${WIPEOUT_ROOT}/src/system.c"
+	"${WIPEOUT_ROOT}/src/system.h"
+	"${WIPEOUT_ROOT}/src/types.c"
+	"${WIPEOUT_ROOT}/src/types.h"
+	"${WIPEOUT_ROOT}/src/utils.c"
+	"${WIPEOUT_ROOT}/src/utils.h"
+)
+
+if(WIN32)
+	list(APPEND WIPEOUT_COMMON_SRC
+		"${WIPEOUT_ROOT}/packaging/windows/wipeout.exe.manifest"
+		"${WIPEOUT_ROOT}/packaging/windows/wipeout.rc"
+	)
+endif()

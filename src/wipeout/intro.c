@@ -5,6 +5,10 @@
 #include "../mem.h"
 #include "../platform.h"
 
+#if defined(__ANDROID__)
+	#include "SDL.h"
+#endif
+
 #include "intro.h"
 #include "ui.h"
 #include "image.h"
@@ -37,13 +41,23 @@ static void audio_mix(float *samples, uint32_t len);
 static void intro_end(void);
 
 void intro_init(void) {
-	FILE *file = platform_open_asset("wipeout/intro.mpeg", "rb");
-	if (!file) {
-		intro_end();
-		return;
-	}
+	#if defined(__ANDROID__)
+		SDL_RWops *rwops = SDL_RWFromFile("wipeout/intro.mpeg", "rb");
+		if (!rwops) {
+			intro_end();
+			return;
+		}
 
-	plm = plm_create_with_file(file, true);
+		plm = plm_create_with_rwops(rwops, true);
+	#else
+		FILE *file = platform_open_asset("wipeout/intro.mpeg", "rb");
+		if (!file) {
+			intro_end();
+			return;
+		}
+
+		plm = plm_create_with_file(file, true);
+	#endif
 	if (!plm) {
 		intro_end();
 		return;

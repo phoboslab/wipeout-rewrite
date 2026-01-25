@@ -3,9 +3,16 @@
 
 /wipeout/
 /build/
+/.cxx/
+/android/app/.cxx/
+/android/.gradle/
+/android/app/build/
+/android/gradle-home/
+/android/local.properties
+/android/gradle/wrapper/gradle-wrapper.jar
+/third_party/
 
 /wipegame
 /wipegame.exe
 /save.dat
 .DS_STORE
-gamecontrollerdb.txt
