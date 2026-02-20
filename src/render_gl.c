@@ -734,7 +734,7 @@ void render_set_cull_backface(bool enabled) {
 
 
 vec3_t render_transform(vec3_t pos) {
-	return vec3_transform(vec3_transform(pos, &view_mat), &projection_mat_3d);
+	return vec4_perspective_divide(vec3_transform_perspective(vec3_transform(pos, &view_mat), &projection_mat_3d));
 }
 
 void render_push_tris(tris_t tris, uint16_t texture_index) {
