@@ -20,7 +20,7 @@ void track_load(const char *base_path) {
 	cmp_t *cmp = image_load_compressed(get_path(base_path, "library.cmp"));
 
 	image_t *temp_tile = image_alloc(128, 128);
-	for (int i = 0; i < ttf->len; i++) {
+	for (unsigned int i = 0; i < ttf->len; i++) {
 		for (int tx = 0; tx < 4; tx++) {
 			for (int ty = 0; ty < 4; ty++) {
 				uint32_t sub_tile_index = ttf->tiles[i].near[ty * 4 + tx];
@@ -94,7 +94,7 @@ ttf_t *track_load_tile_format(char *ttf_name) {
 	ttf_t *ttf = mem_temp_alloc(sizeof(ttf_t) + sizeof(ttf_tile_t) * num_tiles);
 	ttf->len = num_tiles;
 
-	for (int t = 0; t < num_tiles; t++) {
+	for (unsigned int t = 0; t < num_tiles; t++) {
 		for (int i = 0; i < 16; i++) {
 			ttf->tiles[t].near[i] = get_i16(ttf_bytes, &p);
 		}
@@ -248,7 +248,7 @@ void track_load_sections(char *file_name) {
 
 void track_draw_section(section_t *section) {
 	track_face_t *face = g.track.faces + section->face_start;
-	int16_t face_count = section->face_count;
+	uint16_t face_count = section->face_count;
 	
 	for (uint32_t j = 0; j < face_count; j++) {
 		uint16_t tex_index = texture_from_list(g.track.textures, face->texture);
@@ -266,8 +266,6 @@ void track_draw(camera_t *camera) {
 	vec3_t cam_pos = camera->position;
 	vec3_t cam_dir = camera_forward(camera);
 	
-	int drawn = 0;
-	int skipped = 0;
 	for(int32_t i = 0; i < g.track.section_count; i++) {
 		section_t *s = &g.track.sections[i];
 		vec3_t diff = vec3_sub(cam_pos, s->center);

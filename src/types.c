@@ -20,7 +20,7 @@ float vec3_angle(vec3_t a, vec3_t b) {
 		(a.x * a.x + a.y * a.y + a.z * a.z) * 
 		(b.x * b.x + b.y * b.y + b.z * b.z)
 	);
-	float cosine = (magnitude == 0)
+	float cosine = (magnitude == 0.0F)
 		? 1
 		: vec3_dot(a, b) / magnitude;
 	return acos(clamp(cosine, -1, 1));

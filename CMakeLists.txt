@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.28 FATAL_ERROR)
 project(wipeout-rewrite)
 
 if("${PROJECT_SOURCE_DIR}" STREQUAL "${PROJECT_BINARY_DIR}")
@@ -7,7 +7,6 @@ endif()
 
 include(GNUInstallDirs)
 include(CMakeDependentOption)
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 if("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
 	set(EMSCRIPTEN true)
@@ -38,87 +37,99 @@ cmake_dependent_option(MINIMAL_BUNDLE "Do not include music/movies for web build
 option(PATH_ASSETS "Path to where the game assets should be located.")
 option(PATH_USERDATA "Path to where user data (e.g. game saves) should be located.")
 option(DEV_BUILD "Set asset/userdata paths to the source directory for testing" OFF)
+option(USE_ASAN "Enable AddressSanitizer" OFF)
+
 if (DEV_BUILD)
 	set(PATH_ASSETS "${CMAKE_SOURCE_DIR}/")
 	set(PATH_USERDATA "${CMAKE_SOURCE_DIR}/")
 endif()
 
+# 3RD PARTY LIBRARIES
+find_package(PkgConfig REQUIRED)
 find_package(OpenGL)
-find_package(GLEW)
-find_package(SDL2)
+find_package(GLEW REQUIRED)
+find_package(SDL2 CONFIG REQUIRED)
+find_package(cmocka REQUIRED)
+pkg_check_modules(libprotobuf-c REQUIRED IMPORTED_TARGET libprotobuf-c)
 
+include_directories(${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/include)
+
+# COMMON COMPLIER FLAGS, DEFINES
+set(CMAKE_C_STANDARD 11)
+add_compile_options(
+    $<$<CXX_COMPILER_ID:MSVC>:/W4>
+    $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall>
+    $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wextra>
+)
+
+if(DEV_BUILD AND NOT WIN32)
+	add_compile_options(-g -Og)
+	if(NOT WIN32)
+		add_compile_options(--coverage)
+		add_link_options(--coverage)
+	endif()
+endif()
+
+if(USE_ASAN)
+	add_compile_options(-fsanitize=address)
+	add_link_options(-fsanitize=address)
+endif()
+
+# INTERNAL LIBRARIES
+# PROTOBUF MSGS
+add_subdirectory(gen)
+
+# NETWORK LIBRARY TARGET
+add_subdirectory(network)
+
+# SERVER TARGET
+add_subdirectory(server)
+
+# MAIN GAME TARGET
 set(common_src
 	src/wipeout/camera.c
-	src/wipeout/camera.h
+	src/wipeout/server_com.c
 	src/wipeout/droid.c
-	src/wipeout/droid.h
 	src/wipeout/game.c
-	src/wipeout/game.h
 	src/wipeout/hud.c
-	src/wipeout/hud.h
 	src/wipeout/image.c
-	src/wipeout/image.h
 	src/wipeout/ingame_menus.c
-	src/wipeout/ingame_menus.h
 	src/wipeout/intro.c
-	src/wipeout/intro.h
 	src/wipeout/main_menu.c
-	src/wipeout/main_menu.h
 	src/wipeout/menu.c
-	src/wipeout/menu.h
 	src/wipeout/object.c
-	src/wipeout/object.h
 	src/wipeout/particle.c
-	src/wipeout/particle.h
 	src/wipeout/race.c
-	src/wipeout/race.h
 	src/wipeout/scene.c
-	src/wipeout/scene.h
 	src/wipeout/sfx.c
-	src/wipeout/sfx.h
 	src/wipeout/ship.c
-	src/wipeout/ship.h
 	src/wipeout/ship_ai.c
-	src/wipeout/ship_ai.h
 	src/wipeout/ship_player.c
-	src/wipeout/ship_player.h
 	src/wipeout/title.c
-	src/wipeout/title.h
 	src/wipeout/track.c
-	src/wipeout/track.h
 	src/wipeout/ui.c
-	src/wipeout/ui.h
 	src/wipeout/weapon.c
-	src/wipeout/weapon.h
 	src/input.c
-	src/input.h
 	src/mem.c
-	src/mem.h
-	src/platform.h
-	src/render.h
 	src/system.c
-	src/system.h
 	src/types.c
-	src/types.h
 	src/utils.c
-	src/utils.h
 
 	packaging/windows/wipeout.exe.manifest
 	packaging/windows/wipeout.rc
 )
 
 add_executable(wipeout WIN32 ${common_src})
-set_property(TARGET wipeout PROPERTY C_STANDARD 11)
 target_include_directories(wipeout PRIVATE src)
 target_include_directories(wipeout SYSTEM PRIVATE src/libs)
-target_compile_options(wipeout PRIVATE
-	$<$<CXX_COMPILER_ID:MSVC>:/W4>
-	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra>
-)
+
 target_compile_definitions(wipeout PRIVATE
 	$<$<BOOL:${PATH_ASSETS}>:-DPATH_ASSETS=${PATH_ASSETS}>
 	$<$<BOOL:${PATH_USERDATA}>:-DPATH_USERDATA=${PATH_USERDATA}>
 )
+
+# COMMON LIBRARIES
+target_link_libraries(wipeout PRIVATE network)
 
 if(WIN32)
 	target_compile_definitions(wipeout PRIVATE
@@ -220,9 +231,16 @@ endif()
 
 if("${PLATFORM}" STREQUAL SDL2)
 	target_sources(wipeout PRIVATE src/platform_sdl.c)
-	target_link_libraries(wipeout PUBLIC SDL2::Main)
+	target_link_libraries(wipeout 
+		PRIVATE 
+		$<TARGET_NAME_IF_EXISTS:SDL2::SDL2main>
+		$<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
+	)
 elseif("${PLATFORM}" STREQUAL SOKOL)
 	target_sources(wipeout PRIVATE src/platform_sokol.c)
 endif()
+
+# UNIT TESTS TARGET
+add_subdirectory(tests)
 
 install(TARGETS wipeout)

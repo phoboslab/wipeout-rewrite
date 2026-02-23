@@ -11,6 +11,8 @@ static bool wants_to_exit = false;
 static SDL_Window *window;
 static SDL_AudioDeviceID audio_device;
 static SDL_GameController *gamepad;
+static bool force_feedback_supported = false;
+static bool force_feedback_enabled = false;
 static void (*audio_callback)(float *buffer, uint32_t len) = NULL;
 static char *path_assets = "";
 static char *path_userdata = "";
@@ -62,6 +64,21 @@ SDL_GameController *platform_find_gamepad(void) {
 	return NULL;
 }
 
+void platform_force_feedback(double strength, uint32_t duration) {
+	if(!gamepad) {
+		return;
+	}
+	else if(!(force_feedback_enabled && force_feedback_supported)) {
+		return;
+	}
+
+	SDL_GameControllerRumble( gamepad, (uint16_t) (0xFFFF * strength), (uint16_t) (0xFFFF * strength), duration );
+}
+
+void platform_set_force_feedback(bool enabled) {
+	force_feedback_enabled = enabled;
+}
+
 
 void platform_pump_events(void) {
 	SDL_Event ev;
@@ -95,6 +112,9 @@ void platform_pump_events(void) {
 		// Gamepads connect/disconnect
 		else if (ev.type == SDL_CONTROLLERDEVICEADDED) {
 			gamepad = SDL_GameControllerOpen(ev.cdevice.which);
+			if(SDL_GameControllerHasRumble(gamepad)) {
+				force_feedback_supported = true;
+			}
 		}
 		else if (ev.type == SDL_CONTROLLERDEVICEREMOVED) {
 			if (gamepad && ev.cdevice.which == SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(gamepad))) {
@@ -213,7 +233,7 @@ void platform_set_fullscreen(bool fullscreen) {
 	}
 }
 
-void platform_audio_callback(void* userdata, uint8_t* stream, int len) {
+void platform_audio_callback(void*, uint8_t* stream, int len) {
 	if (audio_callback) {
 		audio_callback((float *)stream, len/sizeof(float));
 	}
@@ -344,7 +364,7 @@ uint32_t platform_store_userdata(const char *name, void *bytes, int32_t len) {
 	#error "Unsupported renderer for platform SDL"
 #endif
 
-int main(int argc, char *argv[]) {
+int main(int, char**) {
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER);
 
 	// Figure out the absolute asset and userdata paths. These may either be

@@ -58,7 +58,7 @@ void ship_player_update_intro_await_three(ship_t *self) {
 	ship_player_update_intro_general(self);
 
 	if (self->update_timer <= UPDATE_TIME_THREE) {
-		sfx_t *sfx = sfx_play(SFX_VOICE_COUNT_3);
+		sfx_play(SFX_VOICE_COUNT_3);
 		self->update_func = ship_player_update_intro_await_two;
 	}
 }
@@ -68,7 +68,7 @@ void ship_player_update_intro_await_two(ship_t *self) {
 
 	if (self->update_timer <= UPDATE_TIME_TWO) {
 		scene_set_start_booms(1);
-		sfx_t *sfx = sfx_play(SFX_VOICE_COUNT_2);
+		sfx_play(SFX_VOICE_COUNT_2);
 		self->update_func = ship_player_update_intro_await_one;
 	}
 }
@@ -78,7 +78,7 @@ void ship_player_update_intro_await_one(ship_t *self) {
 
 	if (self->update_timer <= UPDATE_TIME_ONE) {
 		scene_set_start_booms(2);
-		sfx_t *sfx = sfx_play(SFX_VOICE_COUNT_1);
+		sfx_play(SFX_VOICE_COUNT_1);
 		self->update_func = ship_player_update_intro_await_go;
 	}
 }
@@ -88,7 +88,7 @@ void ship_player_update_intro_await_go(ship_t *self) {
 
 	if (self->update_timer <= UPDATE_TIME_GO) {
 		scene_set_start_booms(3);
-		sfx_t *sfx = sfx_play(SFX_VOICE_COUNT_GO);
+		sfx_play(SFX_VOICE_COUNT_GO);
 		
 		if (flags_is(self->flags, SHIP_RACING)) {
 			// Check for stall
@@ -520,7 +520,7 @@ ship_t *ship_player_find_target(ship_t *self) {
 	int shortest_distance = 256;
 	ship_t *nearest_ship = NULL;
 
-	for (int i = 0; i < len(g.ships); i++) {
+	for (long unsigned int i = 0; i < len(g.ships); i++) {
 		ship_t *other = &g.ships[i];
 		if (self == other) {
 			continue;

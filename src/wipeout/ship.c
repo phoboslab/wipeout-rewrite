@@ -1,6 +1,7 @@
 #include "../mem.h"
 #include "../utils.h"
 #include "../system.h"
+#include "../platform.h"
 
 #include "object.h"
 #include "scene.h"
@@ -23,7 +24,7 @@ void ships_load(void) {
 	texture_list_t collision_textures = image_get_compressed_textures("wipeout/common/alcol.cmp");
 	Object *collision_models = objects_load("wipeout/common/alcol.prm", collision_textures);
 
-	int object_index;
+	unsigned int object_index;
 	Object *ship_model = ship_models;
 	Object *collision_model = collision_models;
 
@@ -46,7 +47,7 @@ void ships_load(void) {
 	image_get_texture_semi_trans("wipeout/textures/shad3.tim");
 	image_get_texture_semi_trans("wipeout/textures/shad4.tim");
 
-	for (int i = 0; i < len(g.ships); i++) {
+	for (unsigned int i = 0; i < len(g.ships); i++) {
 		g.ships[i].shadow_texture = shadow_textures_start + (i >> 1);
 	}
 }
@@ -58,7 +59,7 @@ void ships_init(section_t *section) {
 	int ranks_to_pilots[NUM_PILOTS];
 
 	// Initialize ranks with all pilots in order
-	for (int i = 0; i < len(g.ships); i++) {
+	for (unsigned int i = 0; i < len(g.ships); i++) {
 		ranks_to_pilots[i] = i;
 	}
 
@@ -70,7 +71,7 @@ void ships_init(section_t *section) {
 	// Randomize some tiers in an ongoing championship
 	else if (g.race_type == RACE_TYPE_CHAMPIONSHIP) {
 		// Initialize with current championship order
-		for (int i = 0; i < len(g.ships); i++) {
+		for (unsigned int i = 0; i < len(g.ships); i++) {
 			ranks_to_pilots[i] = g.championship_ranks[i].pilot;
 		}		
 		shuffle(ranks_to_pilots, 2); // shuffle 0..1
@@ -78,7 +79,7 @@ void ships_init(section_t *section) {
 	}
 
 	// player is always last
-	for (int i = 0; i < len(ranks_to_pilots)-1; i++) {
+	for (unsigned int i = 0; i < len(ranks_to_pilots)-1; i++) {
 		if (ranks_to_pilots[i] == g.pilot) {
 			swap(ranks_to_pilots[i], ranks_to_pilots[i+1]);
 		}
@@ -89,7 +90,7 @@ void ships_init(section_t *section) {
 	for (int i = 0; i < start_line_pos - 15; i++) {
 		section = section->next;
 	}
-	for (int i = 0; i < len(g.ships); i++) {
+	for (unsigned int i = 0; i < len(g.ships); i++) {
 		start_sections[i] = section;
 		section = section->next;
 		if ((i % 2) == 0) {
@@ -97,7 +98,7 @@ void ships_init(section_t *section) {
 		}
 	}
 
-	for (int i = 0; i < len(ranks_to_pilots); i++) {
+	for (unsigned int i = 0; i < len(ranks_to_pilots); i++) {
 		int rank_inv = (len(g.ships)-1) - i;
 		int pilot = ranks_to_pilots[i];
 		ship_init(&g.ships[pilot], start_sections[rank_inv], pilot, rank_inv);
@@ -125,18 +126,18 @@ void ships_update(void) {
 		ship_update(&g.ships[g.pilot]);
 	}
 	else {
-		for (int i = 0; i < len(g.ships); i++) {
+		for (unsigned int i = 0; i < len(g.ships); i++) {
 			ship_update(&g.ships[i]);
 		}
-		for (int j = 0; j < (len(g.ships) - 1); j++) {
-			for (int i = j + 1; i < len(g.ships); i++) {
+		for (unsigned int j = 0; j < (len(g.ships) - 1); j++) {
+			for (unsigned int i = j + 1; i < len(g.ships); i++) {
 				ship_collide_with_ship(&g.ships[i], &g.ships[j]);
 			}
 		}
 
 		if (flags_is(g.ships[g.pilot].flags, SHIP_RACING)) {
 			sort(g.race_ranks, len(g.race_ranks), sort_rank_compare);
-			for (int32_t i = 0; i < len(g.ships); i++) {
+			for (uint32_t i = 0; i < len(g.ships); i++) {
 				g.ships[g.race_ranks[i].pilot].position_rank = i + 1;
 			}
 		}
@@ -144,7 +145,7 @@ void ships_update(void) {
 }
 
 void ships_reset_exhaust_plumes(void) {
-	for (int i = 0; i < len(g.ships); i++) {
+	for (unsigned int i = 0; i < len(g.ships); i++) {
 		ship_reset_exhaust_plume(&g.ships[i]);
 	}
 }
@@ -152,7 +153,7 @@ void ships_reset_exhaust_plumes(void) {
 
 void ships_draw(void) {
 	// Ship models
-	for (int i = 0; i < len(g.ships); i++) {
+	for (unsigned int i = 0; i < len(g.ships); i++) {
 		if (
 			(flags_is(g.ships[i].flags, SHIP_VIEW_INTERNAL) && flags_not(g.ships[i].flags, SHIP_IN_RESCUE)) ||
 			(g.race_type == RACE_TYPE_TIME_TRIAL && i != g.pilot)
@@ -170,7 +171,7 @@ void ships_draw(void) {
 	render_set_depth_write(false);
 	render_set_depth_offset(-32.0);
 
-	for (int i = 0; i < len(g.ships); i++) {
+	for (unsigned int i = 0; i < len(g.ships); i++) {
 		if (
 			(g.race_type == RACE_TYPE_TIME_TRIAL && i != g.pilot) ||
 			flags_not(g.ships[i].flags, SHIP_VISIBLE) || 
@@ -643,6 +644,7 @@ void ship_resolve_wing_collision(ship_t *self, track_face_t *face, float directi
 	self->velocity = vec3_add(self->velocity, vec3_mulf(face->normal, 4096.0)); // div by 4096?
 
 	float magnitude = (fabsf(angle) * self->speed) * 2 * M_PI / 4096.0; // (6 velocity shift, 12 angle shift?)
+	platform_force_feedback(magnitude, 500);
 
 	vec3_t wing_pos;
 	if (direction > 0) {
@@ -662,14 +664,14 @@ void ship_resolve_wing_collision(ship_t *self, track_face_t *face, float directi
 
 
 void ship_resolve_nose_collision(ship_t *self, track_face_t *face, float direction) {
-	vec3_t collision_vector = vec3_sub(self->section->center, face->tris[0].vertices[2].pos);
-	float angle = vec3_angle(collision_vector, self->dir_forward);
 	self->velocity = vec3_reflect(self->velocity, face->normal, 2);
 	self->position = vec3_sub(self->position, vec3_mulf(self->velocity, 0.015625)); // system_tick?
 	self->velocity = vec3_sub(self->velocity, vec3_mulf(self->velocity, 0.5));
 	self->velocity = vec3_add(self->velocity, vec3_mulf(face->normal, 4096)); // div by 4096?
 
 	float magnitude = ((self->speed * 0.0625) + 400) * 2 * M_PI / 4096.0;
+	platform_force_feedback(magnitude, 500);
+
 	if (direction > 0) {
 		self->angular_velocity.y += magnitude;
 	}
@@ -945,7 +947,7 @@ bool ship_intersects_ship(ship_t *self, ship_t *other) {
 			float dp1 = vec3_dot(vec3_sub(p1, other_points[vi]), plane1);
 			float dp2 = vec3_dot(other_lines[vi], plane1);
 			
-			if (dp2 != 0) {
+			if (dp2 != 0.0F) {
 				float norm = dp1 / dp2;
 
 				if ((norm >= 0) && (norm <= 1)) {
@@ -996,6 +998,8 @@ void ship_collide_with_ship(ship_t *self, ship_t *other) {
 		),
 		self->mass + other->mass
 	);
+
+	platform_force_feedback(1.0, 500);
 
 	vec3_t ship_react = vec3_mulf(vec3_sub(vc, self->velocity), 0.5); // >> 1
 	vec3_t other_react = vec3_mulf(vec3_sub(vc, other->velocity), 0.5); // >> 1

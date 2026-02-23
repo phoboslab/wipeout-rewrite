@@ -127,7 +127,7 @@ void droid_update(droid_t *droid, ship_t *ship) {
 	}
 }
 
-void droid_update_intro(droid_t *droid, ship_t *ship) {
+void droid_update_intro(droid_t *droid, ship_t*) {
 	droid->update_timer -= system_tick();
 
 	if (droid->update_timer < DROID_UPDATE_TIME_INTRO_3) {

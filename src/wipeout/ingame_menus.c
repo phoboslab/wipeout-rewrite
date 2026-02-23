@@ -27,7 +27,7 @@ void ingame_menus_load(void) {
 // -----------------------------------------------------------------------------
 // Pause Menu
 
-static void button_continue(menu_t *menu, int data) {
+static void button_continue(menu_t*, int) {
 	race_unpause();
 }
 
@@ -40,7 +40,7 @@ static void button_restart_confirm(menu_t *menu, int data) {
 	}
 }
 
-static void button_restart_or_quit(menu_t *menu, int data) {
+static void button_restart_or_quit(menu_t*, int data) {
 	if (data) {
 		race_restart();
 	}
@@ -49,7 +49,7 @@ static void button_restart_or_quit(menu_t *menu, int data) {
 	}
 }
 
-static void button_restart(menu_t *menu, int data) {
+static void button_restart(menu_t *menu, int) {
 	menu_confirm(menu, "ARE YOU SURE YOU", "WANT TO RESTART", "YES", "NO", button_restart_confirm);
 }
 
@@ -62,25 +62,25 @@ static void button_quit_confirm(menu_t *menu, int data) {
 	}
 }
 
-static void button_quit(menu_t *menu, int data) {
+static void button_quit(menu_t *menu, int) {
 	menu_confirm(menu, "ARE YOU SURE YOU", "WANT TO QUIT", "YES", "NO", button_quit_confirm);
 }
 
 
-static void button_music_track(menu_t *menu, int data) {
+static void button_music_track(menu_t*, int data) {
 	sfx_music_play(data);
 	sfx_music_mode(SFX_MUSIC_LOOP);
 }
 
-static void button_music_random(menu_t *menu, int data) {
+static void button_music_random(menu_t*, int) {
 	sfx_music_play(rand_int(0, len(def.music)));
 	sfx_music_mode(SFX_MUSIC_RANDOM);
 }
 
-static void button_music(menu_t *menu, int data) {
-	menu_page_t *page = menu_push(menu, "MUSIC", NULL);
+static void button_music(menu_t *menu, int) {
+	menu_page_t *page = menu_push(menu, "MUSIC", NULL, NULL, NULL);
 
-	for (int i = 0; i < len(def.music); i++) {
+	for (unsigned int i = 0; i < len(def.music); i++) {
 		menu_page_add_button(page, i, def.music[i].name, button_music_track);
 	}
 	menu_page_add_button(page, 0, "RANDOM", button_music_random);
@@ -90,7 +90,7 @@ menu_t *pause_menu_init(void) {
 	sfx_play(SFX_MENU_SELECT);
 	menu_reset(ingame_menu);
 
-	menu_page_t *page = menu_push(ingame_menu, "PAUSED", NULL);
+	menu_page_t *page = menu_push(ingame_menu, "PAUSED", NULL, NULL, NULL);
 	menu_page_add_button(page, 0, "CONTINUE", button_continue);
 	menu_page_add_button(page, 0, "RESTART", button_restart);
 	menu_page_add_button(page, 0, "QUIT", button_quit);
@@ -107,7 +107,7 @@ menu_t *game_over_menu_init(void) {
 	sfx_play(SFX_MENU_SELECT);
 	menu_reset(ingame_menu);
 
-	menu_page_t *page = menu_push(ingame_menu, "GAME OVER", NULL);
+	menu_page_t *page = menu_push(ingame_menu, "GAME OVER", NULL, NULL, NULL);
 	menu_page_add_button(page, 1, "", button_quit_confirm);
 	return ingame_menu;
 }
@@ -116,7 +116,7 @@ menu_t *game_over_menu_init(void) {
 // -----------------------------------------------------------------------------
 // Race Stats
 
-static void button_qualify_confirm(menu_t *menu, int data) {
+static void button_qualify_confirm(menu_t*, int data) {
 	if (data) {
 		race_restart();
 	}
@@ -125,7 +125,7 @@ static void button_qualify_confirm(menu_t *menu, int data) {
 	}
 }
 
-static void button_race_stats_continue(menu_t *menu, int data) {
+static void button_race_stats_continue(menu_t *menu, int) {
 	if (g.race_type == RACE_TYPE_CHAMPIONSHIP) {
 		if (g.race_position <= QUALIFYING_RANK) {
 			page_race_points_init(menu);
@@ -145,7 +145,7 @@ static void button_race_stats_continue(menu_t *menu, int data) {
 	}
 }
 
-static void page_race_stats_draw(menu_t *menu, int data) {
+static void page_race_stats_draw(menu_t *menu, int) {
 	menu_page_t *page = &menu->pages[menu->index];
 	vec2i_t pos = page->title_pos;
 	pos.x -= 140;
@@ -201,7 +201,7 @@ menu_t *race_stats_menu_init(void) {
 	else {
 		title = "FAILED TO QUALIFY";
 	}
-	menu_page_t *page = menu_push(ingame_menu, title, page_race_stats_draw);
+	menu_page_t *page = menu_push(ingame_menu, title, page_race_stats_draw, NULL, NULL);
 	flags_add(page->layout_flags, MENU_FIXED);
 	page->title_anchor = UI_POS_MIDDLE | UI_POS_CENTER;
 	page->title_pos = vec2i(0, -100);
@@ -213,7 +213,7 @@ menu_t *race_stats_menu_init(void) {
 // -----------------------------------------------------------------------------
 // Race Table
 
-static void button_race_points_continue(menu_t *menu, int data) {
+static void button_race_points_continue(menu_t *menu, int) {
 	if (g.race_type == RACE_TYPE_CHAMPIONSHIP) {
 		page_championship_points_init(menu);
 	}
@@ -225,7 +225,7 @@ static void button_race_points_continue(menu_t *menu, int data) {
 	}
 }
 
-static void page_race_points_draw(menu_t *menu, int data) {
+static void page_race_points_draw(menu_t *menu, int) {
 	menu_page_t *page = &menu->pages[menu->index];
 	vec2i_t pos = page->title_pos;
 	pos.x -= 140;
@@ -237,7 +237,7 @@ static void page_race_points_draw(menu_t *menu, int data) {
 
 	pos.y += 24;
 
-	for (int i = 0; i < len(g.race_ranks); i++) {
+	for (unsigned int i = 0; i < len(g.race_ranks); i++) {
 		rgba_t color = g.race_ranks[i].pilot == g.pilot ? UI_COLOR_ACCENT : UI_COLOR_DEFAULT;
 		ui_draw_text(def.pilots[g.race_ranks[i].pilot].name, ui_scaled_pos(anchor, pos), UI_SIZE_8, color);
 		int w = ui_number_width(g.race_ranks[i].points, UI_SIZE_8);
@@ -247,7 +247,7 @@ static void page_race_points_draw(menu_t *menu, int data) {
 }
 
 static void page_race_points_init(menu_t *menu) {
-	menu_page_t *page = menu_push(menu, "RACE POINTS", page_race_points_draw);
+	menu_page_t *page = menu_push(menu, "RACE POINTS", page_race_points_draw, NULL, NULL);
 	flags_add(page->layout_flags, MENU_FIXED);
 	page->title_anchor = UI_POS_MIDDLE | UI_POS_CENTER;
 	page->title_pos = vec2i(0, -100);
@@ -258,7 +258,7 @@ static void page_race_points_init(menu_t *menu) {
 // -----------------------------------------------------------------------------
 // Championship Table
 
-static void button_championship_points_continue(menu_t *menu, int data) {
+static void button_championship_points_continue(menu_t *menu, int) {
 	if (g.is_new_race_record) {
 		page_hall_of_fame_init(menu);
 	}
@@ -270,7 +270,7 @@ static void button_championship_points_continue(menu_t *menu, int data) {
 	}
 }
 
-static void page_championship_points_draw(menu_t *menu, int data) {
+static void page_championship_points_draw(menu_t *menu, int) {
 	menu_page_t *page = &menu->pages[menu->index];
 	vec2i_t pos = page->title_pos;
 	pos.x -= 140;
@@ -282,7 +282,7 @@ static void page_championship_points_draw(menu_t *menu, int data) {
 
 	pos.y += 24;
 
-	for (int i = 0; i < len(g.championship_ranks); i++) {
+	for (unsigned int i = 0; i < len(g.championship_ranks); i++) {
 		rgba_t color = g.championship_ranks[i].pilot == g.pilot ? UI_COLOR_ACCENT : UI_COLOR_DEFAULT;
 		ui_draw_text(def.pilots[g.championship_ranks[i].pilot].name, ui_scaled_pos(anchor, pos), UI_SIZE_8, color);
 		int w = ui_number_width(g.championship_ranks[i].points, UI_SIZE_8);
@@ -292,7 +292,7 @@ static void page_championship_points_draw(menu_t *menu, int data) {
 }
 
 static void page_championship_points_init(menu_t *menu) {
-	menu_page_t *page = menu_push(menu, "CHAMPIONSHIP TABLE", page_championship_points_draw);
+	menu_page_t *page = menu_push(menu, "CHAMPIONSHIP TABLE", page_championship_points_draw, NULL, NULL);
 	flags_add(page->layout_flags, MENU_FIXED);
 	page->title_anchor = UI_POS_MIDDLE | UI_POS_CENTER;
 	page->title_pos = vec2i(0, -100);
@@ -311,7 +311,7 @@ static const char *hs_charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 static int hs_char_index = 0;
 static bool hs_entry_complete = false;
 
-static void hall_of_fame_draw_name_entry(menu_t *menu, ui_pos_t anchor, vec2i_t pos) {
+static void hall_of_fame_draw_name_entry(menu_t*, ui_pos_t anchor, vec2i_t pos) {
 	int entry_len = strlen(hs_new_entry.name);
 	int entry_width = ui_text_width(hs_new_entry.name, UI_SIZE_16);
 
@@ -373,7 +373,7 @@ static void hall_of_fame_draw_name_entry(menu_t *menu, ui_pos_t anchor, vec2i_t 
 	ui_draw_text(hs_new_entry.name, ui_scaled_pos(anchor, pos), UI_SIZE_16, UI_COLOR_ACCENT);
 }
 
-static void page_hall_of_fame_draw(menu_t *menu, int data) {
+static void page_hall_of_fame_draw(menu_t *menu, int) {
 	// FIXME: doing this all in the draw() function leads to all kinds of
 	// complications
 
@@ -385,7 +385,6 @@ static void page_hall_of_fame_draw(menu_t *menu, int data) {
 		save.is_dirty = true;
 		
 		// Insert new highscore entry into the save struct
-		highscores_entry_t temp_entry = hs->entries[0];
 		for (int i = 0; i < NUM_HIGHSCORES; i++) {
 			if (hs_new_entry.time < hs->entries[i].time) {
 				for (int j = NUM_HIGHSCORES - 2; j >= i; j--) {
@@ -431,7 +430,7 @@ static void page_hall_of_fame_draw(menu_t *menu, int data) {
 
 static void page_hall_of_fame_init(menu_t *menu) {
 	menu_reset(menu); // Can't go back!
-	menu_page_t *page = menu_push(menu, "HALL OF FAME", page_hall_of_fame_draw);
+	menu_page_t *page = menu_push(menu, "HALL OF FAME", page_hall_of_fame_draw, NULL, NULL);
 	flags_add(page->layout_flags, MENU_FIXED);
 	page->title_anchor = UI_POS_MIDDLE | UI_POS_CENTER;
 	page->title_pos = vec2i(0, -100);
@@ -451,7 +450,7 @@ static char * const *text_scroll_lines;
 static int text_scroll_lines_len;
 static double text_scroll_start_time;
 
-static void text_scroll_menu_draw(menu_t *menu, int data) {
+static void text_scroll_menu_draw(menu_t*, int) {
 	double time = system_time() - text_scroll_start_time;
 	int scale = ui_get_scale();
 	int speed = 32;
@@ -480,7 +479,7 @@ menu_t *text_scroll_menu_init(char * const *lines, int len) {
 
 	menu_reset(ingame_menu);
 
-	menu_page_t *page = menu_push(ingame_menu, "", text_scroll_menu_draw);
+	menu_page_t *page = menu_push(ingame_menu, "", text_scroll_menu_draw, NULL, NULL);
 	menu_page_add_button(page, 1, "", button_quit_confirm);
 	return ingame_menu;
 }
