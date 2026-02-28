@@ -1,0 +1,2 @@
+replace this directory with the one from the wipeout NTSC version and copy
+the common/ models from the PC version in.

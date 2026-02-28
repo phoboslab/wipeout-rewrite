@@ -1,0 +1,92 @@
+plugins {
+	id 'com.android.application'
+	id 'org.jetbrains.kotlin.android'
+}
+
+def sdlDir = file("${rootDir}/../third_party/SDL")
+def sdlDirPath = sdlDir.absolutePath.replace('\\', '/')
+def ndkVer = project.findProperty("ndkVersion") ?: "29.0.0"
+
+android {
+	namespace "com.phoboslab.wipeout"
+	compileSdk 36
+	ndkVersion "29.0.14206865"
+	buildToolsVersion "36.1.0"
+
+	defaultConfig {
+		applicationId "com.phoboslab.wipeout"
+		minSdk 26
+		targetSdk 36
+		versionCode 1
+		versionName "0.1"
+
+		externalNativeBuild {
+			cmake {
+				arguments "-DSDL2_SOURCE_DIR=${sdlDirPath}"
+			}
+		}
+
+		ndk {
+			abiFilters "arm64-v8a"
+		}
+	}
+
+	externalNativeBuild {
+		cmake {
+			path "src/main/cpp/CMakeLists.txt"
+			version "3.22.1"
+		}
+	}
+
+	sourceSets {
+		main {
+			java.srcDirs += [
+				"src/main/java",
+				"src/main/kotlin",
+				"${sdlDir}/android-project/app/src/main/java"
+			]
+			res.srcDirs += [
+				"${sdlDir}/android-project/app/src/main/res",
+				"src/main/res"
+			]
+			assets.srcDirs += ["src/main/assets"]
+		}
+	}
+
+	buildTypes {
+		release {
+			minifyEnabled false
+			signingConfig signingConfigs.debug
+			proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
+		}
+	}
+
+	compileOptions {
+		sourceCompatibility JavaVersion.VERSION_17
+		targetCompatibility JavaVersion.VERSION_17
+	}
+
+	kotlinOptions {
+		jvmTarget = "17"
+	}
+}
+
+afterEvaluate {
+	android.applicationVariants.all { variant ->
+		def cap = variant.name.capitalize()
+		def nativeTask = tasks.findByName("externalNativeBuild${cap}")
+		if (nativeTask != null) {
+			def kotlinTask = tasks.findByName("compile${cap}Kotlin")
+			if (kotlinTask != null) {
+				kotlinTask.dependsOn(nativeTask)
+			}
+			def javaTask = tasks.findByName("compile${cap}JavaWithJavac")
+			if (javaTask != null) {
+				javaTask.dependsOn(nativeTask)
+			}
+		}
+	}
+}
+
+dependencies {
+}

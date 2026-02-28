@@ -2,6 +2,10 @@
 #include "../mem.h"
 #include "../platform.h"
 
+#if defined(__ANDROID__)
+	#include "SDL.h"
+#endif
+
 #include "sfx.h"
 #include "game.h"
 
@@ -16,7 +20,11 @@ typedef struct {
 
 typedef struct {
 	qoa_desc qoa;
+#if defined(__ANDROID__)
+	SDL_RWops *rwops;
+#else
 	FILE *file;
+#endif
 
 	uint32_t track_index;
 	uint32_t first_frame_pos;
@@ -58,7 +66,11 @@ void sfx_load(void) {
 	music->sample_data = mem_bump(channels * QOA_FRAME_LEN * sizeof(short) * 2);
 	music->qoa.channels = channels;
 	music->mode = SFX_MUSIC_RANDOM;
+#if defined(__ANDROID__)
+	music->rwops = NULL;
+#else
 	music->file = NULL;
+#endif
 	music->track_index = -1;
 
 
@@ -228,10 +240,21 @@ void sfx_set_position(sfx_t *sfx, vec3_t pos, vec3_t vel, float volume) {
 // Music
 
 uint32_t sfx_music_decode_frame(void) {
-	if (!music->file) {
-		return 0;
-	}
-	music->buffer_len = fread(music->buffer, 1, qoa_max_frame_size(&music->qoa), music->file);
+	#if defined(__ANDROID__)
+		if (!music->rwops) {
+			return 0;
+		}
+		size_t read = SDL_RWread(music->rwops, music->buffer, 1, qoa_max_frame_size(&music->qoa));
+		music->buffer_len = (uint32_t)read;
+		if (music->buffer_len == 0) {
+			return 0;
+		}
+	#else
+		if (!music->file) {
+			return 0;
+		}
+		music->buffer_len = fread(music->buffer, 1, qoa_max_frame_size(&music->qoa), music->file);
+	#endif
 
 	uint32_t frame_len;
 	qoa_decode_frame(music->buffer, music->buffer_len, &music->qoa, music->sample_data, &frame_len);
@@ -241,47 +264,94 @@ uint32_t sfx_music_decode_frame(void) {
 }
 
 void sfx_music_rewind(void) {
-	fseek(music->file, music->first_frame_pos, SEEK_SET);
+	#if defined(__ANDROID__)
+		if (music->rwops) {
+			SDL_RWseek(music->rwops, music->first_frame_pos, RW_SEEK_SET);
+		}
+	#else
+		fseek(music->file, music->first_frame_pos, SEEK_SET);
+	#endif
 	music->sample_data_len = 0;
 	music->sample_data_pos = 0;
 }
 
 void sfx_music_open(char *path) {
-	if (music->file) {
-		fclose(music->file);
-		music->file = NULL;
-	}
-	
-	FILE *file = platform_open_asset(path, "rb");
-	if (!file) {
-		return;
-	}
+	#if defined(__ANDROID__)
+		if (music->rwops) {
+			SDL_RWclose(music->rwops);
+			music->rwops = NULL;
+		}
 
-	uint8_t header[QOA_MIN_FILESIZE];
-	int read = fread(header, QOA_MIN_FILESIZE, 1, file);
-	if (!read) {
-		fclose(file);
-		return;
-	}
+		SDL_RWops *rwops = SDL_RWFromFile(path, "rb");
+		if (!rwops) {
+			return;
+		}
 
-	qoa_desc qoa;
-	uint32_t first_frame_pos = qoa_decode_header(header, QOA_MIN_FILESIZE, &qoa);
-	if (!first_frame_pos) {
-		fclose(file);
-		return;
-	}
+		uint8_t header[QOA_MIN_FILESIZE];
+		size_t read = SDL_RWread(rwops, header, 1, QOA_MIN_FILESIZE);
+		if (read != QOA_MIN_FILESIZE) {
+			SDL_RWclose(rwops);
+			return;
+		}
 
-	fseek(file, first_frame_pos, SEEK_SET);
+		qoa_desc qoa;
+		uint32_t first_frame_pos = qoa_decode_header(header, QOA_MIN_FILESIZE, &qoa);
+		if (!first_frame_pos) {
+			SDL_RWclose(rwops);
+			return;
+		}
 
-	if (qoa.channels != music->qoa.channels) {
-		fclose(file);
-		return;
-	}
-	music->qoa = qoa;
-	music->first_frame_pos = first_frame_pos;
-	music->file = file;
-	music->sample_data_len = 0;
-	music->sample_data_pos = 0;
+		if (SDL_RWseek(rwops, first_frame_pos, RW_SEEK_SET) < 0) {
+			SDL_RWclose(rwops);
+			return;
+		}
+
+		if (qoa.channels != music->qoa.channels) {
+			SDL_RWclose(rwops);
+			return;
+		}
+		music->qoa = qoa;
+		music->first_frame_pos = first_frame_pos;
+		music->rwops = rwops;
+		music->sample_data_len = 0;
+		music->sample_data_pos = 0;
+	#else
+		if (music->file) {
+			fclose(music->file);
+			music->file = NULL;
+		}
+		
+		FILE *file = platform_open_asset(path, "rb");
+		if (!file) {
+			return;
+		}
+
+		uint8_t header[QOA_MIN_FILESIZE];
+		int read = fread(header, QOA_MIN_FILESIZE, 1, file);
+		if (!read) {
+			fclose(file);
+			return;
+		}
+
+		qoa_desc qoa;
+		uint32_t first_frame_pos = qoa_decode_header(header, QOA_MIN_FILESIZE, &qoa);
+		if (!first_frame_pos) {
+			fclose(file);
+			return;
+		}
+
+		fseek(file, first_frame_pos, SEEK_SET);
+
+		if (qoa.channels != music->qoa.channels) {
+			fclose(file);
+			return;
+		}
+		music->qoa = qoa;
+		music->first_frame_pos = first_frame_pos;
+		music->file = file;
+		music->sample_data_len = 0;
+		music->sample_data_pos = 0;
+	#endif
 }
 
 void sfx_music_play(uint32_t index) {
@@ -366,7 +436,11 @@ void sfx_stero_mix(float *buffer, uint32_t len) {
 		right *= save.sfx_volume;
 
 		// Mix in music
+		#if defined(__ANDROID__)
+		if (music->mode != SFX_MUSIC_PAUSED && music->rwops) {
+		#else
 		if (music->mode != SFX_MUSIC_PAUSED && music->file) {
+		#endif
 			if (music->sample_data_len - music->sample_data_pos == 0) {
 				if (!sfx_music_decode_frame()) {
 					if (music->mode == SFX_MUSIC_RANDOM) {

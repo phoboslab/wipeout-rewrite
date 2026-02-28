@@ -1,4 +1,9 @@
 #include "SDL.h"
+#include <stdio.h>
+#if defined(__ANDROID__)
+	#include "SDL_system.h"
+	#include <sys/stat.h>
+#endif
 
 #include "platform.h"
 #include "input.h"
@@ -15,6 +20,31 @@ static void (*audio_callback)(float *buffer, uint32_t len) = NULL;
 static char *path_assets = "";
 static char *path_userdata = "";
 static char *temp_path = NULL;
+
+#if defined(__ANDROID__)
+static char android_assets_path[1024];
+static char android_userdata_path[1024];
+
+static void platform_ensure_dir(const char *path) {
+	if (!path || !path[0]) {
+		return;
+	}
+	size_t len = strlen(path);
+	if (len >= sizeof(android_assets_path)) {
+		return;
+	}
+	char buf[1024];
+	memcpy(buf, path, len + 1);
+	for (char *p = buf + 1; *p; p++) {
+		if (*p == '/') {
+			*p = '\0';
+			mkdir(buf, 0777);
+			*p = '/';
+		}
+	}
+	mkdir(buf, 0777);
+}
+#endif
 
 
 uint8_t platform_sdl_gamepad_map[] = {
@@ -229,13 +259,51 @@ void platform_set_audio_mix_cb(void (*cb)(float *buffer, uint32_t len)) {
 
 
 FILE *platform_open_asset(const char *name, const char *mode) {
+#if defined(__ANDROID__)
+	(void)name;
+	(void)mode;
+	return NULL;
+#else
 	char *path = strcat(strcpy(temp_path, path_assets), name);
 	return fopen(path, mode);
+#endif
 }
 
 uint8_t *platform_load_asset(const char *name, uint32_t *bytes_read) {
+#if defined(__ANDROID__)
+	SDL_RWops *rw = SDL_RWFromFile(name, "rb");
+	if (!rw) {
+		// Try external storage path first when available
+		if (path_assets && path_assets[0]) {
+			char *path = strcat(strcpy(temp_path, path_assets), name);
+			rw = SDL_RWFromFile(path, "rb");
+		}
+	}
+	if (!rw) {
+		*bytes_read = 0;
+		error_if(true, "Could not open asset: %s", name);
+		return NULL;
+	}
+
+	Sint64 size = SDL_RWsize(rw);
+	if (size <= 0) {
+		SDL_RWclose(rw);
+		*bytes_read = 0;
+		error_if(true, "Empty asset: %s", name);
+		return NULL;
+	}
+
+	uint8_t *bytes = mem_temp_alloc((uint32_t)size);
+	size_t read = SDL_RWread(rw, bytes, 1, (size_t)size);
+	SDL_RWclose(rw);
+
+	*bytes_read = (uint32_t)read;
+	error_if(read != (size_t)size, "Could not read asset: %s", name);
+	return bytes;
+#else
 	char *path = strcat(strcpy(temp_path, path_assets), name);
 	return file_load(path, bytes_read);
+#endif
 }
 
 uint8_t *platform_load_userdata(const char *name, uint32_t *bytes_read) {
@@ -248,6 +316,9 @@ uint8_t *platform_load_userdata(const char *name, uint32_t *bytes_read) {
 }
 
 uint32_t platform_store_userdata(const char *name, void *bytes, int32_t len) {
+#if defined(__ANDROID__)
+	platform_ensure_dir(path_userdata);
+#endif
 	char *path = strcat(strcpy(temp_path, path_userdata), name);
 	return file_store(path, bytes, len);
 }
@@ -257,11 +328,15 @@ uint32_t platform_store_userdata(const char *name, void *bytes, int32_t len) {
 	SDL_GLContext platform_gl;
 
 	void platform_video_init(void) {
-		#if defined(USE_GLES2)
-			SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-			SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+	#if defined(USE_GLES2)
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+		#if defined(__ANDROID__)
+			SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+		#else
 			SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
 		#endif
+	#endif
 
 		platform_gl = SDL_GL_CreateContext(window);
 		SDL_GL_SetSwapInterval(1);
@@ -345,6 +420,9 @@ uint32_t platform_store_userdata(const char *name, void *bytes, int32_t len) {
 #endif
 
 int main(int argc, char *argv[]) {
+#if defined(__ANDROID__)
+	SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeLeft LandscapeRight");
+#endif
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER);
 
 	// Figure out the absolute asset and userdata paths. These may either be
@@ -353,23 +431,56 @@ int main(int argc, char *argv[]) {
 	// We fall back to the current directory (i.e. just "") in this case.
 
 	char *sdl_path_assets = NULL;
-	#ifdef PATH_ASSETS
-		path_assets = TOSTRING(PATH_ASSETS);
-	#else
-		sdl_path_assets = SDL_GetBasePath();
-		if (sdl_path_assets) {
-			path_assets = sdl_path_assets;
-		}
-	#endif
-
 	char *sdl_path_userdata = NULL;
-	#ifdef PATH_USERDATA
-		path_userdata = TOSTRING(PATH_USERDATA);
-	#else
-		sdl_path_userdata = SDL_GetPrefPath("phoboslab", "wipeout");
-		if (sdl_path_userdata) {
-			path_userdata = sdl_path_userdata;
+
+	#if defined(__ANDROID__)
+		const char *ext_path = SDL_AndroidGetExternalStoragePath();
+		if (ext_path && ext_path[0]) {
+			size_t ext_len = strlen(ext_path);
+			const char *slash = (ext_len > 0 && ext_path[ext_len - 1] == '/') ? "" : "/";
+			snprintf(android_assets_path, sizeof(android_assets_path), "%s%s", ext_path, slash);
+			snprintf(android_userdata_path, sizeof(android_userdata_path), "%swipeout/", android_assets_path);
+			path_assets = android_assets_path;
+			path_userdata = android_userdata_path;
+			platform_ensure_dir(path_userdata);
 		}
+		else {
+			#ifdef PATH_ASSETS
+				path_assets = TOSTRING(PATH_ASSETS);
+			#else
+				sdl_path_assets = SDL_GetBasePath();
+				if (sdl_path_assets) {
+					path_assets = sdl_path_assets;
+				}
+			#endif
+
+			#ifdef PATH_USERDATA
+				path_userdata = TOSTRING(PATH_USERDATA);
+			#else
+				sdl_path_userdata = SDL_GetPrefPath("phoboslab", "wipeout");
+				if (sdl_path_userdata) {
+					path_userdata = sdl_path_userdata;
+				}
+			#endif
+		}
+	#else
+		#ifdef PATH_ASSETS
+			path_assets = TOSTRING(PATH_ASSETS);
+		#else
+			sdl_path_assets = SDL_GetBasePath();
+			if (sdl_path_assets) {
+				path_assets = sdl_path_assets;
+			}
+		#endif
+
+		#ifdef PATH_USERDATA
+			path_userdata = TOSTRING(PATH_USERDATA);
+		#else
+			sdl_path_userdata = SDL_GetPrefPath("phoboslab", "wipeout");
+			if (sdl_path_userdata) {
+				path_userdata = sdl_path_userdata;
+			}
+		#endif
 	#endif
 
 	// Reserve some space for concatenating the asset and userdata paths with
@@ -378,6 +489,19 @@ int main(int argc, char *argv[]) {
 
 	// Load gamecontrollerdb.txt if present.
 	// FIXME: Should this load from userdata instead?
+#if defined(__ANDROID__)
+	int gcdb_res = -1;
+	SDL_RWops *gcdb_rw = SDL_RWFromFile("gamecontrollerdb.txt", "rb");
+	if (gcdb_rw) {
+		gcdb_res = SDL_GameControllerAddMappingsFromRW(gcdb_rw, 1);
+	}
+	if (gcdb_res < 0) {
+		printf("Failed to load gamecontrollerdb.txt\n");
+	}
+	else {
+		printf("load gamecontrollerdb.txt\n");
+	}
+#else
 	char *gcdb_path = strcat(strcpy(temp_path, path_assets), "gamecontrollerdb.txt");
 	int gcdb_res = SDL_GameControllerAddMappingsFromFile(gcdb_path);
 	if (gcdb_res < 0) {
@@ -386,6 +510,7 @@ int main(int argc, char *argv[]) {
 	else {
 		printf("load gamecontrollerdb.txt\n");
 	}
+#endif
 
 
 

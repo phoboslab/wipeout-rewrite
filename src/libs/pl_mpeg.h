@@ -168,6 +168,10 @@ See below for detailed the API documentation.
 #include <stdint.h>
 #include <stdio.h>
 
+#ifdef PLM_USE_SDL_RWOPS
+	#include <SDL_rwops.h>
+#endif
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -285,6 +289,12 @@ plm_t *plm_create_with_filename(const char *filename);
 // let plmpeg call fclose() on the handle when plm_destroy() is called.
 
 plm_t *plm_create_with_file(FILE *fh, int close_when_done);
+
+#ifdef PLM_USE_SDL_RWOPS
+// Create a plmpeg instance with an SDL_RWops handle. Pass TRUE to close_when_done
+// to let plmpeg call SDL_RWclose() on the handle when plm_destroy() is called.
+plm_t *plm_create_with_rwops(SDL_RWops *rwops, int close_when_done);
+#endif
 
 
 // Create a plmpeg instance with a pointer to memory as source. This assumes the
@@ -481,6 +491,12 @@ plm_buffer_t *plm_buffer_create_with_filename(const char *filename);
 // to let plmpeg call fclose() on the handle when plm_destroy() is called.
 
 plm_buffer_t *plm_buffer_create_with_file(FILE *fh, int close_when_done);
+
+#ifdef PLM_USE_SDL_RWOPS
+// Create a buffer instance with an SDL_RWops handle. Pass TRUE to close_when_done
+// to let plmpeg call SDL_RWclose() on the handle when plm_destroy() is called.
+plm_buffer_t *plm_buffer_create_with_rwops(SDL_RWops *rwops, int close_when_done);
+#endif
 
 
 // Create a buffer instance with a pointer to memory as source. This assumes
@@ -860,6 +876,13 @@ plm_t *plm_create_with_file(FILE *fh, int close_when_done) {
 	plm_buffer_t *buffer = plm_buffer_create_with_file(fh, close_when_done);
 	return plm_create_with_buffer(buffer, TRUE);
 }
+
+#ifdef PLM_USE_SDL_RWOPS
+plm_t *plm_create_with_rwops(SDL_RWops *rwops, int close_when_done) {
+	plm_buffer_t *buffer = plm_buffer_create_with_rwops(rwops, close_when_done);
+	return plm_create_with_buffer(buffer, TRUE);
+}
+#endif
 
 plm_t *plm_create_with_memory(uint8_t *bytes, size_t length, int free_when_done) {
 	plm_buffer_t *buffer = plm_buffer_create_with_memory(bytes, length, free_when_done);
@@ -1320,6 +1343,9 @@ int plm_seek(plm_t *self, double time, int seek_exact) {
 
 enum plm_buffer_mode {
 	PLM_BUFFER_MODE_FILE,
+#ifdef PLM_USE_SDL_RWOPS
+	PLM_BUFFER_MODE_RWOPS,
+#endif
 	PLM_BUFFER_MODE_FIXED_MEM,
 	PLM_BUFFER_MODE_RING,
 	PLM_BUFFER_MODE_APPEND
@@ -1335,6 +1361,9 @@ struct plm_buffer_t {
 	int free_when_done;
 	int close_when_done;
 	FILE *fh;
+#ifdef PLM_USE_SDL_RWOPS
+	SDL_RWops *rwops;
+#endif
 	plm_buffer_load_callback load_callback;
 	void *load_callback_user_data;
 	uint8_t *bytes;
@@ -1356,6 +1385,9 @@ void plm_buffer_seek(plm_buffer_t *self, size_t pos);
 size_t plm_buffer_tell(plm_buffer_t *self);
 void plm_buffer_discard_read_bytes(plm_buffer_t *self);
 void plm_buffer_load_file_callback(plm_buffer_t *self, void *user);
+#ifdef PLM_USE_SDL_RWOPS
+void plm_buffer_load_rwops_callback(plm_buffer_t *self, void *user);
+#endif
 
 int plm_buffer_has(plm_buffer_t *self, size_t count);
 int plm_buffer_read(plm_buffer_t *self, int count);
@@ -1391,6 +1423,23 @@ plm_buffer_t *plm_buffer_create_with_file(FILE *fh, int close_when_done) {
 	return self;
 }
 
+#ifdef PLM_USE_SDL_RWOPS
+plm_buffer_t *plm_buffer_create_with_rwops(SDL_RWops *rwops, int close_when_done) {
+	plm_buffer_t *self = plm_buffer_create_with_capacity(PLM_BUFFER_DEFAULT_SIZE);
+	self->rwops = rwops;
+	self->close_when_done = close_when_done;
+	self->mode = PLM_BUFFER_MODE_RWOPS;
+	self->discard_read_bytes = TRUE;
+
+	Sint64 size = SDL_RWsize(self->rwops);
+	self->total_size = size > 0 ? (size_t)size : 0;
+	plm_buffer_seek(self, 0);
+
+	plm_buffer_set_load_callback(self, plm_buffer_load_rwops_callback, NULL);
+	return self;
+}
+#endif
+
 plm_buffer_t *plm_buffer_create_with_memory(uint8_t *bytes, size_t length, int free_when_done) {
 	plm_buffer_t *self = (plm_buffer_t *)PLM_MALLOC(sizeof(plm_buffer_t));
 	memset(self, 0, sizeof(plm_buffer_t));
@@ -1423,9 +1472,14 @@ plm_buffer_t *plm_buffer_create_for_appending(size_t initial_capacity) {
 }
 
 void plm_buffer_destroy(plm_buffer_t *self) {
-	if (self->fh && self->close_when_done) {
+	if (self->mode == PLM_BUFFER_MODE_FILE && self->fh && self->close_when_done) {
 		fclose(self->fh);
 	}
+#ifdef PLM_USE_SDL_RWOPS
+	if (self->mode == PLM_BUFFER_MODE_RWOPS && self->rwops && self->close_when_done) {
+		SDL_RWclose(self->rwops);
+	}
+#endif
 	if (self->free_when_done) {
 		PLM_FREE(self->bytes);
 	}
@@ -1433,7 +1487,11 @@ void plm_buffer_destroy(plm_buffer_t *self) {
 }
 
 size_t plm_buffer_get_size(plm_buffer_t *self) {
-	return (self->mode == PLM_BUFFER_MODE_FILE)
+	return (self->mode == PLM_BUFFER_MODE_FILE
+#ifdef PLM_USE_SDL_RWOPS
+		|| self->mode == PLM_BUFFER_MODE_RWOPS
+#endif
+	)
 		? self->total_size
 		: self->length;
 }
@@ -1496,6 +1554,13 @@ void plm_buffer_seek(plm_buffer_t *self, size_t pos) {
 		self->bit_index = 0;
 		self->length = 0;
 	}
+#ifdef PLM_USE_SDL_RWOPS
+	else if (self->mode == PLM_BUFFER_MODE_RWOPS) {
+		SDL_RWseek(self->rwops, pos, RW_SEEK_SET);
+		self->bit_index = 0;
+		self->length = 0;
+	}
+#endif
 	else if (self->mode == PLM_BUFFER_MODE_RING) {
 		if (pos != 0) {
 			// Seeking to non-0 is forbidden for dynamic-mem buffers
@@ -1511,9 +1576,15 @@ void plm_buffer_seek(plm_buffer_t *self, size_t pos) {
 }
 
 size_t plm_buffer_tell(plm_buffer_t *self) {
-	return self->mode == PLM_BUFFER_MODE_FILE
-		? ftell(self->fh) + (self->bit_index >> 3) - self->length
-		: self->bit_index >> 3;
+	if (self->mode == PLM_BUFFER_MODE_FILE) {
+		return ftell(self->fh) + (self->bit_index >> 3) - self->length;
+	}
+#ifdef PLM_USE_SDL_RWOPS
+	if (self->mode == PLM_BUFFER_MODE_RWOPS) {
+		return SDL_RWtell(self->rwops) + (self->bit_index >> 3) - self->length;
+	}
+#endif
+	return self->bit_index >> 3;
 }
 
 void plm_buffer_discard_read_bytes(plm_buffer_t *self) {
@@ -1544,6 +1615,24 @@ void plm_buffer_load_file_callback(plm_buffer_t *self, void *user) {
 		self->has_ended = TRUE;
 	}
 }
+
+#ifdef PLM_USE_SDL_RWOPS
+void plm_buffer_load_rwops_callback(plm_buffer_t *self, void *user) {
+	PLM_UNUSED(user);
+
+	if (self->discard_read_bytes) {
+		plm_buffer_discard_read_bytes(self);
+	}
+
+	size_t bytes_available = self->capacity - self->length;
+	size_t bytes_read = SDL_RWread(self->rwops, self->bytes + self->length, 1, bytes_available);
+	self->length += bytes_read;
+
+	if (bytes_read == 0) {
+		self->has_ended = TRUE;
+	}
+}
+#endif
 
 int plm_buffer_has_ended(plm_buffer_t *self) {
 	return self->has_ended;
