@@ -21,7 +21,7 @@
 	#include <GL/gl.h>
 #endif
 
-
+int sbs = 0; // -1:left +1:rigth 0:no-sbs
 
 #include <stb_image_write.h>
 
@@ -437,7 +437,7 @@ void render_init(vec2i_t screen_size) {
 	prg_game = shader_game_init();
 	use_program(prg_game);
 
-	render_set_view(vec3(0, 0, 0), vec3(0, 0, 0));
+	render_set_view(vec3(0, 0, 0), vec3(0, 0, 0), 0/*lrdist*/);
 	render_set_model_mat(&mat4_identity());
 
 	glEnable(GL_CULL_FACE);
@@ -575,15 +575,19 @@ vec2i_t render_size(void) {
 void render_frame_prepare(void) {
 	use_program(prg_game);
 	glBindFramebuffer(GL_FRAMEBUFFER, backbuffer);
-	glViewport(0, 0, backbuffer_size.x, backbuffer_size.y);
+	glViewport(sbs? (sbs + 1) * backbuffer_size.x / 4: 0, 0, backbuffer_size.x / (!!sbs + 1), backbuffer_size.y);
 
 	glBindTexture(GL_TEXTURE_2D, atlas_texture);
 	glUniform2f(prg_game->uniform.screen, 0, 0);
 	glEnable(GL_DEPTH_TEST);
 	glDepthMask(true);
 	glDisable(GL_POLYGON_OFFSET_FILL);
-	glClearColor(0, 0, 0, 1);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	if (sbs <= 0)
+	{
+		// only when rendering total of left
+		glClearColor(0, 0, 0, 1);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	}
 	glEnable(GL_DEPTH_TEST); 
 }
 
@@ -599,8 +603,12 @@ void render_frame_end(void) {
 	glUniform1f(prg_post->uniform.time, system_cycle_time());
 	glUniform2f(prg_post->uniform.screen_size, screen_size.x, screen_size.y);
 
-	glClearColor(0, 0, 0, 1);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	if (sbs <= 0)
+	{
+		// only when rendering total of left
+		glClearColor(0, 0, 0, 1);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	}
 
 	rgba_t white = rgba(128,128,128,255);
 	tris_buffer[tris_len++] = (tris_t){
@@ -638,13 +646,14 @@ void render_flush(void) {
 }
 
 
-void render_set_view(vec3_t pos, vec3_t angles) {
+void render_set_view(vec3_t pos, vec3_t angles, float lrdist) {
 	render_flush();
 	render_set_depth_write(true);
 	render_set_depth_test(true);
 
 	view_mat = mat4_identity();
-	mat4_set_translation(&view_mat, vec3(0, 0, 0));
+	mat4_set_translation(&view_mat, vec3(-lrdist, 0, 0));
+
 	mat4_set_roll_pitch_yaw(&view_mat, vec3(angles.x, -angles.y + M_PI, angles.z + M_PI));
 	mat4_translate(&view_mat, vec3_inv(pos));
 	mat4_set_yaw_pitch_roll(&sprite_mat, vec3(-angles.x, angles.y - M_PI, 0));
