@@ -286,7 +286,7 @@ uint32_t platform_store_userdata(const char *name, void *bytes, int32_t len) {
 	}
 
 
-#elif defined(RENDERER_SOFTWARE) // ----------------------------------------------
+#elif defined(RENDERER_SOFTWARE) || defined(RENDERER_NULL)// -------------------
 	#define PLATFORM_WINDOW_FLAGS 0
 	static SDL_Renderer *renderer;
 	static SDL_Texture *screenbuffer = NULL;
