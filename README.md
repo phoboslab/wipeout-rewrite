@@ -222,7 +222,7 @@ The following is a table for project specific build flags using CMake:
 
 | Flag             | Description                                                                             | Options                                                                                                                 | Default                                                                                     |
 |------------------|-----------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------|
-| `PLATFORM`       | The platform to build for.                                                              | `SDL2`, `SOKOL`                                                                                                         | `SDL2`                                                                                      |
+| `PLATFORM`       | The platform to build for.                                                              | `SDL2`, `SOKOL`, `NULL` for a dummy implementation.                                                                     | `SDL2`                                                                                      |
 | `RENDERER`       | Graphics renderer.                                                                      | `GL` for OpenGL 3, `GLES2` for OpenGL ES 2, `SOFTWARE` for a pure software renderer, `NULL` for a dummy implementation. | `GL`                                                                                        |
 | `USE_GLVND`      | Link against the OpenGL Vendor Neutral Dispatch libraries.                              | `ON`, `OFF`                                                                                                             | `ON`, falling back to `OFF` if the libraries aren't found or an OpenGL renderer isn't used. |
 | `MINIMAL_BUNDLE` | Do not include the music/intro video when building for the web.                         | `ON`, `OFF`                                                                                                             | `OFF`                                                                                       |
@@ -248,7 +248,9 @@ Note that the blog post announcing this project may or may not provide a link to
 
 Optionally, if you want to use a game controller that may not be supported by SDL directly, you can place the [gamecontrollerdb.txt](https://github.com/gabomdq/SDL_GameControllerDB) in the root directory of this project (along the compiled `wipegame`). Note that if you want to use the analog sticks of your gamecontroller in the game you have to configure it in the Options menu; the analog sticks are not bound by default.
 
+# Porting
 
+For a new platform not covered by SDL, Sokol, or OpenGL, a starting point would be to run CMake with the dummy platform and renderer implementations, e.g. `-DDEV_BUILD=true -DRENDERER=NULL -DPLATFORM=NULL`. This should compile on most systems, run enough to load assets, then exit, all with just a basic C compiler and no dependencies.
 
 # Ideas for improvements
 
