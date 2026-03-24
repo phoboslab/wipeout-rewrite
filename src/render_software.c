@@ -55,6 +55,11 @@ uint16_t RENDER_NO_TEXTURE;
 int32_t tris_buffer_len = 0;
 clip_tris_t tris_buffer[TRIS_BUFFER_SIZE];
 
+// Intra-frame counts
+static render_stats_t running_stats = {0};
+// Previous frame's total stats (copy of running_stats in render_frame_end())
+static render_stats_t end_stats = {0};
+
 
 void render_init(vec2i_t screen_size) {
 	render_set_screen_size(screen_size);
@@ -121,10 +126,18 @@ void render_frame_prepare(void) {
 	for (uint32_t i = 0; i < depth_buffer_len; i++) {
 		depth_buffer[i] = 1.0f;
 	}
+
+	running_stats.num_tris = 0;
+	running_stats.num_draw_calls = 0;
 }
 
 void render_frame_end(void) {
 	render_flush();
+	memcpy(&end_stats, &running_stats, sizeof(render_stats_t));
+}
+
+const render_stats_t* render_frame_get_stats(void) {
+	return &end_stats;
 }
 
 void render_set_view(vec3_t pos, vec3_t angles) {
@@ -211,6 +224,10 @@ static void render_flush(void) {
 	// rasterization, but it still helps a little to skip it when depth testing.
 
 	qsort(tris_buffer, tris_buffer_len, sizeof(clip_tris_t), sort_sw_tris_by_depth);
+
+	running_stats.num_tris += tris_buffer_len;
+	// Not draw calls but draw buffer sorts
+	running_stats.num_draw_calls++;
 
 	for (int i = 0; i < tris_buffer_len; i++) {
 		draw_tris(tris_buffer[i]);
