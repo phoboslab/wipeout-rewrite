@@ -423,7 +423,7 @@ void ship_player_update_race(ship_t *self) {
 			}
 
 			self->section = landing;
-			self->temp_target = vec3_mulf(vec3_add(landing->center, landing->next->center), 0.5);
+			self->temp_target = vec3_mulf(vec3_add(landing->center, landing->next->center), 0.55);
 			self->temp_target.y -= 2000;
 			self->velocity = vec3(0, 0, 0);
 		}
