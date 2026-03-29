@@ -418,9 +418,10 @@ void ship_player_update_race(ship_t *self) {
 			for (int i = 0; i < 3; i++) {
 				landing = landing->prev;
 			}
-			for (int i = 0; i < 10 && flags_not(landing->flags, SECTION_JUMP); i++) {
+			while(flags_not(landing->flags, SECTION_JUMP)) {
 				landing = landing->next;
 			}
+
 			self->section = landing;
 			self->temp_target = vec3_mulf(vec3_add(landing->center, landing->next->center), 0.5);
 			self->temp_target.y -= 2000;
