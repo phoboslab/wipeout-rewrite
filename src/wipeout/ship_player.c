@@ -391,12 +391,27 @@ void ship_player_update_race(ship_t *self) {
 		else {
 			self->angular_acceleration.x += NTSC_ACCELERATION(ANGLE_NORM_TO_RADIAN(FIXED_TO_FLOAT(-50.0/16.0)));
 		}
+
+		//	Have we somehow flown off of the track into the scenery?
+		float distance = ship_player_find_distance_from_track(self);
+		if (distance > 8000) {
+			self->update_func = ship_player_update_rescue;
+			self->update_timer = UPDATE_TIME_RESCUE;
+			flags_add(self->flags, SHIP_IN_RESCUE | SHIP_FLYING);
+
+			section_t *landing = self->section->prev;
+
+			self->section = landing;
+			self->temp_target = vec3_mulf(vec3_add(landing->center, landing->next->center), 0.5);
+			self->temp_target.y -= 2000;
+			self->velocity = vec3(0, 0, 0);
+		}
 	}
 
 	// Flying
 	else {
 		// Detect the need for a rescue droid
-		float distance = ship_player_find_distance_from_landing(self);
+		float distance = ship_player_find_distance_from_track(self);
 
 		// Do we need to be rescued?
 		if (distance > 8000) {
@@ -582,7 +597,7 @@ ship_t *ship_player_find_target(ship_t *self) {
 	}
 }
 
-const float ship_player_find_distance_from_landing(ship_t *self)
+const float ship_player_find_distance_from_track(ship_t *self)
 {
 	section_t *next = self->section->next;
 
