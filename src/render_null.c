@@ -1,5 +1,7 @@
 #include "render.h"
 
+static render_stats_t dummy_stats = {0};
+
 uint16_t RENDER_NO_TEXTURE;
 
 void render_init(vec2i_t screen_size) {
@@ -22,6 +24,9 @@ vec2i_t render_size(void) {
 
 void render_frame_prepare(void) {}
 void render_frame_end(void) {}
+const render_stats_t* render_frame_get_stats(void) {
+	return &dummy_stats;
+}
 
 void render_set_view(vec3_t pos, vec3_t angles) {
 	(void) pos; (void) angles;
