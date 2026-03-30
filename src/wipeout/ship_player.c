@@ -394,7 +394,7 @@ void ship_player_update_race(ship_t *self) {
 
 		//	Have we somehow flown off of the track into the scenery?
 		float distance = ship_player_find_distance_from_track(self);
-		if (distance > 8000 && vec3_len(self->velocity) == 0) {
+		if (distance > 10000 && vec3_len(self->velocity) == 0) {
 			section_t *landing = self->section->prev;
 			ship_player_begin_rescue_to_section(self, landing);
 		}
