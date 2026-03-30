@@ -415,9 +415,7 @@ void ship_player_update_race(ship_t *self) {
 			flags_add(self->flags, SHIP_IN_RESCUE | SHIP_FLYING);
 
 			section_t *landing = self->section->prev;
-			for (int i = 0; i < 3; i++) {
-				landing = landing->prev;
-			}
+
 			while(flags_not(landing->flags, SECTION_JUMP)) {
 				landing = landing->next;
 			}
