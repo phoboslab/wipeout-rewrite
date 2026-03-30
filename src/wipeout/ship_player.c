@@ -395,16 +395,8 @@ void ship_player_update_race(ship_t *self) {
 		//	Have we somehow flown off of the track into the scenery?
 		float distance = ship_player_find_distance_from_track(self);
 		if (distance > 8000) {
-			self->update_func = ship_player_update_rescue;
-			self->update_timer = UPDATE_TIME_RESCUE;
-			flags_add(self->flags, SHIP_IN_RESCUE | SHIP_FLYING);
-
 			section_t *landing = self->section->prev;
-
-			self->section = landing;
-			self->temp_target = vec3_mulf(vec3_add(landing->center, landing->next->center), 0.5);
-			self->temp_target.y -= 2000;
-			self->velocity = vec3(0, 0, 0);
+			ship_player_begin_rescue_to_section(self, landing);
 		}
 	}
 
@@ -415,10 +407,6 @@ void ship_player_update_race(ship_t *self) {
 
 		// Do we need to be rescued?
 		if (distance > 8000) {
-			self->update_func = ship_player_update_rescue;
-			self->update_timer = UPDATE_TIME_RESCUE;
-			flags_add(self->flags, SHIP_IN_RESCUE | SHIP_FLYING);
-
 			section_t *landing = self->section->prev;
 			for (int i = 0; i < 3; i++) {
 				landing = landing->prev;
@@ -426,10 +414,8 @@ void ship_player_update_race(ship_t *self) {
 			for (int i = 0; i < 10 && flags_not(landing->flags, SECTION_JUMP); i++) {
 				landing = landing->next;
 			}
-			self->section = landing;
-			self->temp_target = vec3_mulf(vec3_add(landing->center, landing->next->center), 0.5);
-			self->temp_target.y -= 2000;
-			self->velocity = vec3(0, 0, 0);
+
+			ship_player_begin_rescue_to_section(self, landing);
 		}
 
 
@@ -521,6 +507,36 @@ void ship_player_update_rescue(ship_t *self) {
 }
 
 
+void ship_player_begin_rescue_to_section(ship_t *self, section_t *section)
+{
+	self->update_func = ship_player_update_rescue;
+	self->update_timer = UPDATE_TIME_RESCUE;
+	flags_add(self->flags, SHIP_IN_RESCUE | SHIP_FLYING);
+
+	self->section = section;
+	self->temp_target = vec3_mulf(vec3_add(section->center, section->next->center), 0.5);
+	self->temp_target.y -= 2000;
+	self->velocity = vec3(0, 0, 0);
+}
+
+const float ship_player_find_distance_from_track(ship_t *self)
+{
+	section_t *next = self->section->next;
+
+	vec3_t best_path = vec3_project_to_ray(self->position, next->center, self->section->center);
+	vec3_t distance = vec3_sub(best_path, self->position);
+
+	if (distance.y > -512) {
+		distance.y = distance.y * 0.0001;
+	}
+	else {
+		distance = vec3_mulf(distance, 8);
+	}
+
+	return vec3_len(distance);
+}
+
+
 ship_t *ship_player_find_target(ship_t *self) {
 	int shortest_distance = 256;
 	ship_t *nearest_ship = NULL;
@@ -595,21 +611,4 @@ ship_t *ship_player_find_target(ship_t *self) {
 	else {
 		return NULL;
 	}
-}
-
-const float ship_player_find_distance_from_track(ship_t *self)
-{
-	section_t *next = self->section->next;
-
-	vec3_t best_path = vec3_project_to_ray(self->position, next->center, self->section->center);
-	vec3_t distance = vec3_sub(best_path, self->position);
-
-	if (distance.y > -512) {
-		distance.y = distance.y * 0.0001;
-	}
-	else {
-		distance = vec3_mulf(distance, 8);
-	}
-
-	return vec3_len(distance);
 }
