@@ -396,20 +396,10 @@ void ship_player_update_race(ship_t *self) {
 	// Flying
 	else {
 		// Detect the need for a rescue droid
-		section_t *next = self->section->next;
-
-		vec3_t best_path = vec3_project_to_ray(self->position, next->center, self->section->center);
-		vec3_t distance = vec3_sub(best_path, self->position);
-
-		if (distance.y > -512) {
-			distance.y = distance.y * 0.0001;
-		}
-		else {
-			distance = vec3_mulf(distance, 8);
-		}
+		float distance = ship_player_find_distance_from_landing(self);
 
 		// Do we need to be rescued?
-		if (vec3_len(distance) > 8000) {
+		if (distance > 8000) {
 			self->update_func = ship_player_update_rescue;
 			self->update_timer = UPDATE_TIME_RESCUE;
 			flags_add(self->flags, SHIP_IN_RESCUE | SHIP_FLYING);
@@ -592,3 +582,19 @@ ship_t *ship_player_find_target(ship_t *self) {
 	}
 }
 
+const float ship_player_find_distance_from_landing(ship_t *self)
+{
+	section_t *next = self->section->next;
+
+	vec3_t best_path = vec3_project_to_ray(self->position, next->center, self->section->center);
+	vec3_t distance = vec3_sub(best_path, self->position);
+
+	if (distance.y > -512) {
+		distance.y = distance.y * 0.0001;
+	}
+	else {
+		distance = vec3_mulf(distance, 8);
+	}
+
+	return vec3_len(distance);
+}

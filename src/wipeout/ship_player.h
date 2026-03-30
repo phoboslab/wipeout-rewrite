@@ -16,5 +16,6 @@ void ship_player_update_race(ship_t *self);
 void ship_player_update_rescue(ship_t *self);
 
 ship_t *ship_player_find_target(ship_t *self);
+const float ship_player_find_distance_from_landing(ship_t *self);
 
 #endif
