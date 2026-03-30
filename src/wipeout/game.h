@@ -102,6 +102,13 @@ enum circut {
 	NUM_CIRCUTS
 };
 
+// How detailed are the stats? Just the FPS or draw internals
+typedef enum {
+	DRAW_STATS_OFF,
+	DRAW_STATS_FPS,
+	DRAW_STATS_DEBUG
+} draw_stats_t;
+
 
 // Game definitions
 
@@ -242,7 +249,7 @@ typedef struct {
 	float music_volume;
 	float internal_roll;
 	uint8_t ui_scale;
-	bool show_fps;
+	draw_stats_t draw_stats;
 	bool fullscreen;
 	int screen_res;
 	int post_effect;
