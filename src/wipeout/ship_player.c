@@ -488,8 +488,8 @@ void ship_player_update_rescue(ship_t *self) {
 
 
 	// Are we done being rescued?
-	float distance = vec3_len(vec3_sub(self->position, self->temp_target));
-	if (flags_is(self->flags, SHIP_IN_TOW) && distance < 800) {
+	float distance = ship_player_find_distance_from_track(self);
+	if (flags_is(self->flags, SHIP_IN_TOW) && distance < 300) {
 		self->update_func = ship_player_update_race;
 		self->update_timer = 0;
 		flags_rm(self->flags, SHIP_IN_RESCUE);
@@ -512,7 +512,7 @@ void ship_player_begin_rescue_to_section(ship_t *self, section_t *section)
 	flags_add(self->flags, SHIP_IN_RESCUE | SHIP_FLYING);
 
 	self->section = section;
-	self->temp_target = vec3_mulf(vec3_add(section->center, section->next->center), 0.5);
+	self->temp_target = vec3_mulf(vec3_add(section->center, section->next->center), 0.55);
 	self->temp_target.y -= 2000;
 	self->velocity = vec3(0, 0, 0);
 }
