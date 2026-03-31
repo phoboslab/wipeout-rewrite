@@ -391,24 +391,17 @@ void ship_player_update_race(ship_t *self) {
 		else {
 			self->angular_acceleration.x += NTSC_ACCELERATION(ANGLE_NORM_TO_RADIAN(FIXED_TO_FLOAT(-50.0/16.0)));
 		}
-
-		//	Have we somehow flown off of the track into the scenery?
-		float distance = ship_player_find_distance_from_track(self);
-		if (distance > 10000 && vec3_len(self->velocity) == 0) {
-			section_t *landing = self->section->prev;
-			ship_player_begin_rescue_to_section(self, landing);
-		}
 	}
 
 	// Flying
 	else {
-		// Detect the need for a rescue droid
+		//	Detect the need for a rescue droid
 		float distance = ship_player_find_distance_from_track(self);
 
-		// Do we need to be rescued?
-		if (distance > 8000) {
+		//	We've fallen off of a jump, rescue to the other side
+		if (distance > 8000 && flags_is(self->section->flags, SECTION_JUMP)) {
 			section_t *landing = self->section->prev;
-
+			
 			while(flags_not(landing->flags, SECTION_JUMP)) {
 				landing = landing->next;
 			}
@@ -416,19 +409,25 @@ void ship_player_update_race(ship_t *self) {
 
 			ship_player_begin_rescue_to_section(self, landing);
 		}
-
-
-		float brake = (self->brake_left + self->brake_right);
-		float resistance = (self->resistance * (SHIP_MAX_RESISTANCE - (brake * 0.125))) * 0.0078125;
-
-		vec3_t force = vec3(0, SHIP_FLYING_GRAVITY, 0);
-		force = vec3_add(force, self->thrust);
-
-		self->acceleration = vec3_divf(vec3_sub(forward_velocity, self->velocity), SHIP_MIN_RESISTANCE + brake * 4);
-		self->acceleration = vec3_add(self->acceleration, vec3_divf(force, self->mass));
-		self->acceleration = vec3_sub(self->acceleration, vec3_divf(self->velocity, resistance));
-
-		self->angular_acceleration.x += NTSC_ACCELERATION(ANGLE_NORM_TO_RADIAN(FIXED_TO_FLOAT(-50.0/16.0)));
+		//	We've flown off the track into the scenery, rescue to last on-track position
+		else if (distance > 10000) {
+			section_t *landing = self->section->prev;
+			ship_player_begin_rescue_to_section(self, landing);
+		}
+		//	Everything is normal, manouver through the air
+		else {
+			float brake = (self->brake_left + self->brake_right);
+			float resistance = (self->resistance * (SHIP_MAX_RESISTANCE - (brake * 0.125))) * 0.0078125;
+	
+			vec3_t force = vec3(0, SHIP_FLYING_GRAVITY, 0);
+			force = vec3_add(force, self->thrust);
+	
+			self->acceleration = vec3_divf(vec3_sub(forward_velocity, self->velocity), SHIP_MIN_RESISTANCE + brake * 4);
+			self->acceleration = vec3_add(self->acceleration, vec3_divf(force, self->mass));
+			self->acceleration = vec3_sub(self->acceleration, vec3_divf(self->velocity, resistance));
+	
+			self->angular_acceleration.x += NTSC_ACCELERATION(ANGLE_NORM_TO_RADIAN(FIXED_TO_FLOAT(-50.0/16.0)));
+		}
 	}
 
 	// Position
