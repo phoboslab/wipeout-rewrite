@@ -27,15 +27,25 @@ float vec3_angle(vec3_t a, vec3_t b) {
 }
 
 vec3_t vec3_transform(vec3_t a, mat4_t *mat) {
-	float w = mat->m[3] * a.x + mat->m[7] * a.y + mat->m[11] * a.z + mat->m[15];
-	if (w == 0) {
-		w = 1;
-	}
 	return vec3(
-		(mat->m[0] * a.x + mat->m[4] * a.y + mat->m[ 8] * a.z + mat->m[12]) / w,
-		(mat->m[1] * a.x + mat->m[5] * a.y + mat->m[ 9] * a.z + mat->m[13]) / w,
-		(mat->m[2] * a.x + mat->m[6] * a.y + mat->m[10] * a.z + mat->m[14]) / w
+		mat->m[0] * a.x + mat->m[4] * a.y + mat->m[ 8] * a.z + mat->m[12],
+		mat->m[1] * a.x + mat->m[5] * a.y + mat->m[ 9] * a.z + mat->m[13],
+		mat->m[2] * a.x + mat->m[6] * a.y + mat->m[10] * a.z + mat->m[14]
 	);
+}
+
+vec4_t vec3_transform_perspective(vec3_t a, mat4_t *mat) {
+	return vec4(
+		mat->m[0] * a.x + mat->m[4] * a.y + mat->m[ 8] * a.z + mat->m[12],
+		mat->m[1] * a.x + mat->m[5] * a.y + mat->m[ 9] * a.z + mat->m[13],
+		mat->m[2] * a.x + mat->m[6] * a.y + mat->m[10] * a.z + mat->m[14],
+		mat->m[3] * a.x + mat->m[7] * a.y + mat->m[11] * a.z + mat->m[15]
+	);
+}
+
+vec3_t vec4_perspective_divide(vec4_t a) {
+	float inv_w = a.w == 0.0 ? 1.0 : 1.0 / a.w;
+	return vec3_mulf(vec3_from_vec4(a), inv_w);
 }
 
 vec3_t vec3_project_to_ray(vec3_t p, vec3_t r0, vec3_t r1) {

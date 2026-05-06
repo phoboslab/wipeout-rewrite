@@ -20,6 +20,11 @@ typedef enum {
 	NUM_RENDER_POST_EFFCTS,
 } render_post_effect_t;
 
+typedef struct {
+	uint32_t num_tris;
+	uint32_t num_draw_calls;
+} render_stats_t;
+
 #define RENDER_USE_MIPMAPS 1
 
 #define RENDER_FADEOUT_NEAR 48000.0
@@ -37,6 +42,8 @@ vec2i_t render_size(void);
 
 void render_frame_prepare(void);
 void render_frame_end(void);
+// render_stats_t owned by the renderer
+const render_stats_t* render_frame_get_stats(void);
 
 void render_set_view(vec3_t pos, vec3_t angles, float lrdist);
 void render_set_view_2d(void);

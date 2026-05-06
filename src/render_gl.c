@@ -378,6 +378,11 @@ prg_game_t *prg_game;
 prg_post_t *prg_post;
 prg_post_t *prg_post_effects[NUM_RENDER_POST_EFFCTS] = {};
 
+// Intra-frame counts
+static render_stats_t running_stats = {0};
+// Previous frame's total stats (copy of running_stats in render_frame_end())
+static render_stats_t end_stats = {0};
+
 
 static void render_flush(void);
 
@@ -589,6 +594,9 @@ void render_frame_prepare(void) {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	}
 	glEnable(GL_DEPTH_TEST); 
+
+	running_stats.num_tris = 0;
+	running_stats.num_draw_calls = 0;
 }
 
 void render_frame_end(void) {
@@ -627,6 +635,13 @@ void render_frame_end(void) {
 	};
 
 	render_flush();
+	
+	// Only here do we have the complete stats
+	memcpy(&end_stats, &running_stats, sizeof(render_stats_t));
+}
+
+const render_stats_t* render_frame_get_stats(void) {
+	return &end_stats;
 }
 
 void render_flush(void) {
@@ -638,6 +653,9 @@ void render_flush(void) {
 		glGenerateMipmap(GL_TEXTURE_2D);
 		texture_mipmap_is_dirty = false;
 	}
+
+	running_stats.num_tris += tris_len;
+	running_stats.num_draw_calls++;
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(tris_t) * tris_len, tris_buffer, GL_DYNAMIC_DRAW);
@@ -743,7 +761,7 @@ void render_set_cull_backface(bool enabled) {
 
 
 vec3_t render_transform(vec3_t pos) {
-	return vec3_transform(vec3_transform(pos, &view_mat), &projection_mat_3d);
+	return vec4_perspective_divide(vec3_transform_perspective(vec3_transform(pos, &view_mat), &projection_mat_3d));
 }
 
 void render_push_tris(tris_t tris, uint16_t texture_index) {

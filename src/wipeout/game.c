@@ -399,7 +399,7 @@ save_t save = {
 	.internal_roll = 0.6,
 	.screen_shake = 0.5,
 	.ui_scale = 0,
-	.show_fps = false,
+	.draw_stats = DRAW_STATS_OFF,
 	.fullscreen = false,
 	.screen_res = 0,
 	.post_effect = 0,
@@ -659,5 +659,7 @@ void game_update(void) {
 	if (g.frame_time > 0) {
 		g.frame_rate = ((double)g.frame_rate * 0.95) + (1.0/g.frame_time) * 0.05;
 	}
+	
+	// The only drawing left here should be the post process
 }
 

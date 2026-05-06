@@ -210,10 +210,24 @@ void hud_draw(ship_t *ship) {
 		ui_draw_number(ship->position_rank, ui_scaled_pos(UI_POS_TOP | UI_POS_RIGHT, vec2i(-60, 19)), UI_SIZE_16, UI_COLOR_DEFAULT);
 	}
 
-	// Framerate
-	if (save.show_fps) {
+	// Framerate/draw stats
+	switch (save.draw_stats) {
+	case DRAW_STATS_FPS:
 		ui_draw_text("FPS", ui_scaled(vec2i(16, 78)), UI_SIZE_8, UI_COLOR_ACCENT);
 		ui_draw_number((int)(g.frame_rate), ui_scaled(vec2i(16, 90)), UI_SIZE_8, UI_COLOR_DEFAULT);
+		break;
+	case DRAW_STATS_DEBUG: {
+		ui_draw_text("TRIS", ui_scaled(vec2i(16, 78)), UI_SIZE_8, UI_COLOR_ACCENT);
+		ui_draw_text("CALLS", ui_scaled(vec2i(80, 78)), UI_SIZE_8, UI_COLOR_ACCENT);
+		ui_draw_text("MS", ui_scaled(vec2i(144, 78)), UI_SIZE_8, UI_COLOR_ACCENT);
+		const render_stats_t *stats = render_frame_get_stats();
+		ui_draw_number((int)(stats->num_tris), ui_scaled(vec2i(16, 90)), UI_SIZE_8, UI_COLOR_DEFAULT);
+		ui_draw_number((int)(stats->num_draw_calls), ui_scaled(vec2i(80, 90)), UI_SIZE_8, UI_COLOR_DEFAULT);
+		ui_draw_number((int)(g.frame_time * 1000), ui_scaled(vec2i(144, 90)), UI_SIZE_8, UI_COLOR_DEFAULT);
+		break;
+	}
+	default:
+		break;
 	}
 
 	// Lap Record

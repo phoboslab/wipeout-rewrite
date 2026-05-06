@@ -7,6 +7,14 @@
 #include <stdlib.h>
 #include <math.h>
 
+#if !defined(M_PI)
+	#define M_PI 3.14159265358979323846
+#endif
+
+#if !defined(M_SQRT2)
+	#define M_SQRT2 1.4142135623730951
+#endif
+
 typedef struct rgba_t {
 	uint8_t r, g, b, a;
 } rgba_t;
@@ -15,15 +23,17 @@ typedef struct {
 	float x, y;
 } vec2_t;
 
-
 typedef struct {
 	int32_t x, y;
 } vec2i_t;
 
-
 typedef struct {
 	float x, y, z;
 } vec3_t;
+
+typedef struct {
+	float x, y, z, w;
+} vec4_t;
 
 typedef union {
 	float m[16];
@@ -44,6 +54,7 @@ typedef struct {
 #define rgba(R, G, B, A) ((rgba_t){.r = R, .g = G, .b = B, .a = A})
 #define vec2(X, Y) ((vec2_t){.x = X, .y = Y})
 #define vec3(X, Y, Z) ((vec3_t){.x = X, .y = Y, .z = Z})
+#define vec4(X, Y, Z, W) ((vec4_t){.x = X, .y = Y, .z = Z, .w = W})
 #define vec2i(X, Y) ((vec2i_t){.x = X, .y = Y})
 
 #define mat4(m0,m1,m2,m3,m4,m5,m6,m7,m8,m9,m10,m11,m12,m13,m14,m15) \
@@ -68,6 +79,20 @@ static inline vec2_t vec2_mulf(vec2_t a, float f) {
 	);
 }
 
+static inline vec2_t vec2_add(vec2_t a, vec2_t b) {
+	return vec2(
+		a.x + b.x,
+		a.y + b.y
+	);
+}
+
+static inline vec2_t vec2_sub(vec2_t a, vec2_t b) {
+	return vec2(
+		a.x - b.x,
+		a.y - b.y
+	);
+}
+
 static inline vec2i_t vec2i_mulf(vec2i_t a, float f) {
 	return vec2i(
 		a.x * f,
@@ -75,6 +100,12 @@ static inline vec2i_t vec2i_mulf(vec2i_t a, float f) {
 	);
 }
 
+static inline vec2_t vec2_lerp(vec2_t a, vec2_t b, float t) {
+	return vec2(
+		a.x + t * (b.x - a.x),
+		a.y + t * (b.y - a.y)
+	);
+}
 
 static inline vec3_t vec3_add(vec3_t a, vec3_t b) {
 	return vec3(
@@ -144,6 +175,42 @@ static inline vec3_t vec3_lerp(vec3_t a, vec3_t b, float t) {
 	);
 }
 
+static inline vec4_t vec4_lerp(vec4_t a, vec4_t b, float t) {
+	return vec4(
+		a.x + t * (b.x - a.x),
+		a.y + t * (b.y - a.y),
+		a.z + t * (b.z - a.z),
+		a.w + t * (b.w - a.w)
+	);
+}
+
+static inline vec4_t vec4_mulf(vec4_t a, float f) {
+	return vec4(
+		a.x * f,
+		a.y * f,
+		a.z * f,
+		a.w * f
+	);
+}
+
+static inline vec4_t vec4_add(vec4_t a, vec4_t b) {
+	return vec4(
+		a.x + b.x,
+		a.y + b.y,
+		a.z + b.z,
+		a.w + b.w
+	);
+}
+
+static inline vec4_t vec4_sub(vec4_t a, vec4_t b) {
+	return vec4(
+		a.x - b.x,
+		a.y - b.y,
+		a.z - b.z,
+		a.w - b.w
+	);
+}
+
 static inline vec3_t vec3_normalize(vec3_t a) {
 	float length = vec3_len(a);
 	return vec3(
@@ -161,6 +228,10 @@ static inline float wrap_angle(float a) {
 	return a - M_PI;
 }
 
+static inline vec3_t vec3_from_vec4(vec4_t a) {
+	return vec3(a.x, a.y, a.z);
+}
+
 rgba_t rgba_from_u32(uint32_t v);
 float vec3_angle(vec3_t a, vec3_t b);
 vec3_t vec3_wrap_angle(vec3_t a);
@@ -172,6 +243,8 @@ vec3_t vec3_reflect(vec3_t incidence, vec3_t normal, float f);
 float wrap_angle(float a);
 
 vec3_t vec3_transform(vec3_t a, mat4_t *mat);
+vec4_t vec3_transform_perspective(vec3_t a, mat4_t *mat);
+vec3_t vec4_perspective_divide(vec4_t a);
 void mat4_set_translation(mat4_t *mat, vec3_t pos);
 void mat4_set_yaw_pitch_roll(mat4_t *m, vec3_t rot);
 void mat4_set_roll_pitch_yaw(mat4_t *mat, vec3_t rot);
