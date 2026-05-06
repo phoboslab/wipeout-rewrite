@@ -43,11 +43,23 @@ void system_update(void) {
 		cycle_time -= 3600 * M_PI;
 	}
 	
+	// render total (sbs==0) or left (sbs==-1)
+
 	render_frame_prepare();
 	
 	game_update();
 
 	render_frame_end();
+
+	if (sbs)
+	{
+		sbs = 1; // now render right
+		render_frame_prepare();
+		game_update();
+		render_frame_end();
+		sbs = -1;
+	}
+
 	input_clear();
 	mem_temp_check();
 }
