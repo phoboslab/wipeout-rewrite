@@ -635,8 +635,16 @@ static bool vec3_is_on_face(vec3_t pos, track_face_t *face, float alpha) {
 }
 
 void ship_resolve_wing_collision(ship_t *self, track_face_t *face, float direction) {
-	vec3_t collision_vector = vec3_sub(self->section->center, face->tris[0].vertices[2].pos);
-	float angle = vec3_angle(collision_vector, self->dir_forward);
+
+	// Get track direction (tangent) from section
+	vec3_t track_dir = vec3_normalize(vec3_sub(self->section->next->center, self->section->center));
+
+	// Calculate angle between ship direction and track direction
+	float angle = vec3_angle(track_dir, self->dir_forward);
+
+    // debug
+	printf("Wing collision: angle=%.2f⁰ breakL=%.2f breakR=%.2f\n", ANGLE(angle), self->brake_left, self->brake_right);
+
 	self->velocity = vec3_reflect(self->velocity, face->normal, 2);
 	self->position = vec3_sub(self->position, vec3_mulf(self->velocity, 0.015625)); // system_tick?
 	self->velocity = vec3_sub(self->velocity, vec3_mulf(self->velocity, 0.5));
