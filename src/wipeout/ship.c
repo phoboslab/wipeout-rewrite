@@ -640,11 +640,40 @@ void ship_resolve_wing_collision(ship_t *self, track_face_t *face, float directi
 	vec3_t track_dir = vec3_normalize(vec3_sub(self->section->next->center, self->section->center));
 
 	// Calculate angle between ship direction and track direction
-	float angle = vec3_angle(track_dir, self->dir_forward);
+	float angle_vs_track = vec3_angle(track_dir, self->dir_forward);
 
-    // debug
-	printf("Wing collision: angle=%.2f⁰ breakL=%.2f breakR=%.2f\n", ANGLE(angle), self->brake_left, self->brake_right);
+	// detect wing sliding:
+	// - when little angle
+	// - when bigger angle and trying to avoid using break L/R resp on right/left side
+	bool is_wing_slide = (fabsf(angle_vs_track) < WING_SLIDE_ANGLE_SLOW_THRESHOLD) ||
+	                     (fabsf(angle_vs_track) < WING_SLIDE_ANGLE_FAST_THRESHOLD && 
+	                      ((direction < 0 && self->brake_right >= WING_BRAKE_THRESHOLD) || 
+	                       (direction > 0 && self->brake_left >= WING_BRAKE_THRESHOLD)));
+	if (is_wing_slide) {
 
+    	printf("Wing slide: angle=%.2f⁰ dir=%.1f/%.1f/%.1f track=%.1f/%.1f/%.1f speed=%.1f\n", 
+			ANGLE_TO_DEG(angle_vs_track), 
+			self->dir_forward.x, self->dir_forward.y, self->dir_forward.z,
+			track_dir.x, track_dir.y, track_dir.z,
+			self->speed);
+
+		// Wing slide mode: project velocity onto track direction (tangent)
+		// No bounce, no braking: just slide along the track
+		self->velocity = vec3_mulf(track_dir, self->speed);
+
+		// Reorient ship towards track direction
+		self->dir_forward = track_dir;
+		self->dir_right = vec3_normalize(vec3_cross(self->dir_forward, vec3(0, 1, 0)));
+
+		// No position adjustment - let normal update handle movement
+
+        return;
+    }
+
+	//printf("Wing collision: angle=%.2f⁰ breakL=%.2f breakR=%.2f\n", ANGLE_TO_DEG(angle), self->brake_left, self->brake_right);
+
+	vec3_t collision_vector = vec3_sub(self->section->center, face->tris[0].vertices[2].pos);
+	float angle = vec3_angle(collision_vector, self->dir_forward);
 	self->velocity = vec3_reflect(self->velocity, face->normal, 2);
 	self->position = vec3_sub(self->position, vec3_mulf(self->velocity, 0.015625)); // system_tick?
 	self->velocity = vec3_sub(self->velocity, vec3_mulf(self->velocity, 0.5));

@@ -11,7 +11,11 @@
 	#define M_PI 3.14159265358979323846
 #endif
 
-#define ANGLE(a) ((a)*(180.0f / M_PI))
+#define ANGLE_TO_DEG(a) ((a)*(180.0f / M_PI))
+#define DEG_TO_ANGLE(deg) ((deg)*(M_PI / 180.0f))
+#define WING_SLIDE_ANGLE_SLOW_THRESHOLD DEG_TO_ANGLE(10)
+#define WING_SLIDE_ANGLE_FAST_THRESHOLD DEG_TO_ANGLE(20)
+#define WING_BRAKE_THRESHOLD 128 // max 256
 
 #if !defined(M_SQRT2)
 	#define M_SQRT2 1.4142135623730951
