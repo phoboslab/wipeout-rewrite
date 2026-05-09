@@ -649,13 +649,15 @@ void ship_resolve_wing_collision(ship_t *self, track_face_t *face, float directi
 	                     (fabsf(angle_vs_track) < WING_SLIDE_ANGLE_FAST_THRESHOLD && 
 	                      ((direction < 0 && self->brake_right >= WING_BRAKE_THRESHOLD) || 
 	                       (direction > 0 && self->brake_left >= WING_BRAKE_THRESHOLD)));
-	if (is_wing_slide) {
 
-    	printf("Wing slide: angle=%.2f⁰ dir=%.1f/%.1f/%.1f track=%.1f/%.1f/%.1f speed=%.1f\n", 
-			ANGLE_TO_DEG(angle_vs_track), 
-			self->dir_forward.x, self->dir_forward.y, self->dir_forward.z,
-			track_dir.x, track_dir.y, track_dir.z,
-			self->speed);
+	printf("Wing %s: angle=%.2f⁰ dir=%.1f/%.1f/%.1f track=%.1f/%.1f/%.1f speed=%.1f dir=%d angle.y=%.1f\n", 
+	    is_wing_slide? "slide": "collision",
+		ANGLE_TO_DEG(angle_vs_track), 
+		self->dir_forward.x, self->dir_forward.y, self->dir_forward.z,
+		track_dir.x, track_dir.y, track_dir.z,
+		self->speed, direction<0?-1:1, ANGLE_TO_DEG(self->angle.y));
+
+	if (is_wing_slide) {
 
 		// Wing slide mode: project velocity onto track direction (tangent)
 		// No bounce, no braking: just slide along the track
@@ -665,12 +667,11 @@ void ship_resolve_wing_collision(ship_t *self, track_face_t *face, float directi
 		self->dir_forward = track_dir;
 		self->dir_right = vec3_normalize(vec3_cross(self->dir_forward, vec3(0, 1, 0)));
 
-		// No position adjustment - let normal update handle movement
+		// slightly adjust angle towards track center
+		self->angle.y += direction>0? INWARD_ADJUST_ANGLE: -INWARD_ADJUST_ANGLE;
 
         return;
     }
-
-	//printf("Wing collision: angle=%.2f⁰ breakL=%.2f breakR=%.2f\n", ANGLE_TO_DEG(angle), self->brake_left, self->brake_right);
 
 	vec3_t collision_vector = vec3_sub(self->section->center, face->tris[0].vertices[2].pos);
 	float angle = vec3_angle(collision_vector, self->dir_forward);
