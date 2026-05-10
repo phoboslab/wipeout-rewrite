@@ -636,39 +636,35 @@ static bool vec3_is_on_face(vec3_t pos, track_face_t *face, float alpha) {
 
 void ship_resolve_wing_collision(ship_t *self, track_face_t *face, float direction) {
 
-	// Get track direction (tangent) from section
-	vec3_t track_dir = vec3_normalize(vec3_sub(self->section->next->center, self->section->center));
+	// track direction (tangent) from section
+	vec3_t track_vec = vec3_normalize(vec3_sub(self->section->next->center, self->section->center));
+	float track_angle_y = -atan2(track_vec.x, track_vec.z);
 
-	// Calculate angle between ship direction and track direction
-	float angle_vs_track = vec3_angle(track_dir, self->dir_forward);
+	// angle between ship direction and track direction
+	float ship2track = track_angle_y - self->angle.y;
+	float abs_ship2track = fabsf(ship2track);
+	
+    // on left side: direction < 0
+    // on right side: direction > 0
 
 	// detect wing sliding:
 	// - when little angle
 	// - when bigger angle and trying to avoid using break L/R resp on right/left side
-	bool is_wing_slide = (fabsf(angle_vs_track) < WING_SLIDE_ANGLE_SLOW_THRESHOLD) ||
-	                     (fabsf(angle_vs_track) < WING_SLIDE_ANGLE_FAST_THRESHOLD && 
+	bool is_wing_slide = (abs_ship2track < WING_SLIDE_ANGLE_SLOW_THRESHOLD) ||
+	                     (abs_ship2track < WING_SLIDE_ANGLE_FAST_THRESHOLD && 
 	                      ((direction < 0 && self->brake_right >= WING_BRAKE_THRESHOLD) || 
 	                       (direction > 0 && self->brake_left >= WING_BRAKE_THRESHOLD)));
 
-	printf("Wing %s: angle=%.2f⁰ dir=%.1f/%.1f/%.1f track=%.1f/%.1f/%.1f speed=%.1f dir=%d angle.y=%.1f\n", 
+	printf("Wing %s: ship2track=%f⁰ side=%d trackdir=%f shipdir=%f⁰\n", 
 	    is_wing_slide? "slide": "collision",
-		ANGLE_TO_DEG(angle_vs_track), 
-		self->dir_forward.x, self->dir_forward.y, self->dir_forward.z,
-		track_dir.x, track_dir.y, track_dir.z,
-		self->speed, direction<0?-1:1, ANGLE_TO_DEG(self->angle.y));
-
+		ANGLE_TO_DEG(ship2track), 
+		direction<0?-1:1,
+		ANGLE_TO_DEG(track_angle_y),
+		ANGLE_TO_DEG(self->angle.y));
+		
 	if (is_wing_slide) {
 
-		// Wing slide mode: project velocity onto track direction (tangent)
-		// No bounce, no braking: just slide along the track
-		self->velocity = vec3_mulf(track_dir, self->speed);
-
-		// Reorient ship towards track direction
-		self->dir_forward = track_dir;
-		self->dir_right = vec3_normalize(vec3_cross(self->dir_forward, vec3(0, 1, 0)));
-
-		// slightly adjust angle towards track center
-		self->angle.y += direction>0? INWARD_ADJUST_ANGLE: -INWARD_ADJUST_ANGLE;
+		self->angle.y = track_angle_y;
 
         return;
     }
