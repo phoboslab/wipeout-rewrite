@@ -664,7 +664,27 @@ void ship_resolve_wing_collision(ship_t *self, track_face_t *face, float directi
 		
 	if (is_wing_slide) {
 
-		self->angle.y = track_angle_y;
+        if (abs_ship2track < WING_STRAIGHT_ENOUGH_ANGLE) {
+        
+            // ship is along the track, slightly push it inward
+        
+            self->angle.y += direction<0? -WING_RECENTER_ANGLE: WING_RECENTER_ANGLE;
+        
+        } else if ((direction < 0 /*on left side*/ && ship2track < 0 /* going left */) || 
+	               (direction > 0 /*on right side*/ && ship2track > 0 /* going right */)) {
+		
+		    // ship is going outside from the track 
+			// smoothly pull ship to the track direction
+			// and make noise
+
+			self->angle.y = (self->angle.y * WING_SLIDE_SMOOTHING) + (track_angle_y * (1.0f - WING_SLIDE_SMOOTHING));
+			
+			static sfx_t* scrape = NULL; // NULL = not playing
+			if (scrape && !flags_is(scrape->flags, SFX_PLAY))
+				scrape = NULL; // checked as not playing anymore -> NULL
+			if (!scrape) // not playing -> play it
+				scrape = sfx_play_at(SFX_SCRAPE, ship_nose(self), vec3(0, 0, 0), 1.f);
+        }
 
         return;
     }
