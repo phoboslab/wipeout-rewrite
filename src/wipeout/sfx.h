@@ -34,6 +34,10 @@ typedef enum {
 	SFX_VOICE_COUNT_2,
 	SFX_VOICE_COUNT_1,
 	SFX_VOICE_COUNT_GO,
+	
+	// external sounds
+	
+	SFX_SCRAPE,
 } sfx_source_t;
 
 typedef enum {
