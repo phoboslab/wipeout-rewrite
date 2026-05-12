@@ -273,7 +273,7 @@ void sfx_pause(void) {
 sfx_t *sfx_get_node(sfx_source_t source_index) {
 	// Check if it's an external sound source
 	bool is_external = (source_index == SFX_SCRAPE);
-	
+
 	if (!is_external) {
 		error_if(source_index < 0 || source_index > num_sources, "Invalid audio source");
 	}
@@ -476,7 +476,7 @@ void sfx_stero_mix(float *buffer, uint32_t len) {
 			// Get sample from VAG sources or external WAV
 			float sample;
 			uint32_t source_len;
-			
+
 			if (sfx->source == SFX_SCRAPE && scrape_wav.samples) {
 				// Use external WAV source
 				source_len = scrape_wav.len;
@@ -487,7 +487,7 @@ void sfx_stero_mix(float *buffer, uint32_t len) {
 				source_len = source->len;
 				sample = (float)source->samples[(int)sfx->position] / 32768.0;
 			}
-			
+
 			left += sample * sfx->current_volume * clamp(1.0 - sfx->current_pan, 0, 1);
 			right += sample * sfx->current_volume * clamp(1.0 + sfx->current_pan, 0, 1);
 
