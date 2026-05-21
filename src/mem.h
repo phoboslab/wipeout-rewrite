@@ -7,6 +7,7 @@
 #define MEM_HUNK_BYTES (16 * 1024 * 1024)
 
 void *mem_bump(uint32_t size);
+void *mem_bump_unaligned(uint32_t size);
 void *mem_mark(void);
 void mem_reset(void *p);
 

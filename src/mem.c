@@ -4,7 +4,6 @@
 #include "mem.h"
 #include "utils.h"
 
-
 static uint8_t hunk[MEM_HUNK_BYTES];
 static uint32_t bump_len = 0;
 static uint32_t temp_len = 0;
@@ -22,14 +21,29 @@ void *mem_mark(void) {
 	return &hunk[bump_len];
 }
 
+// mem_bump is guaranteed to return a pointer aligned to 8 bytes.
+// It is not guaranteed to return a pointer that immediately follows the
+// previous one it handed out; use mem_bump_unaligned for that. 
+
 void *mem_bump(uint32_t size) {
+	// In addition to aligning the size itself, we must also align 
+	// bump_len since a previous direct call to mem_bump_unaligned may 
+	// have destroyed its alignment.
+	bump_len = round_up_to_word(bump_len);
+	size = round_up_to_word(size);
+	return mem_bump_unaligned(size);
+}
+
+// The only time this ever gets called is for loading primitives and objects.
+// Ideally we would never call it at all, given the risk of bus errors.
+
+void *mem_bump_unaligned(uint32_t size) {
 	error_if(bump_len + temp_len + size >= MEM_HUNK_BYTES, "Failed to allocate %d bytes in hunk mem", size);
 	uint8_t *p = &hunk[bump_len];
 	bump_len += size;
 	memset(p, 0, size);
 	return p;
 }
-
 void mem_reset(void *p) {
 	uint32_t offset = (uint8_t *)p - (uint8_t *)hunk;
 	error_if(offset > bump_len || offset > MEM_HUNK_BYTES, "Invalid mem reset");
@@ -46,7 +60,7 @@ void mem_reset(void *p) {
 // and aftewards free A then B.
 
 void *mem_temp_alloc(uint32_t size) {
-	size = ((size + 7) >> 3) << 3; // allign to 8 bytes
+	size = round_up_to_word(size);
 
 	error_if(bump_len + temp_len + size >= MEM_HUNK_BYTES, "Failed to allocate %d bytes in temp mem", size);
 	error_if(temp_objects_len >= MEM_TEMP_OBJECTS_MAX, "MEM_TEMP_OBJECTS_MAX reached");

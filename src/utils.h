@@ -47,6 +47,7 @@
 
 #define len(A) (sizeof(A) / sizeof(A[0]))
 #define clear(A) memset(A, 0, sizeof(A))
+#define round_up_to_word(A) (((A + 7) >> 3) << 3)
 
 
 #define STRINGIFY(x) #x
