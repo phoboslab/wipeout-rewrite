@@ -25,8 +25,15 @@ void droid_load(void) {
 void droid_init(droid_t *droid, ship_t *ship) {
 	droid->section = g.track.sections;
 
+	void *start = droid->section;
 	while (flags_not(droid->section->flags, SECTION_JUMP)) {
 		droid->section = droid->section->next;
+		// Prevent hang on tracks without jumps.
+		// Such tracks exist in Wipeout 2097 and potentially 64.
+		if (droid->section == start) {
+			droid->section = NULL;
+			break;
+		};
 	}
 
 	droid->position = vec3_add(ship->position, vec3(0, -200, 0));
@@ -150,6 +157,14 @@ void droid_update_intro(droid_t *droid, ship_t *ship) {
 	}
 
 	if (droid->update_timer <= 0) {
+		// When there are no jumps in the level, the droid stops updating
+		// as soon as the intro completes.
+		if (!droid->section) {
+			// Zeroing these is not strictly needed but seems like a good idea
+			droid->velocity = droid->acceleration = droid->angular_velocity = (const vec3_t){ 0 };
+			droid->update_func = droid_update_nothing;
+			return;
+		}
 		droid->update_timer = DROID_UPDATE_TIME_INITIAL;
 		droid->update_func = droid_update_idle;
 		droid->position.x = droid->section->center.x;
@@ -258,3 +273,5 @@ void droid_update_rescue(droid_t *droid, ship_t *ship) {
 		}
 	}
 }
+
+void droid_update_nothing(droid_t *droid, ship_t *ship) {}

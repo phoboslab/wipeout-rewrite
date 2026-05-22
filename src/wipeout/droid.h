@@ -35,5 +35,6 @@ void droid_update(droid_t *droid, ship_t *ship);
 void droid_update_intro(droid_t *droid, ship_t *ship);
 void droid_update_idle(droid_t *droid, ship_t *ship);
 void droid_update_rescue(droid_t *droid, ship_t *ship);
+void droid_update_nothing(droid_t *droid, ship_t *ship);
 
 #endif
