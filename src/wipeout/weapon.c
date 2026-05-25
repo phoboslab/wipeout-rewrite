@@ -586,20 +586,10 @@ void weapon_update_shield(weapon_t *self) {
 			col1 = sin(color_timer * coords[1]) * 127 + 128;
 			col2 = sin(color_timer * coords[2]) * 127 + 128;
 
-			poly.g3->color[0].r = col0;
-			poly.g3->color[0].g = col0;
-			poly.g3->color[0].b = 255;
-			poly.g3->color[0].a = shield_alpha;
-
-			poly.g3->color[1].r = col1;
-			poly.g3->color[1].g = col1;
-			poly.g3->color[1].b = 255;
-			poly.g3->color[1].a = shield_alpha;
-
-			poly.g3->color[2].r = col2;
-			poly.g3->color[2].g = col2;
-			poly.g3->color[2].b = 255;
-			poly.g3->color[2].a = shield_alpha;
+			poly.g3->color[0] = rgba(col0, col0, 255, shield_alpha);
+			poly.g3->color[1] = rgba(col1, col1, 255, shield_alpha);
+			poly.g3->color[2] = rgba(col2, col2, 255, shield_alpha);
+			
 			poly.g3 += 1;
 			break;
 
@@ -611,25 +601,11 @@ void weapon_update_shield(weapon_t *self) {
 			col2 = sin(color_timer * coords[2]) * 127 + 128;
 			col3 = sin(color_timer * coords[3]) * 127 + 128;
 
-			poly.g4->color[0].r = col0;
-			poly.g4->color[0].g = col0;
-			poly.g4->color[0].b = 255;
-			poly.g4->color[0].a = shield_alpha;
+			poly.g4->color[0] = rgba(col0, col0, 255, shield_alpha);
+			poly.g4->color[1] = rgba(col1, col1, 255, shield_alpha);
+			poly.g4->color[2] = rgba(col2, col2, 255, shield_alpha);
+			poly.g4->color[3] = rgba(col3, col3, 255, shield_alpha);
 
-			poly.g4->color[1].r = col1;
-			poly.g4->color[1].g = col1;
-			poly.g4->color[1].b = 255;
-			poly.g4->color[1].a = shield_alpha;
-
-			poly.g4->color[2].r = col2;
-			poly.g4->color[2].g = col2;
-			poly.g4->color[2].b = 255;
-			poly.g4->color[2].a = shield_alpha;
-
-			poly.g4->color[3].r = col3;
-			poly.g4->color[3].g = col3;
-			poly.g4->color[3].b = 255;
-			poly.g4->color[3].a = shield_alpha;
 			poly.g4 += 1;
 			break;
 		}
