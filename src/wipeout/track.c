@@ -41,6 +41,10 @@ void track_load(const char *base_path) {
 	track_load_faces(get_path(base_path, "track.trf"), vertices);
 	mem_temp_free(vertices);
 
+	// Wipeout 2097 .tex loading
+	char *tex_path = get_path(base_path, "track.tex");
+	if (file_exists(tex_path)) track_load_texture_file(tex_path);
+
 	track_load_sections(get_path(base_path, "track.trs"));
 
 	g.track.pickups_len = 0;
@@ -63,7 +67,6 @@ void track_load(const char *base_path) {
 		s = s->next;
 	} while (s != g.track.sections);
 	g.track.total_section_nums = num;
-
 	g.track.pickups = mem_mark();
 	for (int i = 0; i < g.track.section_count; i++) {
 		track_face_t *face = track_section_get_base_face(&g.track.sections[i]);
@@ -192,6 +195,16 @@ void track_load_faces(char *file_name, vec3_t *vertices) {
 	mem_temp_free(bytes);
 }
 
+void track_load_texture_file(char *tex_path) {
+	int size;
+	uint8_t *bytes = platform_load_asset(tex_path, &size);
+	uint32_t p = 0;
+	for (int i = 0; i < g.track.face_count; i++) {
+		g.track.faces[i].texture = get_u8(bytes, &p);
+		g.track.faces[i].flags = get_u8(bytes, &p);
+	}
+	mem_temp_free(bytes);
+}
 
 void track_load_sections(char *file_name) {
 	uint32_t size;

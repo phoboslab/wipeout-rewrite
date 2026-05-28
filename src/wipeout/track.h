@@ -82,6 +82,7 @@ void track_load(const char *base_path);
 ttf_t *track_load_tile_format(char *ttf_name);
 vec3_t *track_load_vertices(char *file);
 void track_load_faces(char *file, vec3_t *vertices);
+void track_load_texture_file(char *tex_path);
 void track_load_sections(char *file);
 bool track_collect_pickups(track_face_t *face);
 void track_face_set_color(track_face_t *face, rgba_t color);
