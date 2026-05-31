@@ -52,57 +52,32 @@ void droid_draw(droid_t *droid) {
 	int gf = sin(droid->cycle_timer + 0.2) * 127 + 128;
 	int bf = sin(droid->cycle_timer * 0.5 + 0.1) * 127 + 128;
 
-	int r, g, b;
-
 	for (int i = 0; i < 11; i++) {
+		rgba_t color;
+
 		if (i < 2) {
-			r = 40;
-			g = gf;
-			b = 40;
+			color = rgba(40,gf,40,0xFF);
 		}
 		else if (i < 6) {
-			r = bf >> 1;
-			b = bf;
-			g = bf >> 1;
+			color = rgba(bf >> 1, bf, bf >> 1, 0xFF);
 		}
 		else {
-			r = rf;
-			b = 40;
-			g = 40;
+			color = rgba(rf, 40, 40, 0xFF);
 		}
 
 		switch (prm.f3->type) {
 			case PRM_TYPE_GT3:
-				prm.gt3->color[0].r = r;
-				prm.gt3->color[0].g = g;
-				prm.gt3->color[0].b = b;
-
-				prm.gt3->color[1].r = r;
-				prm.gt3->color[1].g = g;
-				prm.gt3->color[1].b = b;
-
-				prm.gt3->color[2].r = r;
-				prm.gt3->color[2].g = g;
-				prm.gt3->color[2].b = b;
+				prm.gt3->color[0] =
+				prm.gt3->color[1] =
+				prm.gt3->color[2] = color;
 				prm.gt3++;
 				break;
 
 			case PRM_TYPE_GT4:
-				prm.gt4->color[0].r = r;
-				prm.gt4->color[0].g = g;
-				prm.gt4->color[0].b = b;
-
-				prm.gt4->color[1].r = r;
-				prm.gt4->color[1].g = g;
-				prm.gt4->color[1].b = b;
-
-				prm.gt4->color[2].r = r;
-				prm.gt4->color[2].g = g;
-				prm.gt4->color[2].b = b;
-
-				prm.gt4->color[3].r = 40;
-				prm.gt4->color[3].g = 40;
-				prm.gt4->color[3].b = 40;
+				prm.gt4->color[0] =
+				prm.gt4->color[1] =
+				prm.gt4->color[2] = color;
+				prm.gt4->color[3] = rgba(40,40,40,0xFF);
 				prm.gt4++;
 				break;
 		}
