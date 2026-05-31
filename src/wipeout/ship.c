@@ -297,10 +297,7 @@ void ship_init_exhaust_plume(ship_t *self) {
 				indices[indices_len++] = prm.ft3->coords[2];
 
 				flags_add(prm.ft3->flag, PRM_TRANSLUCENT);
-				prm.ft3->color.r = 180;
-				prm.ft3->color.g = 97 ;
-				prm.ft3->color.b = 120;
-				prm.ft3->color.a = 140;
+				prm.ft3->color = rgba(180,97,120,140);
 			}
 			prm.ft3 += 1;
 			break;
@@ -334,10 +331,7 @@ void ship_init_exhaust_plume(ship_t *self) {
 
 				flags_add(prm.gt3->flag, PRM_TRANSLUCENT);
 				for (int j = 0; j < 3; j++) {
-					prm.gt3->color[j].r = 180;
-					prm.gt3->color[j].g = 97 ;
-					prm.gt3->color[j].b = 120;
-					prm.gt3->color[j].a = 140;
+					prm.gt3->color[j] = rgba(180,97,120,140);
 				}
 			}
 			prm.gt3 += 1;
