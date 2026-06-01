@@ -26,11 +26,9 @@ void camera_init(camera_t *camera, section_t *section) {
 }
 
 vec3_t camera_forward(camera_t *camera) {
-	float sx = sin(camera->angle.x);
-	float cx = cos(camera->angle.x);
-	float sy = sin(camera->angle.y);
-	float cy = cos(camera->angle.y);
-	return vec3(-(sy * cx), -sx, (cy * cx));
+	mat4_t rotation_matrix;
+	mat4_set_yaw_pitch_roll(&rotation_matrix, camera->angle);
+	return rotation_matrix.basis.z.vec3;
 }
 
 void camera_update(camera_t *camera, ship_t *ship, droid_t *droid) {

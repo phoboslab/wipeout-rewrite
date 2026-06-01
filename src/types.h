@@ -38,6 +38,12 @@ typedef struct {
 typedef union {
 	float m[16];
 	float cols[4][4];
+	struct {
+		union {
+			vec3_t vec3;
+			vec4_t vec4;
+		} x, y, z, w;
+	} basis;
 } mat4_t;
 
 typedef struct {

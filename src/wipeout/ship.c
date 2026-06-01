@@ -440,26 +440,11 @@ void ship_draw_shadow(ship_t *self) {
 }
 
 void ship_update(ship_t *self) {
-
-	// Set Unit vectors of this ship
-	float sx = sin(self->angle.x);
-	float cx = cos(self->angle.x);
-	float sy = sin(self->angle.y);
-	float cy = cos(self->angle.y);
-	float sz = sin(self->angle.z);
-	float cz = cos(self->angle.z);
-
-	self->dir_forward.x = -(sy * cx);
-	self->dir_forward.y = - sx;
-	self->dir_forward.z =  (cy * cx);
-
-	self->dir_right.x =  (cy * cz) + (sy * sz * sx);
-	self->dir_right.y = -(sz * cx);
-	self->dir_right.z =  (sy * cz) - (cy * sx * sz);
-
-	self->dir_up.x = (cy * sz) - (sy * sx * cz);
-	self->dir_up.y = -(cx * cz);
-	self->dir_up.z = (sy * sz) + (cy * sx * cz);
+	mat4_t rotation_matrix;
+	mat4_set_yaw_pitch_roll(&rotation_matrix, self->angle);
+	self->dir_right   = rotation_matrix.basis.x.vec3;
+	self->dir_up      = vec3_mulf(rotation_matrix.basis.y.vec3, -1);
+	self->dir_forward = rotation_matrix.basis.z.vec3;
 
 	self->prev_section = self->section;
 
