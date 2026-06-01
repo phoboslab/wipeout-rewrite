@@ -51,6 +51,9 @@ image_t *image_load_from_bytes(uint8_t *bytes, bool transparent) {
 	uint32_t type = get_i32_le(bytes, &p);
 	rgba_t palette[256];
 
+	// Wipeout 64 compatibility
+	type &= 0xF;
+
 	if (
 		type == TIM_TYPE_PALETTED_4_BPP ||
 		type == TIM_TYPE_PALETTED_8_BPP

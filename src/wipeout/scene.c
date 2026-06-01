@@ -50,11 +50,36 @@ void scene_move_oil_pump(Object *obj);
 void scene_update_aurora_borealis(void);
 
 void scene_load(const char *base_path, float sky_y_offset) {
-	texture_list_t scene_textures = image_get_compressed_textures(get_path(base_path, "scene.cmp"));
-	scene_objects = objects_load(get_path(base_path, "scene.prm"), scene_textures);
+	bool multiplayer = false;
+	if (def.circuts[g.circut].release == GAME_WIPEOUT_64) {
+		// Wipeout 64's skies appear to be rendered in a way reminiscent of
+		// Mario 64, rather than using an actual model. There is a 'sky.prm'
+		// model present in the Wipeout files, but it is a red herring - it's
+		// apparently corrupt and inaccurate to the final game's rendering.
+		// As such, we use a placeholder. TODO: make a custom skybox model,
+		// or reimplement Wipeout 64's sky rendering.
+		texture_list_t sky_textures = image_get_compressed_textures(get_path("wipeout/track01/", "sky.cmp"));
+		sky_object = objects_load(get_path("wipeout/track01/", "sky.prm"), sky_textures);
+
+		// Wipeout 64 splits its scenery into "common" scenery and
+		// "multiplayer" / "singleplayer" specific scenery.
+		// We simply glue the latter to the end of the former.
+		texture_list_t scene_textures = image_get_compressed_textures(get_path(base_path, "sceneCom.cmp"));
+		scene_objects = objects_load(get_path(base_path, "sceneCom.prm"), scene_textures);
+
+		Object *obj = scene_objects;
+		while (obj->next) obj = obj->next;
+
+		texture_list_t scene_extra_textures = image_get_compressed_textures(get_path(base_path, multiplayer ? "sceneMul.cmp" : "sceneSin.cmp"));
+		obj->next = objects_load(get_path(base_path, multiplayer ? "sceneMul.prm" : "sceneSin.prm"), scene_extra_textures);
+	} else {
+		texture_list_t sky_textures = image_get_compressed_textures(get_path(base_path, "sky.cmp"));
+		sky_object = objects_load(get_path(base_path, "sky.prm"), sky_textures);
+
+		texture_list_t scene_textures = image_get_compressed_textures(get_path(base_path, "scene.cmp"));
+		scene_objects = objects_load(get_path(base_path, "scene.prm"), scene_textures);
+	}
 	
-	texture_list_t sky_textures = image_get_compressed_textures(get_path(base_path, "sky.cmp"));
-	sky_object = objects_load(get_path(base_path, "sky.prm") , sky_textures);
 	sky_offset = vec3(0, sky_y_offset, 0);
 
 	// Collect all objects that need to be updated each frame
