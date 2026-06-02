@@ -261,9 +261,9 @@ void weapon_follow_target(weapon_t *self) {
 	self->angle = vec3_add(self->angle, vec3_mulf(angular_velocity, 30 * system_tick() * 0.25));
 	self->angle = vec3_wrap_angle(self->angle);
 
-	self->acceleration.x = -sin(self->angle.y) * cos(self->angle.x) * 256;
-	self->acceleration.y = -sin(self->angle.x) * 256;
-	self->acceleration.z = cos(self->angle.y) * cos(self->angle.x) * 256;
+	mat4_t rotation_matrix;
+	mat4_set_yaw_pitch_roll(&rotation_matrix, self->angle);
+	self->acceleration = vec3_mulf(rotation_matrix.basis.z.vec3, 256);
 }
 
 ship_t *weapon_collides_with_ship(weapon_t *self) {
