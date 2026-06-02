@@ -382,12 +382,21 @@ static void page_options_highscores_viewer_input_handler() {
 	else if (input_pressed(A_MENU_DOWN)) {
 		options_highscores_race_class++;
 	}
-
 	if (input_pressed(A_MENU_LEFT)) {
-		options_highscores_circut--;
+		do {
+			options_highscores_circut--;
+			if (options_highscores_circut < 0) {
+				options_highscores_circut = NUM_CIRCUTS - 1;
+			}
+		} while (!g.installed_circuts[options_highscores_circut]);
 	}
 	else if (input_pressed(A_MENU_RIGHT)) {
-		options_highscores_circut++;
+		do {
+			options_highscores_circut++;
+			if (options_highscores_circut >= NUM_CIRCUTS) {
+				options_highscores_circut = 0;
+			}
+		} while (!g.installed_circuts[options_highscores_circut]);
 	}
 
 	if (options_highscores_race_class >= NUM_RACE_CLASSES) {
@@ -395,13 +404,6 @@ static void page_options_highscores_viewer_input_handler() {
 	}
 	if (options_highscores_race_class < 0) {
 		options_highscores_race_class = NUM_RACE_CLASSES - 1;
-	}
-
-	if (options_highscores_circut >= NUM_CIRCUTS) {
-		options_highscores_circut = 0;
-	}
-	if (options_highscores_circut < 0) {
-		options_highscores_circut = NUM_CIRCUTS - 1;
 	}
 
 	if ((last_race_class_index != options_highscores_race_class) ||
@@ -610,6 +612,28 @@ static void button_circut_select(menu_t *menu, int data) {
 	game_set_scene(GAME_SCENE_RACE);
 }
 
+static void page_circut_additional_draw(menu_t *menu, int data) {}
+
+static void page_circut_additional_init(menu_t *menu) {
+	menu_page_t *page = menu_push(menu, "ADDITIONAL CIRCUTS", page_circut_additional_draw);
+	flags_add(page->layout_flags, MENU_FIXED);
+	page->title_pos = vec2i(0, 30);
+	page->title_anchor = UI_POS_TOP | UI_POS_CENTER;
+	page->items_pos = vec2i(0, 50);
+	page->items_anchor = UI_POS_TOP | UI_POS_CENTER;
+
+	for (int i = CIRCUT_TALONS_REACH; i < len(def.circuts); i++) {
+		if (g.installed_circuts[i] &&
+			(!def.circuts[i].is_bonus_circut || save.has_bonus_circuts)) {
+			menu_page_add_button(page, i, def.circuts[i].name, button_circut_select);
+		}
+	}
+}
+
+static void button_circut_additional_select(menu_t *menu, int data) {
+	page_circut_additional_init(menu);
+}
+
 static void page_circut_draw(menu_t *menu, int data) {
 	vec2i_t pos = vec2i(0, -25);
 	vec2i_t size = vec2i(128, 74);
@@ -625,10 +649,13 @@ static void page_circut_init(menu_t *menu) {
 	page->title_anchor = UI_POS_TOP | UI_POS_CENTER;
 	page->items_pos = vec2i(0, -100);
 	page->items_anchor = UI_POS_BOTTOM | UI_POS_CENTER;
-	for (int i = 0; i < len(def.circuts); i++) {
+	for (int i = 0; i < CIRCUT_TALONS_REACH; i++) {
 		if (!def.circuts[i].is_bonus_circut || save.has_bonus_circuts) {
 			menu_page_add_button(page, i, def.circuts[i].name, button_circut_select);
 		}
+	}
+	if (g.additional_circuts) {
+		menu_page_add_button(page, 0, "ADDITIONAL CIRCUTS", button_circut_additional_select); 
 	}
 }
 

@@ -20,6 +20,12 @@
 #define SAVE_DATA_MAGIC 0x64736f77
 
 typedef enum {
+	GAME_WIPEOUT, 
+	GAME_WIPEOUT_2097, 
+	GAME_WIPEOUT_64
+} game_release_t;
+
+typedef enum {
 	A_UP,
 	A_DOWN,
 	A_LEFT,
@@ -99,9 +105,27 @@ enum circut {
 	CIRCUT_ARRIDOS_IV,
 	CIRCUT_SILVERSTREAM,
 	CIRCUT_FIRESTAR,
+	NUM_WIPEOUT_CIRCUTS,
+	//wipeout2
+	CIRCUT_TALONS_REACH = NUM_WIPEOUT_CIRCUTS,
+	CIRCUT_SAGARMATHA,
+	CIRCUT_VALPARAISO,
+	CIRCUT_PHENITIA_PARK,
+	CIRCUT_GARE_DEUROPA,
+	CIRCUT_ODESSA_KEYS,
+	CIRCUT_VOSTOK_ISLAND,
+	CIRCUT_SPILSKINANKE,
+	CIRCUT_UNFINISHED_TRACK,
+	//wipeout64
+	CIRCUT_KLIES_BRIDGE,
+	CIRCUT_QORON_IV,
+	CIRCUT_SOKANA,
+	CIRCUT_DYRONESS,
+	CIRCUT_MACHAON_II,
+	CIRCUT_TERAFUMOS,
+	CIRCUT_VELOCITAR,
 	NUM_CIRCUTS
 };
-
 // How detailed are the stats? Just the FPS or draw internals
 typedef enum {
 	DRAW_STATS_OFF,
@@ -161,6 +185,7 @@ typedef struct {
 typedef struct {
 	char *name;
 	bool is_bonus_circut;
+	game_release_t release;
 	circut_settings_t settings[NUM_RACE_CLASSES];
 } circut_t;
 
@@ -225,6 +250,9 @@ typedef struct {
 	droid_t droid;
 	ship_t ships[NUM_PILOTS];
 	track_t track;
+
+	bool additional_circuts;
+	bool installed_circuts[NUM_CIRCUTS];
 } game_t;
 
 

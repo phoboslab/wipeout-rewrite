@@ -233,7 +233,7 @@ void race_next(void) {
 
 	// Championship complete
 	if (
-		(save.has_bonus_circuts && next_circut >= NUM_CIRCUTS) ||
+		(save.has_bonus_circuts && next_circut >= NUM_WIPEOUT_CIRCUTS) ||
 		(!save.has_bonus_circuts && next_circut >= NUM_NON_BONUS_CIRCUTS)
 	) {
 		if (g.race_class == RACE_CLASS_RAPIER) {

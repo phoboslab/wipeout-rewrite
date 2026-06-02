@@ -13,19 +13,24 @@
 void track_load(const char *base_path) {
 	// Load and assemble high res track tiles
 
+	bool wipeout64_mode = def.circuts[g.circut].release == GAME_WIPEOUT_64;
 	g.track.textures.start = render_textures_len();
 	g.track.textures.len = 0;
 
 	ttf_t *ttf = track_load_tile_format(get_path(base_path, "library.ttf"));
 	cmp_t *cmp = image_load_compressed(get_path(base_path, "library.cmp"));
-
-	image_t *temp_tile = image_alloc(128, 128);
-	for (int i = 0; i < ttf->len; i++) {
-		for (int tx = 0; tx < 4; tx++) {
-			for (int ty = 0; ty < 4; ty++) {
-				uint32_t sub_tile_index = ttf->tiles[i].near[ty * 4 + tx];
-				image_t *sub_tile = image_load_from_bytes(cmp->entries[sub_tile_index], false);
-				image_copy(sub_tile, temp_tile, 0, 0, 32, 32, tx * 32, ty * 32);
+	int temp_tile_size = wipeout64_mode ? 64 : 128;
+	int sub_tile_size  = wipeout64_mode ? 64 : 32;
+	int tiles          = wipeout64_mode ? 1  : 4;
+	
+	image_t *temp_tile = image_alloc(temp_tile_size, temp_tile_size);
+	int len = wipeout64_mode ? cmp->len : ttf->len;
+	for (int i = 0; i < len; i++) {
+		for (int tx = 0; tx < tiles; tx++) {
+			for (int ty = 0; ty < tiles; ty++) {
+				uint32_t sub_tile_index = ttf->tiles[i].near[ty * tiles + tx];
+				image_t *sub_tile = image_load_from_bytes(cmp->entries[wipeout64_mode ? i : sub_tile_index], false);
+				image_copy(sub_tile, temp_tile, 0, 0, sub_tile_size, sub_tile_size, tx * sub_tile_size, ty * sub_tile_size);
 				mem_temp_free(sub_tile);
 			}
 		}
@@ -40,6 +45,10 @@ void track_load(const char *base_path) {
 	vec3_t *vertices = track_load_vertices(get_path(base_path, "track.trv"));
 	track_load_faces(get_path(base_path, "track.trf"), vertices);
 	mem_temp_free(vertices);
+
+	// Wipeout 2097 .tex loading
+	char *tex_path = get_path(base_path, "track.tex");
+	if (file_exists(tex_path)) track_load_texture_file(tex_path);
 
 	track_load_sections(get_path(base_path, "track.trs"));
 
@@ -63,7 +72,6 @@ void track_load(const char *base_path) {
 		s = s->next;
 	} while (s != g.track.sections);
 	g.track.total_section_nums = num;
-
 	g.track.pickups = mem_mark();
 	for (int i = 0; i < g.track.section_count; i++) {
 		track_face_t *face = track_section_get_base_face(&g.track.sections[i]);
@@ -144,6 +152,11 @@ static const vec2_t track_uv[2][4] = {
 	{{  0, 0}, {128, 0}, {128, 128}, {  0, 128}}
 };
 
+static const vec2_t wipeout64_track_uv[2][4] = {
+	{{64, 0}, {  0, 0}, {  0, 64}, {64, 64}},
+	{{  0, 0}, {64, 0}, {64, 64}, {  0, 64}}
+};
+
 void track_load_faces(char *file_name, vec3_t *vertices) {
 	uint32_t size;
 	uint8_t *bytes = platform_load_asset(file_name, &size);
@@ -168,9 +181,13 @@ void track_load_faces(char *file_name, vec3_t *vertices) {
 		tf->texture = get_i8(bytes, &p);
 		tf->flags = get_i8(bytes, &p);
 
+		const vec2_t *uv;
 		rgba_t color = rgba_from_u32(get_u32(bytes, &p));
-		const vec2_t *uv = track_uv[flags_is(tf->flags, FACE_FLIP_TEXTURE) ? 1 : 0];
-
+		if (def.circuts[g.circut].release == GAME_WIPEOUT_64) {
+			uv = wipeout64_track_uv[flags_is(tf->flags, FACE_FLIP_TEXTURE) ? 1 : 0];
+		} else {
+			uv = track_uv[flags_is(tf->flags, FACE_FLIP_TEXTURE) ? 1 : 0];
+		}
 		tf->tris[0] = (tris_t){
 			.vertices = {
 				{.pos = v0, .uv = uv[0], .color = color},
@@ -192,6 +209,16 @@ void track_load_faces(char *file_name, vec3_t *vertices) {
 	mem_temp_free(bytes);
 }
 
+void track_load_texture_file(char *tex_path) {
+	int size;
+	uint8_t *bytes = platform_load_asset(tex_path, &size);
+	uint32_t p = 0;
+	for (int i = 0; i < g.track.face_count; i++) {
+		g.track.faces[i].texture = get_u8(bytes, &p);
+		g.track.faces[i].flags = get_u8(bytes, &p);
+	}
+	mem_temp_free(bytes);
+}
 
 void track_load_sections(char *file_name) {
 	uint32_t size;
