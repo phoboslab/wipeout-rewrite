@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
 project(wipeout-rewrite)
 
+set(CMAKE_C_STANDARD 99) # Align C standard to what's specified in the Makefile: -std=gnu99
+
 if("${PROJECT_SOURCE_DIR}" STREQUAL "${PROJECT_BINARY_DIR}")
 	message(FATAL_ERROR "In-tree builds are not allowed.")
 endif()
