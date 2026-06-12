@@ -113,16 +113,14 @@ void droid_update_intro(droid_t *droid, ship_t *ship) {
 	droid->update_timer -= system_tick();
 
 	if (droid->update_timer < DROID_UPDATE_TIME_INTRO_3) {
-		droid->acceleration.x = (-sin(droid->angle.y) * cos(droid->angle.x)) * 0.25 * 4096.0;
+		droid->acceleration = vec3_mulf(droid->mat.basis.forward.vec3, 0.25 * 4096.0);
 		droid->acceleration.y = 0;
-		droid->acceleration.z = (cos(droid->angle.y) * cos(droid->angle.x)) * 0.25 * 4096.0;
 		droid->angular_velocity.y = 0;
 	}
 
 	else if (droid->update_timer < DROID_UPDATE_TIME_INTRO_2) {
-		droid->acceleration.x = (-sin(droid->angle.y) * cos(droid->angle.x)) * 0.125 * 4096.0;
+		droid->acceleration = vec3_mulf(droid->mat.basis.forward.vec3, 0.125 * 4096.0);
 		droid->acceleration.y = -140;
-		droid->acceleration.z = (cos(droid->angle.y) * cos(droid->angle.x)) * 0.125 * 4096.0;
 		droid->angular_velocity.y = (-8.0 / 4096.0) * M_PI * 2 * 30;
 	}
 
@@ -136,7 +134,7 @@ void droid_update_intro(droid_t *droid, ship_t *ship) {
 		// as soon as the intro completes.
 		if (!droid->section) {
 			// Zeroing these is not strictly needed but seems like a good idea
-			droid->velocity = droid->acceleration = droid->angular_velocity = (const vec3_t){ 0 };
+			droid->velocity = droid->acceleration = droid->angular_velocity = vec3(0,0,0);
 			droid->update_func = droid_update_nothing;
 			return;
 		}
@@ -176,9 +174,8 @@ void droid_update_idle(droid_t *droid, ship_t *ship) {
 		droid->angular_velocity.y = quickest_turn * 30.0 / 64.0;
 	}
 
-	droid->acceleration.x = (-sin(droid->angle.y) * cos(droid->angle.x)) * 0.125 * 4096;
+	droid->acceleration = vec3_mulf(droid->mat.basis.forward.vec3, 0.125 * 4096.0);
 	droid->acceleration.y = target_vector.y / 64.0;
-	droid->acceleration.z = (cos(droid->angle.y) * cos(droid->angle.x)) * 0.125 * 4096;
 
 	if (flags_is(ship->flags, SHIP_IN_RESCUE)) {
 		flags_add(droid->sfx_tractor->flags, SFX_PLAY);

@@ -300,9 +300,9 @@ void ship_player_update_race(ship_t *self) {
 	// Physics
 
 	// Calculate thrust vector along principle axis of ship
-	self->thrust = vec3_mulf(self->dir_forward, self->thrust_mag * 64);
+	self->thrust = vec3_mulf(self->mat.basis.forward.vec3, self->thrust_mag * 64);
 	self->speed = vec3_len(self->velocity);
-	vec3_t forward_velocity = vec3_mulf(self->dir_forward, self->speed);
+	vec3_t forward_velocity = vec3_mulf(self->mat.basis.forward.vec3, self->speed);
 
 	// SECTION_JUMP
 	if (flags_is(self->section->flags, SECTION_JUMP)) {
@@ -383,7 +383,8 @@ void ship_player_update_race(ship_t *self) {
 		self->acceleration = vec3_sub(self->acceleration, vec3_divf(self->velocity, resistance));
 
 		// Burying the nose in the track? Move it out!
-		vec3_t nose_pos = vec3_add(self->position, vec3_mulf(self->dir_forward, 128));
+		// Why is it 128 units in front? ship_nose() puts it at 512...
+		vec3_t nose_pos = vec3_transform(vec3(0, 0, 128), &self->mat);
 		float nose_height = vec3_distance_to_plane(nose_pos,face_point, face->normal);
 		if (nose_height < 600) {
 			self->angular_acceleration.x += NTSC_ACCELERATION(ANGLE_NORM_TO_RADIAN(FIXED_TO_FLOAT((height - nose_height + 5) * (1.0/16.0))));

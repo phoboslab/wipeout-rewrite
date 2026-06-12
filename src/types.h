@@ -42,7 +42,7 @@ typedef union {
 		union {
 			vec3_t vec3;
 			vec4_t vec4;
-		} x, y, z, w;
+		} right, down, forward, translation;
 	} basis;
 } mat4_t;
 

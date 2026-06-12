@@ -66,10 +66,6 @@ typedef struct ship_t {
 
 	section_t *section, *prev_section;
 
-	vec3_t dir_forward;
-	vec3_t dir_right;
-	vec3_t dir_up;
-
 	vec3_t position;
 	vec3_t velocity;
 	vec3_t acceleration;

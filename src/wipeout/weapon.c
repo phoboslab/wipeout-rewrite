@@ -237,7 +237,8 @@ void weapon_set_trajectory(weapon_t *self) {
 	track_face_t *face = track_section_get_base_face(ship->section);
 
 	vec3_t face_point = face->tris[0].vertices[0].pos;
-	vec3_t target = vec3_add(ship->position, vec3_mulf(ship->dir_forward, 64));
+	vec3_t target = vec3_transform(vec3(0,0,64), &ship->mat);
+	
 	float target_height = vec3_distance_to_plane(target, face_point, face->normal);
 	float ship_height = vec3_distance_to_plane(target, face_point, face->normal);
 
@@ -263,7 +264,7 @@ void weapon_follow_target(weapon_t *self) {
 
 	mat4_t rotation_matrix;
 	mat4_set_yaw_pitch_roll(&rotation_matrix, self->angle);
-	self->acceleration = vec3_mulf(rotation_matrix.basis.z.vec3, 256);
+	self->acceleration = vec3_mulf(rotation_matrix.basis.forward.vec3, 256);
 }
 
 ship_t *weapon_collides_with_ship(weapon_t *self) {
@@ -606,7 +607,7 @@ void weapon_update_shield(weapon_t *self) {
 
 
 void weapon_fire_turbo(ship_t *ship) {
-	ship->velocity = vec3_add(ship->velocity, vec3_mulf(ship->dir_forward, 39321)); // unitVecNose.vx) << 3) * FR60) / 50
+	ship->velocity = vec3_add(ship->velocity, vec3_mulf(ship->mat.basis.forward.vec3, 39321)); // unitVecNose.vx) << 3) * FR60) / 50
 	
 	if (ship->pilot == g.pilot) {
 		sfx_t *sfx = sfx_play(SFX_MISSILE_FIRE);
