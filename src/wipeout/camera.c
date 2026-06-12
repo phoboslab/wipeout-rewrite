@@ -28,7 +28,7 @@ void camera_init(camera_t *camera, section_t *section) {
 vec3_t camera_forward(camera_t *camera) {
 	mat4_t rotation_matrix;
 	mat4_set_yaw_pitch_roll(&rotation_matrix, camera->angle);
-	return rotation_matrix.basis.z.vec3;
+	return rotation_matrix.basis.forward.vec3;
 }
 
 void camera_update(camera_t *camera, ship_t *ship, droid_t *droid) {
@@ -39,7 +39,9 @@ void camera_update(camera_t *camera, ship_t *ship, droid_t *droid) {
 }
 
 void camera_update_race_external(camera_t *camera, ship_t *ship, droid_t *droid) {
-	vec3_t pos = vec3_sub(ship->position, vec3_mulf(ship->dir_forward, 1024));
+	
+	vec3_t pos = vec3_transform(vec3(0,0,-1024), &ship->mat);
+	
 	pos.y -= 200;
 	camera->section = track_nearest_section(pos, vec3(1,1,1), camera->section, NULL);
 	section_t *next = camera->section->next;
@@ -66,8 +68,8 @@ void camera_update_race_internal(camera_t *camera, ship_t *ship, droid_t *droid)
 
 void camera_update_race_intro(camera_t *camera, ship_t *ship, droid_t *droid) {
 	// Set to final position
-	vec3_t pos = vec3_sub(ship->position, vec3_mulf(ship->dir_forward, 0.25 * 4096));
-
+	vec3_t pos = vec3_transform(vec3(0,0,-0.25 * 4096), &ship->mat);
+	
 	pos.x += sin(( (ship->update_timer - UPDATE_TIME_RACE_VIEW) * 30 * 3.0 * M_PI * 2) / 4096.0) * 4096;
 	pos.y -= (2 *  (ship->update_timer - UPDATE_TIME_RACE_VIEW) * 30) + 200;
 	pos.z += sin(( (ship->update_timer - UPDATE_TIME_RACE_VIEW) * 30 * 3.0 * M_PI * 2) / 4096.0) * 4096;
@@ -109,8 +111,8 @@ void camera_update_attract_circle(camera_t *camera, ship_t *ship, droid_t *droid
 	camera->position.x += sin(camera->update_timer * 0.25) * 512;
 	camera->position.y -= 400;
 	camera->position.z += cos(camera->update_timer * 0.25) * 512;
-	camera->position = vec3_sub(camera->position, vec3_mulf(ship->dir_up, 256));
-
+	camera->position = vec3_add(camera->position, vec3_mulf(ship->mat.basis.down.vec3, 256));
+	
 	vec3_t target = vec3_sub(ship->position, camera->position);
 	float height = sqrt(target.x * target.x + target.z * target.z);
 	camera->angle.x = -atan2(target.y, height);
