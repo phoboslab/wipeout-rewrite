@@ -389,14 +389,10 @@ void ship_init_exhaust_plume(ship_t *self) {
 	}
 }
 
-void ship_reset_exhaust_plume(ship_t* self)
-{
+void ship_reset_exhaust_plume(ship_t* self) {
 	for (int i = 0; i < 3; i++) {
-		if (self->exhaust_plume[i].v != NULL) {
-			self->exhaust_plume[i].v->z = self->exhaust_plume[i].initial.z;
-			self->exhaust_plume[i].v->x = self->exhaust_plume[i].initial.x;
-			self->exhaust_plume[i].v->y = self->exhaust_plume[i].initial.y;
-		}
+		if (self->exhaust_plume[i].v)
+			*self->exhaust_plume[i].v = self->exhaust_plume[i].initial;
 	}
 }
 
@@ -847,8 +843,7 @@ void ship_collide_with_track(ship_t *self, track_face_t *face) {
 
 
 bool ship_intersects_ship(ship_t *self, ship_t *other) {
-	// Get 4 points of collision model relative to the
-	// camera
+	// Get 4 points of collision model in world space
 	vec3_t a = vec3_transform(other->collision_model->vertices[0], &other->mat);
 	vec3_t b = vec3_transform(other->collision_model->vertices[1], &other->mat);
 	vec3_t c = vec3_transform(other->collision_model->vertices[2], &other->mat);
@@ -875,36 +870,18 @@ bool ship_intersects_ship(ship_t *self, ship_t *other) {
 		int16_t *indices;
 		switch (poly.primitive->type) {
 			case PRM_TYPE_F3:
-				indices = poly.f3->coords;
-				p1 =  vec3_transform(self->collision_model->vertices[indices[0]], &self->mat);
-				p2 =  vec3_transform(self->collision_model->vertices[indices[1]], &self->mat);
-				p3 =  vec3_transform(self->collision_model->vertices[indices[2]], &self->mat);
-				poly.f3++;
-				break;
+				indices = poly.f3++->coords;  break;
 			case PRM_TYPE_G3:
-				indices = poly.g3->coords;
-				p1 =  vec3_transform(self->collision_model->vertices[indices[0]], &self->mat);
-				p2 =  vec3_transform(self->collision_model->vertices[indices[1]], &self->mat);
-				p3 =  vec3_transform(self->collision_model->vertices[indices[2]], &self->mat);
-				poly.g3++;
-				break;
+				indices = poly.g3++->coords;  break;
 			case PRM_TYPE_FT3:
-				indices = poly.ft3->coords;
-				p1 =  vec3_transform(self->collision_model->vertices[indices[0]], &self->mat);
-				p2 =  vec3_transform(self->collision_model->vertices[indices[1]], &self->mat);
-				p3 =  vec3_transform(self->collision_model->vertices[indices[2]], &self->mat);
-				poly.ft3++;
-				break;
+				indices = poly.ft3++->coords; break;
 			case PRM_TYPE_GT3:
-				indices = poly.gt3->coords;
-				p1 =  vec3_transform(self->collision_model->vertices[indices[0]], &self->mat);
-				p2 =  vec3_transform(self->collision_model->vertices[indices[1]], &self->mat);
-				p3 =  vec3_transform(self->collision_model->vertices[indices[2]], &self->mat);
-				poly.gt3++;
-				break;
-			default:
-				break;
+				indices = poly.gt3++->coords; break;
+			default: die("Can't happen?");
 		}
+		p1 =  vec3_transform(self->collision_model->vertices[indices[0]], &self->mat);
+		p2 =  vec3_transform(self->collision_model->vertices[indices[1]], &self->mat);
+		p3 =  vec3_transform(self->collision_model->vertices[indices[2]], &self->mat);
 
 		// Find polyGon line vectors
 		vec3_t p1p2 = vec3_sub(p2, p1);

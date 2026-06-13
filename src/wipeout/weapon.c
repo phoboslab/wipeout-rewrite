@@ -189,7 +189,7 @@ void weapons_update(void) {
 				weapon->trail_spawn_timer += system_tick();
 				while (weapon->trail_spawn_timer > 0) {
 					vec3_t pos = vec3_sub(weapon->position, vec3_mulf(weapon->velocity, 30 * system_tick() * weapon->trail_spawn_timer));
-					vec3_t velocity = vec3(rand_float(-128, 128), rand_float(-128, 128), rand_float(-128, 128));
+					vec3_t velocity = vec3_rand(128);
 					particles_spawn(pos, weapon->trail_particle, velocity, 128);
 					weapon->trail_spawn_timer -= WEAPON_PARTICLE_SPAWN_RATE;
 				}
@@ -199,7 +199,7 @@ void weapons_update(void) {
 			weapon->section = track_nearest_section(weapon->position, vec3(1,1,1), weapon->section, NULL);
 			if (weapon_collides_with_track(weapon)) {
 				for (int p = 0; p < 32; p++) {
-					vec3_t velocity = vec3(rand_float(-512, 512), rand_float(-512, 512), rand_float(-512, 512));
+					vec3_t velocity = vec3_rand(512);
 					particles_spawn(weapon->position, weapon->track_hit_particle, velocity, 256);
 				}
 				sfx_play_at(SFX_EXPLOSION_2, weapon->position, vec3(0,0,0), 1);
@@ -277,7 +277,7 @@ ship_t *weapon_collides_with_ship(weapon_t *self) {
 		float distance = vec3_len(vec3_sub(ship->position, self->position));
 		if (distance < 512) {
 			for (int p = 0; p < 32; p++) {
-				vec3_t velocity = vec3(rand_float(-512, 512), rand_float(-512, 512), rand_float(-512, 512));
+				vec3_t velocity = vec3_rand(512);
 				velocity = vec3_add(velocity, vec3_mulf(ship->velocity, 0.25));
 				particles_spawn(self->position, self->ship_hit_particle, velocity, 256);
 			}
