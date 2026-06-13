@@ -130,7 +130,7 @@ static void hud_draw_speedo_bars(vec2i_t *pos, float f, rgba_t color_override) {
 	}
 
 	if (f - floor(f) > 0.9) {
-		f = ceil(f);
+		f = ceilf(f);
 	}
 	if (f > 13) {
 		f = 13;

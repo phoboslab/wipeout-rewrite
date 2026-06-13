@@ -30,7 +30,7 @@ void ship_ai_update_intro(ship_t *self) {
 }
 
 void ship_ai_update_intro_await_go(ship_t *self) {
-	self->position.y = self->temp_target.y + sin(self->update_timer * (80.0 + self->pilot * 3.0) * 30.0 * M_PI * 2.0 / 4096.0) * 32;
+	self->position.y = self->temp_target.y + sinf(self->update_timer * (80.0 + self->pilot * 3.0) * 30.0 * M_PI * 2.0 / 4096.0) * 32;
 
 	self->update_timer -= system_tick();
 	if (self->update_timer <= UPDATE_TIME_GO) {
@@ -472,7 +472,7 @@ void ship_ai_update_race(ship_t *self) {
 		self->velocity = vec3_add(self->velocity, vec3_mulf(self->acceleration, 30 * system_tick()));
 
 
-		float xy_dist = sqrt(track_target.x * track_target.x + track_target.z * track_target.z);
+		float xy_dist = sqrtf(track_target.x * track_target.x + track_target.z * track_target.z);
 
 		self->angular_velocity.x = wrap_angle(-atan2(track_target.y, xy_dist) - self->angle.x) * (1.0/16.0) * 30;
 		self->angular_velocity.y = (wrap_angle(-atan2(track_target.x, track_target.z) - self->angle.y) * (1.0/16.0)) * 30 + self->turn_rate_from_hit;

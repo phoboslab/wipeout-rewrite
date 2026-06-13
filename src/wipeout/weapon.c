@@ -253,7 +253,7 @@ void weapon_follow_target(weapon_t *self) {
 	vec3_t angular_velocity = vec3(0, 0, 0);
 	if (self->target) {
 		vec3_t dir = vec3_mulf(vec3_sub(self->target->position, self->position), 0.125 * 30 * system_tick());
-		float height = sqrt(dir.x * dir.x + dir.z * dir.z);
+		float height = sqrtf(dir.x * dir.x + dir.z * dir.z);
 		angular_velocity.y = -atan2(dir.x, dir.z) - self->angle.y;
 		angular_velocity.x = -atan2(dir.y, height) - self->angle.x;
 	}
@@ -351,7 +351,7 @@ void weapon_update_mine_wait_for_release(weapon_t *self) {
 void weapon_update_mine_lights(weapon_t *self, int index) {
 	Prm prm = {.primitive = self->model->primitives};
 
-	uint8_t r = sin(system_cycle_time() * M_PI * 2 + index * 0.66) * 128 + 128;
+	uint8_t r = sinf(system_cycle_time() * M_PI * 2 + index * 0.66) * 128 + 128;
 	for (int i = 0; i < 8; i++) {
 		switch (prm.primitive->type) {
 		case PRM_TYPE_GT3:
@@ -577,9 +577,9 @@ void weapon_update_shield(weapon_t *self) {
 		case PRM_TYPE_G3 :
 			coords = poly.g3->coords;
 
-			col0 = sin(color_timer * coords[0]) * 127 + 128;
-			col1 = sin(color_timer * coords[1]) * 127 + 128;
-			col2 = sin(color_timer * coords[2]) * 127 + 128;
+			col0 = sinf(color_timer * coords[0]) * 127 + 128;
+			col1 = sinf(color_timer * coords[1]) * 127 + 128;
+			col2 = sinf(color_timer * coords[2]) * 127 + 128;
 
 			poly.g3->color[0] = rgba(col0, col0, 255, shield_alpha);
 			poly.g3->color[1] = rgba(col1, col1, 255, shield_alpha);
@@ -590,10 +590,10 @@ void weapon_update_shield(weapon_t *self) {
 		case PRM_TYPE_G4 :
 			coords = poly.g4->coords;
 
-			col0 = sin(color_timer * coords[0]) * 127 + 128;
-			col1 = sin(color_timer * coords[1]) * 127 + 128;
-			col2 = sin(color_timer * coords[2]) * 127 + 128;
-			col3 = sin(color_timer * coords[3]) * 127 + 128;
+			col0 = sinf(color_timer * coords[0]) * 127 + 128;
+			col1 = sinf(color_timer * coords[1]) * 127 + 128;
+			col2 = sinf(color_timer * coords[2]) * 127 + 128;
+			col3 = sinf(color_timer * coords[3]) * 127 + 128;
 
 			poly.g4->color[0] = rgba(col0, col0, 255, shield_alpha);
 			poly.g4->color[1] = rgba(col1, col1, 255, shield_alpha);
