@@ -55,9 +55,9 @@ void droid_draw(droid_t *droid) {
 	droid->cycle_timer += system_tick() * M_PI * 2;
 
 	Prm prm = {.primitive = droid_model->primitives};
-	int rf = sin(droid->cycle_timer) * 127 + 128;
-	int gf = sin(droid->cycle_timer + 0.2) * 127 + 128;
-	int bf = sin(droid->cycle_timer * 0.5 + 0.1) * 127 + 128;
+	int rf = sinf(droid->cycle_timer) * 127 + 128;
+	int gf = sinf(droid->cycle_timer + 0.2) * 127 + 128;
+	int bf = sinf(droid->cycle_timer * 0.5 + 0.1) * 127 + 128;
 
 	for (int i = 0; i < 11; i++) {
 		rgba_t color;

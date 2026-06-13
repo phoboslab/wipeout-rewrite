@@ -207,7 +207,7 @@ void scene_set_start_booms(int light_index) {
 
 
 void scene_pulsate_red_light(Object *obj) {
-	uint8_t r = clamp(sin(system_cycle_time() * M_PI * 2) * 128 + 128, 0, 255);
+	uint8_t r = clamp(sinf(system_cycle_time() * M_PI * 2) * 128 + 128, 0, 255);
 	Prm libPoly = {.primitive = obj->primitives};
 
 	for (int v = 0; v < 4; v++) {
@@ -216,7 +216,7 @@ void scene_pulsate_red_light(Object *obj) {
 }
 
 void scene_move_oil_pump(Object *pump) {
-	mat4_set_yaw_pitch_roll(&pump->mat, vec3(sin(system_cycle_time() * 0.125 * M_PI * 2), 0, 0));
+	mat4_set_yaw_pitch_roll(&pump->mat, vec3(sinf(system_cycle_time() * 0.125 * M_PI * 2), 0, 0));
 }
 
 void scene_init_aurora_borealis(void) {
@@ -259,9 +259,9 @@ void scene_init_aurora_borealis(void) {
 
 rgba_t scene_aurora_color_from_coordinate(int16_t coord, float phase) {
 	return rgba(
-		 (sin(coord * phase) * 64.0) + 190,
-		 (sin(coord * (phase + 0.054)) * 64.0) + 190,
-		 (sin(coord * (phase + 0.039)) * 64.0) + 190,
+		 (sinf(coord * phase) * 64.0) + 190,
+		 (sinf(coord * (phase + 0.054)) * 64.0) + 190,
+		 (sinf(coord * (phase + 0.039)) * 64.0) + 190,
 		 0xFF
 	);
 }

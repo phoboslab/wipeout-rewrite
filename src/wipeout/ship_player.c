@@ -114,7 +114,7 @@ void ship_player_update_intro_await_go(ship_t *self) {
 
 void ship_player_update_intro_general(ship_t *self) {
 	self->update_timer -= system_tick();
-	self->position.y = self->temp_target.y + sin(self->update_timer * 80.0 * 30.0 * M_PI * 2.0 / 4096.0) * 32;
+	self->position.y = self->temp_target.y + sinf(self->update_timer * 80.0 * 30.0 * M_PI * 2.0 / 4096.0) * 32;
 
 	// Thrust
 	if (input_state(A_THRUST)) {
