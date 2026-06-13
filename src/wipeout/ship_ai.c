@@ -121,12 +121,10 @@ void ship_ai_update_race(ship_t *self) {
 
 	ship_t *player = &(g.ships[g.pilot]);
 
-	if (self->ebolt_timer > 0) {
+	if (self->ebolt_timer > 0)
 		self->ebolt_timer -= system_tick();
-	}
-	if (self->ebolt_timer <= 0) {
+	else
 		flags_rm(self->flags, SHIP_ELECTROED);
-	}
 
 	int behind_speed = def.circuts[g.circut].settings[g.race_class].behind_speed;
 
@@ -246,33 +244,25 @@ void ship_ai_update_race(ship_t *self) {
 
 							if (chance < 48) {
 								self->update_strat_func = ship_ai_strat_block;
-							}
-							else if ((chance >= 40) && (chance < 54)) {
+							} else {
 								self->update_strat_func = ship_ai_strat_avoid;
 								flags_rm(self->flags, SHIP_OVERTAKEN);
+								
 								if (flags_not(self->flags, SHIP_SHIELDED) && flags_is(self->flags, SHIP_RACING)) {
-									sfx_play(SFX_VOICE_ROCKETS);
-									self->weapon_type = WEAPON_TYPE_ROCKET;
-									weapons_fire_delayed(self, self->weapon_type);
-								}
-							}
-							else if ((chance >= 54) && (chance < 60)) {
-								self->update_strat_func = ship_ai_strat_avoid;
-								flags_rm(self->flags, SHIP_OVERTAKEN);
-								if (flags_not(self->flags, SHIP_SHIELDED) && flags_is(self->flags, SHIP_RACING)) {
-									sfx_play(SFX_VOICE_MISSILE);
-									self->weapon_type = WEAPON_TYPE_MISSILE;
-									self->weapon_target = &g.ships[g.pilot];
-									weapons_fire_delayed(self, self->weapon_type);
-								}
-							}
-							else if ((chance >= 60) && (chance < 64)) {
-								self->update_strat_func = ship_ai_strat_avoid;
-								flags_rm(self->flags, SHIP_OVERTAKEN);
-								if (flags_not(self->flags, SHIP_SHIELDED) && flags_is(self->flags, SHIP_RACING)) {
-									sfx_play(SFX_VOICE_SHOCKWAVE);
-									self->weapon_type = WEAPON_TYPE_EBOLT;
-									self->weapon_target = &g.ships[g.pilot];
+									if (chance < 54) {
+										sfx_play(SFX_VOICE_ROCKETS);
+										self->weapon_type = WEAPON_TYPE_ROCKET;
+									}
+									else if (chance < 60) {
+										sfx_play(SFX_VOICE_MISSILE);
+										self->weapon_type = WEAPON_TYPE_MISSILE;
+										self->weapon_target = &g.ships[g.pilot];
+									}
+									else {
+										sfx_play(SFX_VOICE_SHOCKWAVE);
+										self->weapon_type = WEAPON_TYPE_EBOLT;
+										self->weapon_target = &g.ships[g.pilot];
+									}
 									weapons_fire_delayed(self, self->weapon_type);
 								}
 							}
@@ -400,20 +390,12 @@ void ship_ai_update_race(ship_t *self) {
 		section = self->section->prev;
 
 		for (int i = 0; i < 4; i++) {
-			if (section->junction) {
-				if (flags_is(section->junction->flags, SECTION_JUNCTION_START)) {
-					if (flags_is(self->flags, SHIP_JUNCTION_LEFT)) {
-						section = section->junction;
-					}
-					else {
-						section = section->next;
-					}
-				}
-				else {
-					section = section->next;
-				}
-			}
-			else {
+			if (section->junction &&
+				flags_is(section->junction->flags, SECTION_JUNCTION_START) &&
+				flags_is(self->flags, SHIP_JUNCTION_LEFT)
+			) {
+				section = section->junction;
+			} else {
 				section = section->next;
 			}
 		}
@@ -530,7 +512,7 @@ void ship_ai_update_race(ship_t *self) {
 		if (self->ebolt_effect_timer > 0.1) {
 			self->ebolt_effect_timer -= 0.1;
 
-			self->position = vec3_add(self->position, vec3(rand_float(-20, 20), rand_float(-20, 20), rand_float(-20, 20)));
+			self->position = vec3_add(self->position, vec3_rand(20));
 
 			if (rand_int(0, 10) == 0) {
 				self->speed -= self->speed * 0.5;

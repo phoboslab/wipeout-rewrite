@@ -174,21 +174,16 @@ void scene_set_start_booms(int light_index) {
 	
 	int lights_len = 1;
 	rgba_t color = rgba(0, 0, 0, 0);
-
-	if (light_index == 0) { // reset all 3
-		lights_len = 3;
-		color = rgba(0x20, 0x20, 0x20, 0xff);
+	switch (light_index) {
+		case 0:
+			// reset all 3
+			lights_len = 3;
+			color = rgba(0x20, 0x20, 0x20, 0xff);
+			break;
+		case 1: color = rgba(0xff, 0x00, 0x00, 0xff); break;
+		case 2: color = rgba(0xff, 0x80, 0x00, 0xff); break;
+		case 3: color = rgba(0x00, 0xff, 0x00, 0xff); break;
 	}
-	else if (light_index == 1) {
-		color = rgba(0xff, 0x00, 0x00, 0xff);
-	}
-	else if (light_index == 2) {
-		color = rgba(0xff, 0x80, 0x00, 0xff);
-	}
-	else if (light_index == 3) {
-		color = rgba(0x00, 0xff, 0x00, 0xff);
-	}
-
 	for (int i = 0; i < start_booms_len; i++) {
 		Prm libPoly = {.primitive = start_booms[i]->primitives};
 
