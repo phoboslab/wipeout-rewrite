@@ -64,6 +64,14 @@ vec3_t vec3_reflect(vec3_t incidence, vec3_t normal, float f) {
 	return vec3_add(incidence, vec3_mulf(normal, vec3_dot(normal, vec3_mulf(incidence, -1)) * f));
 }
 
+vec3_t vec3_rand(float maxlen) {
+	vec3_t v;
+	do {
+		v = vec3(rand_float(-1, 1), rand_float(-1, 1), rand_float(-1, 1));
+	} while (vec3_len_sq(v) > 1);
+	return vec3_mulf(v, maxlen);
+}
+
 void mat4_set_translation(mat4_t *mat, vec3_t pos) {
 	mat->cols[3][0] = pos.x;
 	mat->cols[3][1] = pos.y;

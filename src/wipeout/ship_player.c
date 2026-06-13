@@ -151,24 +151,21 @@ void ship_player_update_race(ship_t *self) {
 	if (self->ebolt_timer > 0) {
 		self->ebolt_timer -= system_tick();
 	}
-
-	if (self->ebolt_timer <= 0) {
+	else {
 		flags_rm(self->flags, SHIP_ELECTROED);
 	}
 
 	if (self->revcon_timer > 0) {
 		self->revcon_timer -= system_tick();
 	}
-
-	if (self->revcon_timer <= 0) {
+	else {
 		flags_rm(self->flags, SHIP_REVCONNED);
 	}
 
 	if (self->special_timer > 0) {
 		self->special_timer -= system_tick();
 	}
-
-	if (self->special_timer <= 0) {
+	else {
 		flags_rm(self->flags, SHIP_SPECIALED);
 	}
 
@@ -219,7 +216,7 @@ void ship_player_update_race(ship_t *self) {
 			self->angular_velocity.y += rand_float(-0.5, 0.5);
 
 			if (rand_int(0, 10) == 0) { // approx once per second
-				self->thrust_mag -= self->thrust_mag * 0.25;
+				self->thrust_mag *= 0.75;
 			}
 		}
 	}
