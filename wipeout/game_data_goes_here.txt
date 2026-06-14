@@ -1,2 +1,6 @@
 replace this directory with the one from the wipeout NTSC version and copy
 the common/ models from the PC version in.
+
+additional/external files:
+- scrape: into `wipeout/sound/`
+      https://sounds.spriters-resource.com/playstation/wipeoutxl2097/asset/398850/ -> scrape.aif22.wav

@@ -14,6 +14,124 @@ typedef struct {
 	uint32_t len;
 } sfx_data_t;
 
+// External WAV sources (for SFX_SCRAPE and future external sounds)
+typedef struct {
+	int16_t *samples;
+	uint32_t len;
+	uint32_t sample_rate;
+} sfx_wav_t;
+
+// Single variable for SFX_SCRAPE - no wasted memory
+static sfx_wav_t scrape_wav = {0};
+
+// Helper function to check fread results
+static bool read_check(FILE *f, const char *path, void *buf, size_t size, size_t count, const char *what) {
+	if (fread(buf, size, count, f) != count) {
+		if (feof(f)) {
+			printf("Unexpected end of file reading %s in '%s'\n", what, path);
+		} else if (ferror(f)) {
+			printf("Error reading %s in '%s'\n", what, path);
+		}
+		return false;
+	}
+	return true;
+}
+
+// Load a simple PCM WAV file
+static bool load_wav(const char *path, sfx_wav_t *wav) {
+	FILE *f = platform_open_asset(path, "rb");
+	if (!f) {
+		printf("Failed to open WAV: %s\n", path);
+		return false;
+	}
+
+	// Read RIFF header
+	char riff[4];
+	if (!read_check(f, path, riff, 1, 4, "RIFF header")) return false;
+	if (riff[0] != 'R' || riff[1] != 'I' || riff[2] != 'F' || riff[3] != 'F') {
+		printf("Invalid WAV header\n");
+		fclose(f);
+		return false;
+	}
+
+	uint32_t file_size;
+	if (!read_check(f, path, &file_size, 4, 1, "file size")) return false;
+
+	char wave[4];
+	if (!read_check(f, path, wave, 1, 4, "WAVE header")) return false;
+	if (wave[0] != 'W' || wave[1] != 'A' || wave[2] != 'V' || wave[3] != 'E') {
+		printf("Not a WAV file\n");
+		fclose(f);
+		return false;
+	}
+
+	// Find fmt chunk
+	bool found_fmt = false;
+	while (!found_fmt) {
+		char chunk_id[4];
+		uint32_t chunk_size;
+		if (!read_check(f, path, chunk_id, 1, 4, "chunk ID")) return false;
+		if (!read_check(f, path, &chunk_size, 4, 1, "chunk size")) return false;
+
+		if (chunk_id[0] == 'f' && chunk_id[1] == 'm' && chunk_id[2] == 't' && chunk_id[3] == ' ') {
+			found_fmt = true;
+
+			uint16_t audio_format;
+			if (!read_check(f, path, &audio_format, 2, 1, "audio format")) return false;
+			if (audio_format != 1) { // PCM only
+				printf("Non-PCM WAV format\n");
+				fclose(f);
+				return false;
+			}
+
+			uint16_t channels;
+			if (!read_check(f, path, &channels, 2, 1, "channels")) return false;
+			if (!read_check(f, path, &wav->sample_rate, 4, 1, "sample rate")) return false;
+
+			// Skip rest of fmt chunk
+			fseek(f, chunk_size - 8, SEEK_CUR);
+		} else {
+			fseek(f, chunk_size, SEEK_CUR);
+		}
+	}
+
+	// Find data chunk
+	bool found_data = false;
+	while (!found_data) {
+		char chunk_id[4];
+		uint32_t chunk_size;
+		if (!read_check(f, path, chunk_id, 1, 4, "chunk ID")) return false;
+		if (!read_check(f, path, &chunk_size, 4, 1, "chunk size")) return false;
+
+		if (chunk_id[0] == 'd' && chunk_id[1] == 'a' && chunk_id[2] == 't' && chunk_id[3] == 'a') {
+			found_data = true;
+			wav->len = chunk_size / 2; // 16-bit samples
+
+			wav->samples = mem_bump(wav->len * sizeof(int16_t));
+			if (!read_check(f, path, wav->samples, sizeof(int16_t), wav->len, "audio samples")) return false;
+		} else {
+			fseek(f, chunk_size, SEEK_CUR);
+		}
+	}
+
+	fclose(f);
+	return true;
+}
+
+void sfx_load_external_wav(sfx_source_t source, const char *path) {
+	if (source != SFX_SCRAPE) {
+		printf("Unknown external sound source\n");
+		return;
+	}
+
+	scrape_wav.samples = NULL;
+	scrape_wav.len = 0;
+
+	if (load_wav(path, &scrape_wav)) {
+		printf("Loaded external WAV: %s (%u samples, %u Hz)\n", path, scrape_wav.len, scrape_wav.sample_rate);
+	}
+}
+
 typedef struct {
 	qoa_desc qoa;
 	FILE *file;
@@ -115,6 +233,10 @@ void sfx_load(void) {
 	}
 
 	mem_temp_free(vb);
+
+	// Load external WAV sounds
+	sfx_load_external_wav(SFX_SCRAPE, "wipeout/sound/scrape.aif22.wav");
+
 	platform_set_audio_mix_cb(sfx_stero_mix);
 }
 
@@ -149,7 +271,12 @@ void sfx_pause(void) {
 // Sound effects
 
 sfx_t *sfx_get_node(sfx_source_t source_index) {
-	error_if(source_index < 0 || source_index > num_sources, "Invalid audio source");
+	// Check if it's an external sound source
+	bool is_external = (source_index == SFX_SCRAPE);
+
+	if (!is_external) {
+		error_if(source_index < 0 || source_index > num_sources, "Invalid audio source");
+	}
 
 	sfx_t *sfx = NULL;
 	for (int i = 0; i < SFX_MAX; i++) {
@@ -346,15 +473,28 @@ void sfx_stero_mix(float *buffer, uint32_t len) {
 			sfx->current_volume = sfx->current_volume * 0.999 + sfx->volume * 0.001;
 			sfx->current_pan = sfx->current_pan * 0.999 + sfx->pan * 0.001;
 
-			sfx_data_t *source = &sources[sfx->source];
-			float sample = (float)source->samples[(int)sfx->position] / 32768.0;
+			// Get sample from VAG sources or external WAV
+			float sample;
+			uint32_t source_len;
+
+			if (sfx->source == SFX_SCRAPE && scrape_wav.samples) {
+				// Use external WAV source
+				source_len = scrape_wav.len;
+				sample = (float)scrape_wav.samples[(int)sfx->position] / 32768.0;
+			} else {
+				// Use VAG source
+				sfx_data_t *source = &sources[sfx->source];
+				source_len = source->len;
+				sample = (float)source->samples[(int)sfx->position] / 32768.0;
+			}
+
 			left += sample * sfx->current_volume * clamp(1.0 - sfx->current_pan, 0, 1);
 			right += sample * sfx->current_volume * clamp(1.0 + sfx->current_pan, 0, 1);
 
 			sfx->position += sfx->pitch;
-			if (sfx->position >= source->len) {
+			if (sfx->position >= source_len) {
 				if (flags_is(sfx->flags, SFX_LOOP)) {
-					sfx->position = fmod(sfx->position, source->len);
+					sfx->position = fmod(sfx->position, source_len);
 				}
 				else {
 					flags_rm(sfx->flags, SFX_PLAY);
