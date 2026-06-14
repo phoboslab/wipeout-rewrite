@@ -4,6 +4,8 @@
 #include <string.h>
 #include "types.h"
 
+extern int sbs; // side by side -1:left 0:no-sbs +1:right
+
 #ifdef WIN32
 	#undef min
 	#undef max

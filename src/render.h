@@ -45,7 +45,7 @@ void render_frame_end(void);
 // render_stats_t owned by the renderer
 const render_stats_t* render_frame_get_stats(void);
 
-void render_set_view(vec3_t pos, vec3_t angles);
+void render_set_view(vec3_t pos, vec3_t angles, float lrdist);
 void render_set_view_2d(void);
 void render_set_model_mat(mat4_t *m);
 void render_set_depth_write(bool enabled);

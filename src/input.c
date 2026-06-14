@@ -198,8 +198,12 @@ void input_set_layer_button_state(input_layer_t layer, button_t button, float st
 }
 
 void input_set_button_state(button_t button, float state) {
-	error_if(button < 0 || button >= INPUT_BUTTON_MAX, "Invalid input button %d", button);
 
+	if (sbs > 0)
+		// do not process buttons twice per frame
+		return;
+
+	error_if(button < 0 || button >= INPUT_BUTTON_MAX, "Invalid input button %d", button);
 	input_set_layer_button_state(INPUT_LAYER_SYSTEM, button, state);
 	input_set_layer_button_state(INPUT_LAYER_USER, button, state);
 
