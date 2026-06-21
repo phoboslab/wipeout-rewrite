@@ -217,6 +217,7 @@ void ship_init(ship_t *self, section_t *section, int pilot, int inv_start_rank) 
 
 	self->update_timer = 0;
 	self->last_impact_time = 0;
+	self->sfx_scrape = NULL;
 
 	int team = def.pilots[pilot].team;
 	self->mass =          def.teams[team].attributes[g.race_class].mass;
@@ -603,6 +604,49 @@ static bool vec3_is_on_face(vec3_t pos, track_face_t *face, float alpha) {
 }
 
 void ship_resolve_wing_collision(ship_t *self, track_face_t *face, float direction) {
+
+	// track direction (tangent) from section
+	const vec3_t track_vec = vec3_normalize(vec3_sub(self->section->next->center, self->section->center));
+	const float track_angle_y = -atan2(track_vec.x, track_vec.z);
+
+	// angle between ship direction and track direction
+	float ship2track = track_angle_y - self->angle.y;
+	if (ship2track < -M_PI) ship2track += 2*M_PI;
+	if (ship2track > M_PI) ship2track -= 2*M_PI;
+
+	const bool on_left = direction < 0;
+	if (on_left)
+	    ship2track = -ship2track;
+	// ship2track > 0 when heading to wall
+	const bool is_sliding = ship2track < 0;
+
+	if (is_sliding) {
+
+		// slide factor:
+		// good brake -> 1
+		// no break -> .5
+		// bad brake -> 0
+		// brake_left/right in [0..256]
+		const float slide_factor = (((on_left? 1: -1) * (self->brake_right - self->brake_left)) + 256) / 512.0;
+
+		// cancel perpendicular velocity
+		const float perpendicular = vec3_dot(self->velocity, face->normal);
+		self->velocity = vec3_sub(self->velocity, vec3_mulf(face->normal, perpendicular));
+
+		// apply slide factor to tangential velocity (system_tick=~1/60)
+		self->velocity = vec3_mulf(self->velocity, 1.0f - ((1.0f - slide_factor) * system_tick()));
+
+		// scrape sound: use per-ship field to track playback state
+		if (self->sfx_scrape && !flags_is(self->sfx_scrape->flags, SFX_PLAY)) {
+			self->sfx_scrape = NULL;
+		}
+		if (!self->sfx_scrape) {
+			self->sfx_scrape = sfx_play_at(SFX_SCRAPE, ship_nose(self), vec3(0, 0, 0), 1.0f);
+		}
+
+		return;
+	}
+
 	vec3_t collision_vector = vec3_sub(self->section->center, face->tris[0].vertices[2].pos);
 	float angle = vec3_angle(collision_vector, self->mat.basis.forward.vec3);
 	self->velocity = vec3_reflect(self->velocity, face->normal, 2);

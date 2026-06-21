@@ -12,7 +12,17 @@
 typedef struct {
 	int16_t *samples;
 	uint32_t len;
+	float pitch; // normalized pitch relative to 44kHz (0.5 = 22kHz, 1.0 = 44kHz)
 } sfx_data_t;
+
+// Helper: check fread results
+static bool read_check(FILE *f, const char *path, void *buf, size_t size, size_t count, const char *what) {
+	if (fread(buf, size, count, f) != count) {
+		printf("Error reading %s in '%s'\n", what, path);
+		return false;
+	}
+	return true;
+}
 
 typedef struct {
 	qoa_desc qoa;
@@ -50,6 +60,81 @@ static sfx_t *nodes;
 static music_decoder_t *music;
 static void (*external_mix_cb)(float *, uint32_t len) = NULL;
 
+// Load a simple PCM WAV file into a sfx_data_t source slot
+static bool load_wav_into_source(sfx_source_t index, const char *path) {
+	FILE *f = platform_open_asset(path, "rb");
+	if (!f) {
+		printf("Failed to open WAV: %s\n", path);
+		return false;
+	}
+
+	// Read RIFF header
+	char riff[4];
+	if (!read_check(f, path, riff, 1, 4, "RIFF header")) { fclose(f); return false; }
+	if (riff[0] != 'R' || riff[1] != 'I' || riff[2] != 'F' || riff[3] != 'F') {
+		printf("Invalid WAV header\n"); fclose(f); return false;
+	}
+
+	uint32_t file_size;
+	if (!read_check(f, path, &file_size, 4, 1, "file size")) { fclose(f); return false; }
+
+	char wave[4];
+	if (!read_check(f, path, wave, 1, 4, "WAVE header")) { fclose(f); return false; }
+	if (wave[0] != 'W' || wave[1] != 'A' || wave[2] != 'V' || wave[3] != 'E') {
+		printf("Not a WAV file\n"); fclose(f); return false;
+	}
+
+	// Find fmt chunk
+	uint32_t sample_rate = 44100; // default
+	bool found_fmt = false;
+	while (!found_fmt) {
+		char chunk_id[4];
+		uint32_t chunk_size;
+		if (!read_check(f, path, chunk_id, 1, 4, "chunk ID")) { fclose(f); return false; }
+		if (!read_check(f, path, &chunk_size, 4, 1, "chunk size")) { fclose(f); return false; }
+
+		if (chunk_id[0] == 'f' && chunk_id[1] == 'm' && chunk_id[2] == 't' && chunk_id[3] == ' ') {
+			uint16_t audio_format;
+			if (!read_check(f, path, &audio_format, 2, 1, "audio format")) { fclose(f); return false; }
+			if (audio_format != 1) { // PCM only
+				printf("Non-PCM WAV format\n"); fclose(f); return false;
+			}
+			uint16_t channels;
+			if (!read_check(f, path, &channels, 2, 1, "channels")) { fclose(f); return false; }
+			if (!read_check(f, path, &sample_rate, 4, 1, "sample rate")) { fclose(f); return false; }
+			fseek(f, chunk_size - 8, SEEK_CUR);
+			found_fmt = true;
+		} else {
+			fseek(f, chunk_size, SEEK_CUR);
+		}
+	}
+
+	// Find data chunk
+	while (1) {
+		char chunk_id[4];
+		uint32_t chunk_size;
+		if (!read_check(f, path, chunk_id, 1, 4, "chunk ID")) { fclose(f); return false; }
+		if (!read_check(f, path, &chunk_size, 4, 1, "chunk size")) { fclose(f); return false; }
+
+		if (chunk_id[0] == 'd' && chunk_id[1] == 'a' && chunk_id[2] == 't' && chunk_id[3] == 'a') {
+			uint32_t num_samples = chunk_size / 2; // 16-bit samples
+			sources[index].samples = mem_bump(num_samples * sizeof(int16_t));
+			sources[index].len = num_samples;
+			sources[index].pitch = (float)sample_rate / 44100.0f;
+			if (!read_check(f, path, sources[index].samples, sizeof(int16_t), num_samples, "audio samples")) {
+				fclose(f); return false;
+			}
+			printf("Loaded WAV: %s (%u samples, %u Hz)\n", path, num_samples, sample_rate);
+			break;
+		} else {
+			fseek(f, chunk_size, SEEK_CUR);
+		}
+	}
+
+	fclose(f);
+	return true;
+}
+
 void sfx_load(void) {
 	// Init decode buffer for music
 	uint32_t channels = 2;
@@ -71,7 +156,9 @@ void sfx_load(void) {
 	uint32_t num_samples = (vb_size / 16) * 28;
 
 	int16_t *sample_buffer = mem_bump(num_samples * sizeof(int16_t));
-	sources = mem_mark();
+	// Allocate a fixed-size sources array indexed by sfx_source_t enum
+	sources = mem_bump(sizeof(sfx_data_t) * SFX_SOURCE_MAX);
+	memset(sources, 0, sizeof(sfx_data_t) * SFX_SOURCE_MAX);
 	num_sources = 0;
 
 	uint32_t sample_index = 0;
@@ -83,7 +170,6 @@ void sfx_load(void) {
 		uint8_t predictor = clamp(header >> 4, 0, 4);
 
 		if (flags_is(flags, VAG_REGION_END)) {
-			mem_bump(sizeof(sfx_data_t));
 			sources[num_sources].samples = &sample_buffer[sample_index];
 		}
 
@@ -115,6 +201,10 @@ void sfx_load(void) {
 	}
 
 	mem_temp_free(vb);
+
+	// Load WAV sounds directly into source slots
+	load_wav_into_source(SFX_SCRAPE, "wipeout/sound/scrape.aif22.wav");
+
 	platform_set_audio_mix_cb(sfx_stero_mix);
 }
 
@@ -149,7 +239,7 @@ void sfx_pause(void) {
 // Sound effects
 
 sfx_t *sfx_get_node(sfx_source_t source_index) {
-	error_if(source_index < 0 || source_index > num_sources, "Invalid audio source");
+	error_if(source_index >= SFX_SOURCE_MAX, "Invalid audio source");
 
 	sfx_t *sfx = NULL;
 	for (int i = 0; i < SFX_MAX; i++) {
@@ -177,9 +267,13 @@ sfx_t *sfx_get_node(sfx_source_t source_index) {
 	sfx->current_pan = 0;
 	sfx->position = 0;
 
-	// Set default pitch. All voice samples are 44khz, 
-	// other effects 22khz
-	sfx->pitch = source_index >= SFX_VOICE_MINES ? 1.0 : 0.5;
+	// Set default pitch from source (WAV files store their own pitch,
+	// VAG voice samples are 44kHz, other effects are 22kHz)
+	if (sources[source_index].pitch > 0.0f) {
+		sfx->pitch = sources[source_index].pitch;
+	} else {
+		sfx->pitch = source_index >= SFX_VOICE_MINES ? 1.0 : 0.5;
+	}
 
 	return sfx;
 }
@@ -348,6 +442,7 @@ void sfx_stero_mix(float *buffer, uint32_t len) {
 
 			sfx_data_t *source = &sources[sfx->source];
 			float sample = (float)source->samples[(int)sfx->position] / 32768.0;
+
 			left += sample * sfx->current_volume * clamp(1.0 - sfx->current_pan, 0, 1);
 			right += sample * sfx->current_volume * clamp(1.0 + sfx->current_pan, 0, 1);
 
