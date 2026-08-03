@@ -55,14 +55,14 @@ void intro_init(void) {
 
 	int w = plm_get_width(plm);
 	int h = plm_get_height(plm);
-	frame_buffer = mem_bump(w * h * sizeof(rgba_t));
+	frame_buffer = mem_bump(w * h * sizeof(*frame_buffer));
 	for (int i = 0; i < w * h; i++) {
 		frame_buffer[i] = rgba(0, 0, 0, 255);
 	}
 	texture = render_texture_create(w, h, frame_buffer);
 
 	sfx_set_external_mix_cb(audio_mix);
-	audio_buffer = mem_bump(INTRO_AUDIO_BUFFER_LEN * sizeof(float) * 2);
+	audio_buffer = mem_bump(INTRO_AUDIO_BUFFER_LEN * sizeof(*audio_buffer) * 2);
 	audio_buffer_read_pos = 0;
 	audio_buffer_write_pos = 0;
 }
@@ -104,7 +104,7 @@ static void audio_mix(float *samples, uint32_t len) {
 }
 
 static void video_cb(plm_t *plm, plm_frame_t *frame, void *user) {
-	plm_frame_to_rgba(frame, (uint8_t *)frame_buffer, plm_get_width(plm) * sizeof(rgba_t));
+	plm_frame_to_rgba(frame, (uint8_t *)frame_buffer, plm_get_width(plm) * sizeof(*frame_buffer));
 	render_texture_replace_pixels(texture, frame_buffer);
 }
 

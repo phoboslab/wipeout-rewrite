@@ -72,7 +72,7 @@ void weapon_fire_turbo(ship_t *ship);
 void invert_shield_polys(Object *shield);
 
 void weapons_load(void) {
-	weapons = mem_bump(sizeof(weapon_t) * WEAPONS_MAX);
+	weapons = mem_bump(sizeof(*weapons) * WEAPONS_MAX);
 	weapon_assets.reticle = image_get_texture("wipeout/textures/target2.tim");
 
 	texture_list_t weapon_textures = image_get_compressed_textures("wipeout/common/mine.cmp");

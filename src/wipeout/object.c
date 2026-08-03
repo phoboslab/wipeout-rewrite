@@ -20,7 +20,7 @@ Object *objects_load(char *name, texture_list_t tl) {
 	uint32_t p = 0;
 
 	while (p < length) {
-		Object *object = mem_bump_unaligned(sizeof(Object));
+		Object *object = mem_bump_unaligned(sizeof(*object));
 		if (prevObject) {
 			prevObject->next = object;
 		}
@@ -61,7 +61,7 @@ Object *objects_load(char *name, texture_list_t tl) {
 		p += 4; // skeleton next
 
 		object->radius = 0;
-		object->vertices = mem_bump(object->vertices_len * sizeof(vec3_t));
+		object->vertices = mem_bump(object->vertices_len * sizeof(*object->vertices));
 		for (int i = 0; i < object->vertices_len; i++) {
 			object->vertices[i].x = get_i16(bytes, &p);
 			object->vertices[i].y = get_i16(bytes, &p);
@@ -81,7 +81,7 @@ Object *objects_load(char *name, texture_list_t tl) {
 
 
 
-		object->normals = mem_bump(object->normals_len * sizeof(vec3_t));
+		object->normals = mem_bump(object->normals_len * sizeof(*object->normals));
 		for (int i = 0; i < object->normals_len; i++) {
 			object->normals[i].x = get_i16(bytes, &p);
 			object->normals[i].y = get_i16(bytes, &p);

@@ -21,7 +21,7 @@ static menu_t *ingame_menu;
 
 void ingame_menus_load(void) {
 	pilot_portraits = image_get_compressed_textures(def.pilots[g.pilot].portrait);
-	ingame_menu = mem_bump(sizeof(menu_t));
+	ingame_menu = mem_bump(sizeof(*ingame_menu));
 }
 
 // -----------------------------------------------------------------------------

@@ -843,9 +843,9 @@ void game_init(void) {
 	uint32_t size;
 	save_t *save_file = (save_t *)platform_load_userdata("save.dat", &size);
 	if (save_file) {
-		if (size == sizeof(save_t) && save_file->magic == SAVE_DATA_MAGIC) {
+		if (size == sizeof(*save_file) && save_file->magic == SAVE_DATA_MAGIC) {
 			printf("load save data success\n");
-			memcpy(&save, save_file, sizeof(save_t));
+			memcpy(&save, save_file, sizeof(*save_file));
 		}
 		else {
 			printf("unexpected size/magic for save data\n");
@@ -982,7 +982,7 @@ void game_update(void) {
 		// FIXME: use a text based format?
 		// FIXME: this should probably run async somewhere
 		save.is_dirty = false;
-		platform_store_userdata("save.dat", &save, sizeof(save_t));
+		platform_store_userdata("save.dat", &save, sizeof(save));
 		printf("wrote save.dat\n");
 	}
 

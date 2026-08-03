@@ -181,7 +181,7 @@ typedef struct {
 } prg_game_t;
 
 prg_game_t *shader_game_init(void) {
-	prg_game_t *s = mem_bump(sizeof(prg_game_t));
+	prg_game_t *s = mem_bump(sizeof(*s));
 	
 	s->program = create_program(SHADER_GAME_VS, SHADER_GAME_FS);
 
@@ -329,14 +329,14 @@ void shader_post_general_init(prg_post_t *s) {
 }
 
 prg_post_t *shader_post_default_init(void) {
-	prg_post_t *s = mem_bump(sizeof(prg_post_t));
+	prg_post_t *s = mem_bump(sizeof(*s));
 	s->program = create_program(SHADER_POST_VS, SHADER_POST_FS_DEFAULT);	
 	shader_post_general_init(s);
 	return s;
 }
 
 prg_post_t *shader_post_crt_init(void) {
-	prg_post_t *s = mem_bump(sizeof(prg_post_t));
+	prg_post_t *s = mem_bump(sizeof(*s));
 	s->program = create_program(SHADER_POST_VS, SHADER_POST_FS_CRT);	
 	shader_post_general_init(s);
 	return s;

@@ -11,7 +11,7 @@ static int particles_active = 0;
 static texture_list_t particle_textures;
 
 void particles_load(void) {
-	particles = mem_bump(sizeof(particle_t) * PARTICLES_MAX);
+	particles = mem_bump(sizeof(*particles) * PARTICLES_MAX);
 	particle_textures = image_get_compressed_textures("wipeout/common/effects.cmp");
 	particles_init();
 }

@@ -55,9 +55,9 @@ static void (*external_mix_cb)(float *, uint32_t len) = NULL;
 void sfx_load(void) {
 	// Init decode buffer for music
 	uint32_t channels = 2;
-	music = mem_bump(sizeof(music_decoder_t));
+	music = mem_bump(sizeof(*music));
 	music->buffer = mem_bump(QOA_FRAME_SIZE(channels, QOA_SLICES_PER_FRAME));
-	music->sample_data = mem_bump(channels * QOA_FRAME_LEN * sizeof(short) * 2);
+	music->sample_data = mem_bump(channels * QOA_FRAME_LEN * sizeof(*music->sample_data) * 2);
 	music->qoa.channels = channels;
 	music->mode = SFX_MUSIC_RANDOM;
 	music->file = NULL;
@@ -65,14 +65,14 @@ void sfx_load(void) {
 
 
 	// Load SFX samples
-	nodes = mem_bump(SFX_MAX * sizeof(sfx_t));
+	nodes = mem_bump(SFX_MAX * sizeof(*nodes));
 
 	// 16 byte blocks: 2 byte header, 14 bytes with 2x4bit samples each
 	uint32_t vb_size;
 	uint8_t *vb = platform_load_asset("wipeout/sound/wipeout.vb", &vb_size);
 	uint32_t num_samples = (vb_size / 16) * 28;
 
-	int16_t *sample_buffer = mem_bump(num_samples * sizeof(int16_t));
+	int16_t *sample_buffer = mem_bump(num_samples * sizeof(*sample_buffer));
 	sources = mem_mark();
 	num_sources = 0;
 
@@ -85,7 +85,7 @@ void sfx_load(void) {
 		uint8_t predictor = clamp(header >> 4, 0, 4);
 
 		if (flags_is(flags, VAG_REGION_END)) {
-			mem_bump(sizeof(sfx_data_t));
+			mem_bump(sizeof(*sources));
 			sources[num_sources].samples = &sample_buffer[sample_index];
 		}
 

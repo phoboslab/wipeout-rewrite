@@ -76,7 +76,7 @@ void track_load(const char *base_path) {
 		
 		for (int f = 0; f < 2; f++) {
 			if (flags_any(face->flags, FACE_PICKUP_RIGHT | FACE_PICKUP_LEFT)) {
-				mem_bump(sizeof(track_pickup_t));
+				mem_bump(sizeof(*g.track.pickups));
 				g.track.pickups[g.track.pickups_len].face = face;
 				g.track.pickups[g.track.pickups_len].cooldown_timer = 0;
 				g.track.pickups_len++;
@@ -97,7 +97,7 @@ ttf_t *track_load_tile_format(char *ttf_name) {
 	uint32_t p = 0;
 	uint32_t num_tiles = ttf_size / 42;
 
-	ttf_t *ttf = mem_temp_alloc(sizeof(ttf_t) + sizeof(ttf_tile_t) * num_tiles);
+	ttf_t *ttf = mem_temp_alloc(sizeof(*ttf) + sizeof(ttf_tile_t) * num_tiles);
 	ttf->len = num_tiles;
 
 	for (int t = 0; t < num_tiles; t++) {
@@ -131,7 +131,7 @@ vec3_t *track_load_vertices(char *file_name) {
 	uint8_t *bytes = platform_load_asset(file_name, &size);
 
 	g.track.vertex_count = size / 16; // VECTOR_SIZE
-	vec3_t *vertices = mem_temp_alloc(sizeof(vec3_t) * g.track.vertex_count);
+	vec3_t *vertices = mem_temp_alloc(sizeof(*vertices) * g.track.vertex_count);
 	
 	uint32_t p = 0;
 	for (int i = 0; i < g.track.vertex_count; i++) {
@@ -160,7 +160,7 @@ void track_load_faces(char *file_name, vec3_t *vertices) {
 	uint8_t *bytes = platform_load_asset(file_name, &size);
 
 	g.track.face_count = size / 20; // TRACK_FACE_DATA_SIZE
-	g.track.faces = mem_bump(sizeof(track_face_t) * g.track.face_count);
+	g.track.faces = mem_bump(sizeof(*g.track.faces) * g.track.face_count);
 
 	uint32_t p = 0;
 	track_face_t *tf = g.track.faces;
@@ -223,7 +223,7 @@ void track_load_sections(char *file_name) {
 	uint8_t *bytes = platform_load_asset(file_name, &size);
 
 	g.track.section_count = size / 156; // SECTION_DATA_SIZE
-	g.track.sections = mem_bump(sizeof(section_t) * g.track.section_count);
+	g.track.sections = mem_bump(sizeof(*g.track.sections) * g.track.section_count);
 
 	uint32_t p = 0;
 	section_t *ts = g.track.sections;

@@ -666,7 +666,7 @@ void main_menu_init(void) {
 
 	ships_reset_exhaust_plumes();
 
-	main_menu = mem_bump(sizeof(menu_t));
+	main_menu = mem_bump(sizeof(*main_menu));
 
 	background = image_get_texture("wipeout/textures/wipeout1.tim");
 	track_images = image_get_compressed_textures("wipeout/textures/track.cmp");

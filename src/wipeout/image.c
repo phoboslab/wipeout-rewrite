@@ -28,10 +28,10 @@ static inline rgba_t tim_16bit_to_rgba(uint16_t c, bool transparent_bit) {
 }
 
 image_t *image_alloc(uint32_t width, uint32_t height) {
-	image_t *image = mem_temp_alloc(sizeof(image_t) + width * height * sizeof(rgba_t));
+	image_t *image = mem_temp_alloc(sizeof(*image) + width * height * sizeof(*image->pixels));
 	image->width = width;
 	image->height = height;
-	image->pixels = (rgba_t *)(((uint8_t *)image) + sizeof(image_t));
+	image->pixels = (rgba_t *)(((uint8_t *)image) + sizeof(*image));
 	return image;
 }
 
