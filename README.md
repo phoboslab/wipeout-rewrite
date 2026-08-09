@@ -109,7 +109,9 @@ USE_GLX=true make sdl
 make sokol
 
 # With cmake
-cmake -S path/to/wipeout-rewrite -B path/to/build-dir
+cmake -S path/to/wipeout-rewrite -B path/to/build-dir \
+    -DCMAKE_C_COMPILER=<gcc|clang|clang-cl> \
+    -DCMAKE_BUILD_TYPE=<Release|ReleaseStrip|Debug>
 cmake --build path/to/build-dir
 ```
 
@@ -136,7 +138,9 @@ With the packages installed, you can now setup and build:
 
 ```sh
 cmake -S path/to/wipeout-rewrite -B path/to/build-dir \
-	-DCMAKE_PREFIX_PATH="$(brew --prefix sdl2)"
+	-DCMAKE_PREFIX_PATH="$(brew --prefix sdl2)" \
+    -DCMAKE_C_COMPILER=<gcc|clang|clang-cl> \
+    -DCMAKE_BUILD_TYPE=<Release|ReleaseStrip|Debug>
 cmake --build path/to/build-dir
 ```
 
@@ -193,7 +197,9 @@ make sdl
 make sokol
 
 # With cmake
-cmake -S path/to/wipeout-rewrite -B path/to/build-dir
+cmake -S path/to/wipeout-rewrite -B path/to/build-dir \
+    -DCMAKE_C_COMPILER=<gcc|clang|clang-cl> \
+    -DCMAKE_BUILD_TYPE=<Release|ReleaseStrip|Debug>
 cmake --build path/to/build-dir
 ```
 

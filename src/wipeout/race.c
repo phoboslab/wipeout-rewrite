@@ -46,7 +46,7 @@ void race_init(void) {
 	if (g.is_attract_mode) {
 		attract_start_time = system_time();
 
-		for (int i = 0; i < len(g.ships); i++) {
+		for (size_t i = 0; i < len(g.ships); i++) {
 			flags_rm(g.ships[i].flags, SHIP_VIEW_INTERNAL);
 			flags_rm(g.ships[i].flags, SHIP_RACING);
 		}
@@ -143,12 +143,12 @@ void race_start(void) {
 	particles_init();
 	weapons_init();
 
-	for (int i = 0; i < len(g.race_ranks); i++) {
+	for (size_t i = 0; i < len(g.race_ranks); i++) {
 		g.race_ranks[i].points = 0;
 		g.race_ranks[i].pilot = i;
 	}
-	for (int i = 0; i < len(g.lap_times); i++) {
-		for (int j = 0; j < len(g.lap_times[i]); j++) {
+	for (size_t i = 0; i < len(g.lap_times); i++) {
+		for (size_t j = 0; j < len(g.lap_times[i]); j++) {
 			g.lap_times[i][j] = 0;
 		}
 	}
@@ -184,7 +184,7 @@ void race_end(void) {
 
 	g.race_time = 0;
 	g.best_lap = g.lap_times[g.pilot][0];
-	for (int i = 0; i < NUM_LAPS; i++) {
+	for (size_t i = 0; i < NUM_LAPS; i++) {
 		g.race_time += g.lap_times[g.pilot][i];
 		if (g.lap_times[g.pilot][i] < g.best_lap) {
 			g.best_lap = g.lap_times[g.pilot][i];
@@ -198,7 +198,7 @@ void race_end(void) {
 		save.is_dirty = true;
 	}
 
-	for (int i = 0; i < NUM_HIGHSCORES; i++) {
+	for (size_t i = 0; i < NUM_HIGHSCORES; i++) {
 		if (g.race_time < hs->entries[i].time) {
 			g.is_new_race_record = true;
 			break;
@@ -206,11 +206,11 @@ void race_end(void) {
 	}
 
 	if (g.race_type == RACE_TYPE_CHAMPIONSHIP) {
-		for (int i = 0; i < len(def.race_points_for_rank); i++) {
+		for (size_t i = 0; i < len(def.race_points_for_rank); i++) {
 			g.race_ranks[i].points = def.race_points_for_rank[i];
 
 			// Find the pilot for this race rank in the championship table
-			for (int j = 0; j < len(g.championship_ranks); j++) {
+			for (size_t j = 0; j < len(g.championship_ranks); j++) {
 				if (g.race_ranks[i].pilot == g.championship_ranks[j].pilot) {
 					g.championship_ranks[j].points += def.race_points_for_rank[i];
 					break;

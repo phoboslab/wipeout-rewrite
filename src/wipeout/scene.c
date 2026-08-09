@@ -175,8 +175,8 @@ void scene_set_start_booms(int light_index) {
 	for (int i = 0; i < start_booms_len; i++) {
 		Prm libPoly = {.primitive = start_booms[i]->primitives};
 		rgba_t color;
-		for (int j = 0; j < len(start_boom_lights); j++) {
-			if (j == light_index) {
+		for (size_t j = 0; j < len(start_boom_lights); j++) {
+			if (j == (size_t)light_index) {
 				color = start_boom_lights[light_index];
 			} else {
 				color = start_boom_color_off;
@@ -213,7 +213,7 @@ void scene_init_aurora_borealis(void) {
 	float y;
 
 	Prm poly = {.primitive = sky_object->primitives};
-	for (int i = 0; i < sky_object->primitives_len; i++) {
+	for (int16_t i = 0; i < sky_object->primitives_len; i++) {
 		switch (poly.primitive->type) {
 		case PRM_TYPE_GT3:
 			poly.gt3 += 1;
@@ -249,7 +249,7 @@ rgba_t scene_aurora_color_from_coordinate(int16_t coord, float phase) {
 
 void scene_update_aurora_borealis(void) {
 	float phase = system_time() / 30.0;
-	for (int i = 0; i < AURORA_BOREALIS_PRIMITIVES_MAX; i++) {
+	for (size_t i = 0; i < AURORA_BOREALIS_PRIMITIVES_MAX; i++) {
 		int16_t *coords = aurora_borealis.coords[i];
 		GT4  *primitive = aurora_borealis.primitives[i];
 		if (aurora_borealis.grey_coords[i] != -2) {

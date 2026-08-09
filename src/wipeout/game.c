@@ -831,9 +831,9 @@ void game_init(void) {
 		g.additional_circuits = true;
 	}
 	printf("installed circuits:");
-	for (int i = 0; i < len(def.circuits); i++) {
+	for (size_t i = 0; i < len(def.circuits); i++) {
 		g.installed_circuits[i] = true;
-		for (int o = 0; o < len(def.race_classes); o++) {
+		for (size_t o = 0; o < len(def.race_classes); o++) {
 			g.installed_circuits[i] &= platform_asset_exists(def.circuits[i].settings[o].path);
 		}
 		if (g.installed_circuits[i]) printf(" %s,", def.circuits[i].name);
@@ -918,7 +918,7 @@ void game_init(void) {
 	
 
 	// User defined, loaded from the save struct
-	for (int action = 0; action < len(save.buttons); action++) {
+	for (size_t action = 0; action < len(save.buttons); action++) {
 		if (save.buttons[action][0] != INPUT_INVALID) {
 			input_bind(INPUT_LAYER_USER, save.buttons[action][0], action);
 		}
@@ -937,7 +937,7 @@ void game_set_scene(game_scene_t scene) {
 }
 
 void game_reset_championship(void) {
-	for (int i = 0; i < len(g.championship_ranks); i++) {
+	for (size_t i = 0; i < len(g.championship_ranks); i++) {
 		g.championship_ranks[i].points = 0;
 		g.championship_ranks[i].pilot = i;
 	}

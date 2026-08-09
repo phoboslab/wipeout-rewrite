@@ -502,7 +502,7 @@ void ship_player_begin_rescue_to_section(ship_t *self, section_t *section)
 	self->velocity = vec3(0, 0, 0);
 }
 
-const float ship_player_find_distance_from_track(ship_t *self)
+float ship_player_find_distance_from_track(ship_t *self)
 {
 	section_t *next = self->section->next;
 
@@ -524,7 +524,7 @@ ship_t *ship_player_find_target(ship_t *self) {
 	int shortest_distance = 256;
 	ship_t *nearest_ship = NULL;
 
-	for (int i = 0; i < len(g.ships); i++) {
+	for (size_t i = 0; i < len(g.ships); i++) {
 		ship_t *other = &g.ships[i];
 		if (self == other) {
 			continue;

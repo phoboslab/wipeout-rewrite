@@ -17,15 +17,15 @@ void track_load(const char *base_path) {
 
 	ttf_t *ttf = track_load_tile_format(get_path(base_path, "library.ttf"));
 	cmp_t *cmp = image_load_compressed(get_path(base_path, "library.cmp"));
-	int temp_tile_size = wipeout64_mode ? 64 : 128;
-	int sub_tile_size  = wipeout64_mode ? 64 : 32;
-	int tiles          = wipeout64_mode ? 1  : 4;
+	size_t temp_tile_size = wipeout64_mode ? 64 : 128;
+	size_t sub_tile_size  = wipeout64_mode ? 64 : 32;
+	size_t tiles          = wipeout64_mode ? 1  : 4;
 	
 	image_t *temp_tile = image_alloc(temp_tile_size, temp_tile_size);
-	int len = wipeout64_mode ? cmp->len : ttf->len;
-	for (int i = 0; i < len; i++) {
-		for (int tx = 0; tx < tiles; tx++) {
-			for (int ty = 0; ty < tiles; ty++) {
+	size_t len = wipeout64_mode ? cmp->len : ttf->len;
+	for (size_t i = 0; i < len; i++) {
+		for (size_t tx = 0; tx < tiles; tx++) {
+			for (size_t ty = 0; ty < tiles; ty++) {
 				uint32_t sub_tile_index = ttf->tiles[i].near[ty * tiles + tx];
 				image_t *sub_tile = image_load_from_bytes(cmp->entries[wipeout64_mode ? i : sub_tile_index], false);
 				image_copy(sub_tile, temp_tile, 0, 0, sub_tile_size, sub_tile_size, tx * sub_tile_size, ty * sub_tile_size);
@@ -56,7 +56,7 @@ void track_load(const char *base_path) {
 
 	// Enumerate all sections; take care to give both stretches at a junction
 	// the same numbers.
-	int num = 0;
+	size_t num = 0;
 	do {
 		s->num = num++;
 		if (s->junction) { // start junction
@@ -95,12 +95,12 @@ ttf_t *track_load_tile_format(char *ttf_name) {
 	uint8_t *ttf_bytes = platform_load_asset(ttf_name, &ttf_size);
 
 	uint32_t p = 0;
-	uint32_t num_tiles = ttf_size / 42;
+	size_t num_tiles = ttf_size / 42;
 
 	ttf_t *ttf = mem_temp_alloc(sizeof(ttf_t) + sizeof(ttf_tile_t) * num_tiles);
 	ttf->len = num_tiles;
 
-	for (int t = 0; t < num_tiles; t++) {
+	for (size_t t = 0; t < num_tiles; t++) {
 		for (int i = 0; i < 16; i++) {
 			ttf->tiles[t].near[i] = get_i16(ttf_bytes, &p);
 		}
@@ -208,10 +208,10 @@ void track_load_faces(char *file_name, vec3_t *vertices) {
 }
 
 void track_load_texture_file(char *tex_path) {
-	int size;
+	uint32_t size;
 	uint8_t *bytes = platform_load_asset(tex_path, &size);
 	uint32_t p = 0;
-	for (int i = 0; i < g.track.face_count; i++) {
+	for (int32_t i = 0; i < g.track.face_count; i++) {
 		g.track.faces[i].texture = get_u8(bytes, &p);
 		g.track.faces[i].flags = get_u8(bytes, &p);
 	}
@@ -227,7 +227,7 @@ void track_load_sections(char *file_name) {
 
 	uint32_t p = 0;
 	section_t *ts = g.track.sections;
-	for (int i = 0; i < g.track.section_count; i++) {
+	for (int32_t i = 0; i < g.track.section_count; i++) {
 		int32_t junction_index = get_i32(bytes, &p);
 		if (junction_index != -1) {
 			ts->junction = g.track.sections + junction_index;
@@ -275,7 +275,7 @@ void track_draw_section(section_t *section) {
 	track_face_t *face = g.track.faces + section->face_start;
 	int16_t face_count = section->face_count;
 	
-	for (uint32_t j = 0; j < face_count; j++) {
+	for (int16_t j = 0; j < face_count; j++) {
 		uint16_t tex_index = texture_from_list(g.track.textures, face->texture);
 		render_push_tris(face->tris[0], tex_index);
 		render_push_tris(face->tris[1], tex_index);

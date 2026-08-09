@@ -23,7 +23,7 @@ uint8_t *file_load(const char *path, uint32_t *bytes_read) {
 	error_if(!f, "Could not open file for reading: %s", path);
 
 	fseek(f, 0, SEEK_END);
-	int32_t size = ftell(f);
+	uint32_t size = ftell(f);
 	if (size <= 0) {
 		fclose(f);
 		return NULL;
@@ -47,7 +47,7 @@ uint32_t file_store(const char *path, void *bytes, int32_t len) {
 	FILE *f = fopen(path, "wb");
 	error_if(!f, "Could not open file for writing: %s", path);
 
-	if (fwrite(bytes, 1, len, f) != len) {
+	if (fwrite(bytes, 1, len, f) != (size_t)len) {
 		die("Could not write file file %s", path);
 	}
 	

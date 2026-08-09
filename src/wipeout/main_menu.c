@@ -160,7 +160,7 @@ void button_capture(void *user, button_t button, int32_t ascii_char) {
 	int index = button < INPUT_KEY_MAX ? 0 : 1; // joypad or keyboard
 
 	// unbind this button if it's bound anywhere
-	for (int i = 0; i < len(save.buttons); i++) {
+	for (size_t i = 0; i < len(save.buttons); i++) {
 		if (save.buttons[i][index] == button) {
 			save.buttons[i][index] = INPUT_INVALID;
 		}
@@ -411,7 +411,7 @@ static void page_options_highscores_viewer_draw(menu_t *menu, int data) {
 	
 	vec2i_t entry_pos = vec2i(pos.x - 110, pos.y + 24);
 	highscores_t *hs = &save.highscores[options_highscores_race_class][options_highscores_circuit][options_highscores_tab];
-	for (int i = 0; i < NUM_HIGHSCORES; i++) {
+	for (size_t i = 0; i < NUM_HIGHSCORES; i++) {
 		ui_draw_text(hs->entries[i].name, ui_scaled_pos(anchor, entry_pos), UI_SIZE_16, UI_COLOR_DEFAULT);
 		ui_draw_time(hs->entries[i].time, ui_scaled_pos(anchor, vec2i(entry_pos.x + 110, entry_pos.y)), UI_SIZE_16, UI_COLOR_DEFAULT);
 		entry_pos.y += 24;
@@ -494,7 +494,7 @@ static void page_race_class_draw(menu_t *menu, int data) {
 
 static void page_race_class_init(menu_t *menu) {
 	menu_page_t *page = menu_push(menu, "SELECT RACING CLASS", page_race_class_draw);
-	for (int i = 0; i < len(def.race_classes); i++) {
+	for (size_t i = 0; i < len(def.race_classes); i++) {
 		menu_page_add_button(page, i, def.race_classes[i].name, button_race_class_select);
 	}
 }
@@ -525,7 +525,7 @@ static void page_race_type_init(menu_t *menu) {
 	page->title_anchor = UI_POS_TOP | UI_POS_CENTER;
 	page->items_pos = vec2i(0, -110);
 	page->items_anchor = UI_POS_BOTTOM | UI_POS_CENTER;
-	for (int i = 0; i < len(def.race_types); i++) {
+	for (size_t i = 0; i < len(def.race_types); i++) {
 		menu_page_add_button(page, i, def.race_types[i].name, button_race_type_select);
 	}
 }
@@ -554,7 +554,7 @@ static void page_team_init(menu_t *menu) {
 	page->title_anchor = UI_POS_TOP | UI_POS_CENTER;
 	page->items_pos = vec2i(0, -110);
 	page->items_anchor = UI_POS_BOTTOM | UI_POS_CENTER;
-	for (int i = 0; i < len(def.teams); i++) {
+	for (size_t i = 0; i < len(def.teams); i++) {
 		menu_page_add_button(page, i, def.teams[i].name, button_team_select);
 	}
 }
@@ -587,7 +587,7 @@ static void page_pilot_init(menu_t *menu) {
 	page->title_anchor = UI_POS_TOP | UI_POS_CENTER;
 	page->items_pos = vec2i(0, -110);
 	page->items_anchor = UI_POS_BOTTOM | UI_POS_CENTER;
-	for (int i = 0; i < len(def.teams[g.team].pilots); i++) {
+	for (size_t i = 0; i < len(def.teams[g.team].pilots); i++) {
 		menu_page_add_button(page, def.teams[g.team].pilots[i], def.pilots[def.teams[g.team].pilots[i]].name, button_pilot_select);
 	}
 }
@@ -611,7 +611,7 @@ static void page_circuit_additional_init(menu_t *menu) {
 	page->items_pos = vec2i(0, 50);
 	page->items_anchor = UI_POS_TOP | UI_POS_CENTER;
 
-	for (int i = CIRCUIT_TALONS_REACH; i < len(def.circuits); i++) {
+	for (size_t i = CIRCUIT_TALONS_REACH; i < len(def.circuits); i++) {
 		if (g.installed_circuits[i] &&
 			(!def.circuits[i].is_bonus_circuit || save.has_bonus_circuits)) {
 			menu_page_add_button(page, i, def.circuits[i].name, button_circuit_select);

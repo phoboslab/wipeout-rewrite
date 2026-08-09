@@ -78,7 +78,7 @@ void sfx_load(void) {
 
 	uint32_t sample_index = 0;
 	int32_t history[2] = {0, 0};
-	for (int p = 0; p < vb_size;) {
+	for (uint32_t p = 0; p < vb_size;) {
 		uint8_t header = vb[p++];
 		uint8_t flags = vb[p++];
 		uint8_t shift = header & 0x0f;
@@ -334,7 +334,7 @@ void sfx_stereo_mix(float *buffer, uint32_t len) {
 
 	uint32_t music_src_index = music->sample_data_pos * music->qoa.channels;
 
-	for (int i = 0; i < len; i += 2) {
+	for (uint32_t i = 0; i < len; i += 2) {
 		float left = 0;
 		float right = 0;
 
