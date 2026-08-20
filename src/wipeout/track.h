@@ -20,14 +20,16 @@ typedef struct track_face_t {
 	uint8_t texture;
 } track_face_t;
 
-#define FACE_TRACK_BASE       (1<<0)
-#define FACE_PICKUP_LEFT      (1<<1)
-#define FACE_FLIP_TEXTURE     (1<<2)
-#define FACE_PICKUP_RIGHT     (1<<3)
-#define FACE_START_GRID       (1<<4)
-#define FACE_BOOST            (1<<5)
-#define FACE_PICKUP_COLLECTED (1<<6)
-#define FACE_PICKUP_ACTIVE    (1<<7)
+enum {
+	FACE_TRACK_BASE =       1<<0,
+	FACE_PICKUP_LEFT =      1<<1,
+	FACE_FLIP_TEXTURE =     1<<2,
+	FACE_PICKUP_RIGHT =     1<<3,
+	FACE_START_GRID =       1<<4,
+	FACE_BOOST =            1<<5,
+	FACE_PICKUP_COLLECTED = 1<<6,
+	FACE_PICKUP_ACTIVE =    1<<7,
+};
 
 typedef struct {
 	uint16_t near[16];
@@ -55,10 +57,12 @@ typedef struct section_t {
 	int16_t num;
 } section_t;
 
-#define SECTION_JUMP            1
-#define SECTION_JUNCTION_END    8
-#define SECTION_JUNCTION_START 16
-#define SECTION_JUNCTION       32
+enum {
+	SECTION_JUMP =           1<<0,
+	SECTION_JUNCTION_END =   1<<3,
+	SECTION_JUNCTION_START = 1<<4,
+	SECTION_JUNCTION =       1<<5,
+};
 
 typedef struct {
 	track_face_t *face;

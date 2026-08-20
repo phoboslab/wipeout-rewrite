@@ -13,11 +13,11 @@ typedef enum {
 } menu_entry_type_t;
 
 typedef enum {
-	MENU_VERTICAL     = (1<<0),
-	MENU_HORIZONTAL   = (1<<1),
-	MENU_FIXED        = (1<<2),
-	MENU_ALIGN_CENTER = (1<<3),
-	MENU_ALIGN_BLOCK  = (1<<4)
+	MENU_VERTICAL     = 1<<0,
+	MENU_HORIZONTAL   = 1<<1,
+	MENU_FIXED        = 1<<2,
+	MENU_ALIGN_CENTER = 1<<3,
+	MENU_ALIGN_BLOCK  = 1<<4
 } menu_page_layout_t;
 
 typedef struct menu_t menu_t;
