@@ -12,6 +12,9 @@
 #include "race.h"
 #include "sfx.h"
 
+static void ship_resolve_collision(ship_t *self, point_face_collision_t col, bool is_nose);
+static void ship_resolve_collision_scrape(ship_t *self, point_face_collision_t col, bool is_nose);
+
 void ships_load(void) {
 	texture_list_t ship_textures = image_get_compressed_textures("wipeout/common/allsh.cmp");
 	Object *ship_models = objects_load("wipeout/common/allsh.prm", ship_textures);
@@ -238,6 +241,14 @@ void ship_init(ship_t *self, section_t *section, int pilot, int inv_start_rank) 
 		self->remote_thrust_mag = def.ai_settings[g.race_class][inv_start_rank-1].thrust_magnitude;
 		self->fight_back = def.ai_settings[g.race_class][inv_start_rank-1].fight_back;
 	}
+	switch (save.collision_response) {
+		case RESPONSE_AUTHENTIC:
+			self->resolve_collision = ship_resolve_collision;
+			break;
+		case RESPONSE_EXPERIMENTAL:
+			self->resolve_collision = ship_resolve_collision_scrape;
+			break;
+	}
 
 	self->section = section;
 	self->prev_section = section;
@@ -399,6 +410,16 @@ void ship_update(ship_t *self) {
 		face++;
 	}
 
+	direction = vec3_sub(self->section->next->center, self->section->center);
+	float down_track = vec3_dot(direction, self->mat.basis.forward.vec3);
+
+	if (down_track < 0) {
+		flags_rm(self->flags, SHIP_DIRECTION_FORWARD);
+	}
+	else {
+		flags_add(self->flags, SHIP_DIRECTION_FORWARD);
+	}
+
 	// Collect powerup
 	if (
 		flags_is(face->flags, FACE_PICKUP_ACTIVE) &&
@@ -527,247 +548,98 @@ static bool vec3_is_on_face(vec3_t pos, track_face_t *face, float alpha) {
 	return (angle > (0.91552734375 * M_PI * 2));
 }
 
-void ship_resolve_wing_collision(ship_t *self, track_face_t *face, float direction) {
-	vec3_t collision_vector = vec3_sub(self->section->center, face->tris[0].vertices[2].pos);
+static void ship_resolve_collision(ship_t *self, point_face_collision_t col, bool is_nose) {
+	if (!col.collided) return;
+	float direction = vec3_dot(self->mat.basis.right.vec3, col.normal);
+
+	vec3_t collision_vector = vec3_sub(self->section->center, col.face->tris[0].vertices[2].pos);
+	// TODO: In the PSX original, nose collisions change depending on the angle to the wall?
 	float angle = vec3_angle(collision_vector, self->mat.basis.forward.vec3);
-	self->velocity = vec3_reflect(self->velocity, face->normal, 2);
+	self->velocity = vec3_reflect(self->velocity, col.normal, 2);
 	self->position = vec3_sub(self->position, vec3_mulf(self->velocity, 0.015625)); // system_tick?
-	self->velocity = vec3_sub(self->velocity, vec3_mulf(self->velocity, 0.5));
-	self->velocity = vec3_add(self->velocity, vec3_mulf(face->normal, 4096.0)); // div by 4096?
+	self->velocity = vec3_mulf(self->velocity, 0.5);
+	self->velocity = vec3_add(self->velocity, vec3_mulf(col.normal, 4096.0)); // div by 4096?
 
-	float magnitude = (fabsf(angle) * self->speed) * 2 * M_PI / 4096.0; // (6 velocity shift, 12 angle shift?)
+	vec3_t nudge;
+	if (is_nose) {
+		float magnitude = ((self->speed * 0.0625) + 400) * 2 * M_PI / 4096.0;
+		if (direction > 0) magnitude *= -1;
+		nudge = vec3(0,magnitude,0);
+	} else {
+		float magnitude = (fabsf(angle) * self->speed) * 2 * M_PI / 4096.0; // (6 velocity shift, 12 angle shift?)
+		if (direction > 0) magnitude *= -1;
+		nudge = vec3(0,0,magnitude);
+	}
 
-	vec3_t wing_pos;
-	if (direction > 0) {
-		self->angular_velocity.z += magnitude;
-		wing_pos = ship_wing_right(self);
-	}
-	else {
-		self->angular_velocity.z -= magnitude;	
-		wing_pos = ship_wing_left(self);
-	}
+	self->angular_velocity = vec3_add(self->angular_velocity, nudge);
 
 	if (self->last_impact_time > 0.2) {
 		self->last_impact_time = 0;
-		sfx_play_at(SFX_IMPACT, wing_pos, vec3(0, 0, 0), 1);
+		sfx_play_at(SFX_IMPACT, col.point, vec3(0, 0, 0), 1);
 	}
 }
 
-
-void ship_resolve_nose_collision(ship_t *self, track_face_t *face, float direction) {
-	vec3_t collision_vector = vec3_sub(self->section->center, face->tris[0].vertices[2].pos);
-	// TODO: In the PSX original, nose collisions change depending on the angle to the wall,
-	// but here this variable goes unused.
-	float angle = vec3_angle(collision_vector, self->mat.basis.forward.vec3);
-	self->velocity = vec3_reflect(self->velocity, face->normal, 2);
-	self->position = vec3_sub(self->position, vec3_mulf(self->velocity, 0.015625)); // system_tick?
-	self->velocity = vec3_sub(self->velocity, vec3_mulf(self->velocity, 0.5));
-	self->velocity = vec3_add(self->velocity, vec3_mulf(face->normal, 4096)); // div by 4096?
-
-	float magnitude = ((self->speed * 0.0625) + 400) * 2 * M_PI / 4096.0;
-	if (direction > 0) {
-		self->angular_velocity.y += magnitude;
-	}
-	else { 
-		self->angular_velocity.y -= magnitude;
-	}
-
-	if (self->last_impact_time > 0.2) {
-		self->last_impact_time = 0;
-		sfx_play_at(SFX_IMPACT, ship_nose(self), vec3(0, 0, 0), 1);
-	}
+// Basic "track scraping" implementation.
+static void ship_resolve_collision_scrape(ship_t *self, point_face_collision_t col, bool is_nose) {
+	if (!col.collided) return;
+	self->position = vec3_add(self->position, vec3_mulf(col.normal, -col.distance));
+	self->velocity = vec3_reflect(self->velocity, col.normal, 1.2);
+	// This is mathematically wrong with deltatime
+	self->velocity = vec3_mulf(self->velocity, 0.95);
+	// Spawning particles at the collision point is really easy, 
+	// but makes it really obvious that the collider doesn't match the graphics.
+	//particles_spawn(col.point, 1, vec3_rand(3.0f), 20.0f);
 }
 
+// Returns the first collision it finds. Track faces project hitboxes of infinite thickness
+// behind them.
+static point_face_collision_t ship_point_find_collision_with_section(vec3_t point, section_t *section) {
+	track_face_t *face_iter = g.track.faces + section->face_start;
+	for (int i = 0; i < section->face_count; i++) {
+		track_face_t *face = face_iter++;
+
+		// Collision with the track base is handled by ship_player.c (reasons unknown?)
+		if (face->flags & FACE_TRACK_BASE) continue;
+
+		vec3_t face_point = face->tris[0].vertices[0].pos;
+		float distance = vec3_distance_to_plane(point, face_point, face->normal);
+
+		if (distance > 0) continue;
+		if (!vec3_is_on_face(point, face, distance)) continue;
+		return (point_face_collision_t){true, point, face->normal, distance, face};
+	}
+	return NO_COLLISION;
+}
+
+// When straddling the boundary between sections, we must decide which to collide with.
+// We check for collisions with our section and its neighbors, and select the shallowest of them.
+static point_face_collision_t ship_point_find_collision(vec3_t point, section_t *section) {
+	point_face_collision_t candidates[4];
+	int shallowest = 0;
+
+	candidates[0] = ship_point_find_collision_with_section(point, section);
+	candidates[1] = ship_point_find_collision_with_section(point, section->prev);
+	candidates[2] = ship_point_find_collision_with_section(point, section->next);
+	if (section->junction) {
+		candidates[3] = ship_point_find_collision_with_section(point, section->junction);
+	} else {
+		candidates[3] = NO_COLLISION;
+	}
+
+	for (int i = 0; i < len(candidates); i++) {
+		if (candidates[i].distance > candidates[shallowest].distance) {
+			shallowest = i;
+		}
+	}
+
+	return candidates[shallowest];
+}
 
 void ship_collide_with_track(ship_t *self, track_face_t *face) {
-	float alpha;
-	section_t 	*trackPtr;
-	bool collide;
-	track_face_t *face2;
-
-	trackPtr = self->section->next;
-	vec3_t direction = vec3_sub(trackPtr->center, self->section->center);
-	float down_track = vec3_dot(direction, self->mat.basis.forward.vec3);
-
-	if (down_track < 0) {
-		flags_rm(self->flags, SHIP_DIRECTION_FORWARD);
-	}
-	else {
-		flags_add(self->flags, SHIP_DIRECTION_FORWARD);
-	}
-
-	vec3_t to_face_vector = vec3_sub(face->tris[0].vertices[0].pos, face->tris[0].vertices[1].pos);
-	direction = vec3_sub(self->section->center, self->position);
-	float to_face = vec3_dot(direction, to_face_vector);
-
-	face--;
-
-	// Check against left hand side of track
-	
-	// FIXME: the collision checks in junctions are very flakey and often select
-	// the wrong face to test for a collision.
-	// Instead of this whole mess here, there should just be a function 
-	// `track_get_nearest_face(section, pos)` that we call with the nose and 
-	// wing positions and then just resolve against this face.
-
-	if (to_face > 0) {
-		flags_add(self->flags, SHIP_LEFT_SIDE);
-		
-		vec3_t face_point = face->tris[0].vertices[0].pos;
-
-		alpha = vec3_distance_to_plane(ship_nose(self), face_point, face->normal);
-		if (alpha <= 0) {
-			if (flags_is(self->section->flags, SECTION_JUNCTION_START)) {
-				collide = vec3_is_on_face(ship_nose(self), face, alpha);
-				if (collide) {
-					ship_resolve_nose_collision(self, face, -down_track);
-				}
-				else {
-					face2 = g.track.faces + self->section->next->face_start;
-					collide = vec3_is_on_face(ship_nose(self), face2, alpha);
-					if (collide) {
-						ship_resolve_nose_collision(self, face, -down_track);
-					}
-				}
-			}
-			else if (flags_is(self->section->flags, SECTION_JUNCTION_END)) {
-				collide = vec3_is_on_face(ship_nose(self), face, alpha);
-				if (collide) {
-					ship_resolve_nose_collision(self, face, -down_track);
-				}
-				else {
-					face2 = g.track.faces + self->section->prev->face_start;
-					collide = vec3_is_on_face(ship_nose(self), face2, alpha);
-					if (collide) {
-						ship_resolve_nose_collision(self, face, -down_track);
-					}
-				}
-			}
-			else {
-				ship_resolve_nose_collision(self, face, -down_track);
-			}
-			return;
-		}
-
-		alpha = vec3_distance_to_plane(ship_wing_left(self), face_point, face->normal);
-		if (alpha <= 0) {
-			if (
-				flags_is(self->section->flags, SECTION_JUNCTION_START) || 
-				flags_is(self->section->flags, SECTION_JUNCTION_END)
-			) {
-				collide = vec3_is_on_face(ship_wing_left(self), face, alpha);
-				if (collide) {
-					ship_resolve_nose_collision(self, face, -down_track);
-				}
-			}
-			else {
-				ship_resolve_wing_collision(self, face, -down_track);
-			}
-			return;
-		}
-
-		alpha = vec3_distance_to_plane(ship_wing_right(self), face_point, face->normal);
-		if (alpha <= 0) {
-			if (
-				flags_is(self->section->flags, SECTION_JUNCTION_START) || 
-				flags_is(self->section->flags, SECTION_JUNCTION_END)
-			) {
-				collide = vec3_is_on_face(ship_wing_right(self), face, alpha);
-				if (collide) {
-					ship_resolve_nose_collision(self, face, -down_track);
-				}
-			}
-			else {
-				ship_resolve_wing_collision(self, face, -down_track);
-			}
-			return;
-		}
-	}
-
-
-	// Collision check against 2nd wall
-	else {
-		flags_rm(self->flags, SHIP_LEFT_SIDE);
-
-		face++;
-		while (face->flags & FACE_TRACK_BASE) {
-			face++;
-		}
-
-		vec3_t face_point = face->tris[0].vertices[0].pos;
-
-		alpha = vec3_distance_to_plane(ship_nose(self), face_point, face->normal);
-		if (alpha <= 0) {
-			if (flags_is(self->section->flags, SECTION_JUNCTION_START)) {
-				collide = vec3_is_on_face(ship_nose(self), face, alpha);
-				if (collide) {
-					ship_resolve_nose_collision(self, face, down_track);
-				}
-				else {
-					face2 = g.track.faces + self->section->next->face_start;
-					face2 += 3;
-					collide = vec3_is_on_face(ship_nose(self), face2, alpha);
-					if (collide) {
-						ship_resolve_nose_collision(self, face, -down_track);
-					}
-				}
-			}
-			else if (flags_is(self->section->flags, SECTION_JUNCTION_END)) {
-				collide = vec3_is_on_face(ship_nose(self), face, alpha);
-				if (collide) {
-					ship_resolve_nose_collision(self, face, -down_track);
-				}
-				else {
-					face2 = g.track.faces + self->section->prev->face_start;
-					face2 += 3;
-					collide = vec3_is_on_face(ship_nose(self), face2, alpha);
-					if (collide) {
-						ship_resolve_nose_collision(self, face2, -down_track);
-					}
-				}
-			}
-			else {
-				ship_resolve_nose_collision(self, face, down_track);
-			}
-			return;
-		}
-		
-		alpha = vec3_distance_to_plane(ship_wing_left(self), face_point, face->normal);
-		if (alpha <= 0) {
-			if (
-				flags_is(self->section->flags, SECTION_JUNCTION_START) ||
-				flags_is(self->section->flags, SECTION_JUNCTION_END)
-			) {
-				collide = vec3_is_on_face(ship_wing_left(self), face, alpha);
-				if (collide) {
-					ship_resolve_nose_collision(self, face, down_track);
-				}
-			}
-			else {
-				ship_resolve_wing_collision(self, face, down_track);
-			}
-			return;
-		}
-
-		alpha = vec3_distance_to_plane(ship_wing_right(self), face_point, face->normal);
-		if (alpha <= 0) {
-			if (
-				flags_is(self->section->flags, SECTION_JUNCTION_START) ||
-				flags_is(self->section->flags, SECTION_JUNCTION_END)
-			) {
-				collide = vec3_is_on_face(ship_wing_right(self), face, alpha);
-				if (collide) {
-					ship_resolve_nose_collision(self, face, down_track);
-				}
-			}
-			else {
-				ship_resolve_wing_collision(self, face, down_track);
-			}
-			return;
-		}
-	}
+	self->resolve_collision(self, ship_point_find_collision(ship_nose(self),       self->section), true);
+	self->resolve_collision(self, ship_point_find_collision(ship_wing_left(self),  self->section), false);
+	self->resolve_collision(self, ship_point_find_collision(ship_wing_right(self), self->section), false);
 }
-
 
 bool ship_intersects_ship(ship_t *self, ship_t *other) {
 	// Get 4 points of collision model in world space

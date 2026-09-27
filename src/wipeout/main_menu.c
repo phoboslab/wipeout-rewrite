@@ -17,6 +17,7 @@ static void page_race_type_init(menu_t *menu);
 static void page_team_init(menu_t *menu);
 static void page_pilot_init(menu_t *menu);
 static void page_circuit_init(menu_t *menu);
+static void page_options_gameplay_init(menu_t *menu);
 static void page_options_controls_init(menu_t *menu);
 static void page_options_video_init(menu_t *menu);
 static void page_options_audio_init(menu_t *menu);
@@ -99,6 +100,10 @@ static void page_main_init(menu_t *menu) {
 // -----------------------------------------------------------------------------
 // Options
 
+static void button_gameplay(menu_t *menu, int data) {
+	page_options_gameplay_init(menu);
+}
+
 static void button_controls(menu_t *menu, int data) {
 	page_options_controls_init(menu);
 }
@@ -117,10 +122,11 @@ static void button_highscores(menu_t *menu, int data) {
 
 static void page_options_draw(menu_t *menu, int data) {
 	switch (data) {
-		case 0: draw_model(models.controller, vec2(0, -0.1), vec3(0, 0, -6000), system_cycle_time()); break;
-		case 1: draw_model(models.rescue, vec2(0, -0.2), vec3(0, 0, -700), system_cycle_time()); break; // TODO: needs better model
-		case 2: draw_model(models.options.headphones, vec2(0, -0.2), vec3(0, 0, -300), system_cycle_time()); break;
-		case 3: draw_model(models.options.stopwatch, vec2(0, -0.2), vec3(0, 0, -400), system_cycle_time()); break;
+		case 0: draw_model(models.options.cd, vec2(0, -0.1), vec3(0, 0, -300), system_cycle_time()); break; // Sort of fits if you squint
+		case 1: draw_model(models.controller, vec2(0, -0.1), vec3(0, 0, -6000), system_cycle_time()); break;
+		case 2: draw_model(models.rescue, vec2(0, -0.2), vec3(0, 0, -700), system_cycle_time()); break; // TODO: needs better model
+		case 3: draw_model(models.options.headphones, vec2(0, -0.2), vec3(0, 0, -300), system_cycle_time()); break;
+		case 4: draw_model(models.options.stopwatch, vec2(0, -0.2), vec3(0, 0, -400), system_cycle_time()); break;
 	}
 }
 
@@ -131,12 +137,34 @@ static void page_options_init(menu_t *menu) {
 	page->title_anchor = UI_POS_TOP | UI_POS_CENTER;
 	page->items_pos = vec2i(0, -110);
 	page->items_anchor = UI_POS_BOTTOM | UI_POS_CENTER;
-	menu_page_add_button(page, 0, "CONTROLS", button_controls);
-	menu_page_add_button(page, 1, "VIDEO", button_video);
-	menu_page_add_button(page, 2, "AUDIO", button_audio);
-	menu_page_add_button(page, 3, "BEST TIMES", button_highscores);
+	menu_page_add_button(page, 0, "GAMEPLAY", button_gameplay);
+	menu_page_add_button(page, 1, "CONTROLS", button_controls);
+	menu_page_add_button(page, 2, "VIDEO", button_video);
+	menu_page_add_button(page, 3, "AUDIO", button_audio);
+	menu_page_add_button(page, 4, "BEST TIMES", button_highscores);
 }
 
+// -----------------------------------------------------------------------------
+// Options Gameplay
+
+static void toggle_collision_response(menu_t *menu, int data) {
+	save.collision_response = data;
+	save.is_dirty = true;
+}
+
+static const char *collision_response[] = {"AUTHENTIC", "EXPERIMENTAL"};
+
+static void page_options_gameplay_init(menu_t *menu) {
+	menu_page_t *page = menu_push(menu, "GAMEPLAY", NULL);
+	flags_set(page->layout_flags, MENU_VERTICAL | MENU_FIXED);
+	page->title_pos = vec2i(-160, -100);
+	page->title_anchor = UI_POS_MIDDLE | UI_POS_CENTER;
+	page->items_pos = vec2i(-160, -60);
+	page->block_width = 320;
+	page->items_anchor = UI_POS_MIDDLE | UI_POS_CENTER;
+
+	menu_page_add_toggle(page, save.collision_response, "TRACK COLLISION", collision_response, len(collision_response), toggle_collision_response);
+}
 
 // -----------------------------------------------------------------------------
 // Options Controls

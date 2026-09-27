@@ -60,6 +60,16 @@
 #define SHIP_THRUST_FALLOFF NTSC_VELOCITY(8)
 #define SHIP_BRAKE_RATE     NTSC_VELOCITY(32)
 
+typedef struct point_face_collision_t {
+	bool collided;
+	vec3_t point;
+	vec3_t normal;
+	float distance;
+	track_face_t *face; // 'Legacy', ship_resolve_collision still requires this.
+} point_face_collision_t;
+
+#define NO_COLLISION (point_face_collision_t){false, vec3(0,0,0), vec3(0,0,0), -INFINITY, NULL}
+
 typedef struct ship_t {
 	int16_t pilot;
 	int flags;
@@ -134,6 +144,7 @@ typedef struct ship_t {
 	// Control Routines
 	vec3_t (*update_strat_func)(struct ship_t *, track_face_t *);
 	void (*update_func)(struct ship_t *);
+	void (*resolve_collision)(struct ship_t *, point_face_collision_t, bool);
 
 	// Audio
 	sfx_t *sfx_engine_thrust;
