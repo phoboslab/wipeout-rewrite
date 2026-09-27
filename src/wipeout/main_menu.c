@@ -25,7 +25,6 @@ static void page_options_highscores_init(menu_t *menu);
 static uint16_t background;
 static texture_list_t track_images;
 static menu_t *main_menu;
-
 static struct {
 	Object *race_classes[2];
 	Object *teams[4];
@@ -34,6 +33,7 @@ static struct {
 	struct { Object *championship, *msdos, *single_race, *options; } misc;
 	Object *rescue;
 	Object *controller;
+	Object *wipeout_2097_track_previews[8];
 } models;
 
 static void draw_model(Object *model, vec2_t offset, vec3_t pos, float rotation) {
@@ -601,15 +601,25 @@ static void button_circuit_select(menu_t *menu, int data) {
 	game_set_scene(GAME_SCENE_RACE);
 }
 
-static void page_circuit_additional_draw(menu_t *menu, int data) {}
+static void page_circuit_additional_draw(menu_t *menu, int data) {
+	// We don't have wipeout64 previews (and 'Unfinished Track' hasn't one either)
+	if (data > 14) return;
+
+	int model_index = (data) % 8;
+	render_set_cull_backface(false);
+	draw_model(models.wipeout_2097_track_previews[model_index], vec2(0, -0.2), vec3(200, -200, -1100), system_cycle_time());
+	render_set_cull_backface(true);
+}
 
 static void page_circuit_additional_init(menu_t *menu) {
+	// It would be nice to switch to wipeout 2097's background here, if present,
+	// but the menu system is not set up for this.
 	menu_page_t *page = menu_push(menu, "ADDITIONAL CIRCUITS", page_circuit_additional_draw);
-	flags_add(page->layout_flags, MENU_FIXED);
-	page->title_pos = vec2i(0, 30);
-	page->title_anchor = UI_POS_TOP | UI_POS_CENTER;
-	page->items_pos = vec2i(0, 50);
-	page->items_anchor = UI_POS_TOP | UI_POS_CENTER;
+	flags_set(page->layout_flags, MENU_VERTICAL | MENU_FIXED);
+	page->title_pos = vec2i(20, 30);
+	page->title_anchor = UI_POS_TOP | UI_POS_LEFT;
+	page->items_pos = vec2i(20, 50);
+	page->items_anchor = UI_POS_TOP | UI_POS_LEFT;
 
 	for (int i = CIRCUIT_TALONS_REACH; i < len(def.circuits); i++) {
 		if (g.installed_circuits[i] &&
@@ -669,6 +679,7 @@ void main_menu_init(void) {
 	main_menu = mem_bump(sizeof(menu_t));
 
 	background = image_get_texture("wipeout/textures/wipeout1.tim");
+
 	track_images = image_get_compressed_textures("wipeout/textures/track.cmp");
 
 	objects_unpack(models.race_classes, objects_load("wipeout/common/leeg.prm", image_get_compressed_textures("wipeout/common/leeg.cmp")));
@@ -678,6 +689,9 @@ void main_menu_init(void) {
 	objects_unpack(models.rescue, objects_load("wipeout/common/rescu.prm", image_get_compressed_textures("wipeout/common/rescu.cmp")));
 	objects_unpack(models.controller, objects_load("wipeout/common/pad1.prm", image_get_compressed_textures("wipeout/common/pad1.cmp")));
 	objects_unpack(models.misc, objects_load("wipeout/common/msdos.prm", image_get_compressed_textures("wipeout/common/msdos.cmp")));
+	if (file_exists("wipeout2/")) {
+		objects_unpack(models.wipeout_2097_track_previews, objects_load("wipeout2/common/june.prm", texture_list_empty()));
+	}
 
 	menu_reset(main_menu);
 	page_main_init(main_menu);
