@@ -257,11 +257,27 @@ void track_load_sections(char *file_name) {
 		ts->face_start = get_i16(bytes, &p);
 		ts->face_count = get_i16(bytes, &p);
 
-		p += 2 * 2; // global/local radius
+		// global/local radius
+		// Seems to consistently be larger than the section radius calculated below,
+		// but by a varying factor. Includes props?
+		p += 2 * 2;
 
 		ts->flags = get_i16(bytes, &p);
 		ts->num = get_i16(bytes, &p);
 		p += 2; // padding
+
+		// Get bounding sphere of section
+		track_face_t *face = g.track.faces + ts->face_start;
+		for (uint32_t j = 0; j < ts->face_count; j++) {
+			for (uint32_t k = 0; k < 2; k++) {
+				for (uint32_t o = 0; o < 3; o++) {
+					ts->radius = max(ts->radius, vec3_len_sq(vec3_sub(face->tris[k].vertices[o].pos, ts->center)));
+				}
+			}
+			face++;
+		}
+		ts->radius = sqrt(ts->radius);
+
 		ts++;
 	}
 
@@ -293,12 +309,11 @@ void track_draw(camera_t *camera) {
 	
 	for(int32_t i = 0; i < g.track.section_count; i++) {
 		section_t *s = &g.track.sections[i];
-		vec3_t diff = vec3_sub(cam_pos, s->center);
+		vec3_t diff = vec3_sub(s->center, cam_pos);
 		float cam_dot = vec3_dot(diff, cam_dir);
-		float dist_sq = vec3_dot(diff, diff);
 		if (
-			cam_dot < 2048 && // FIXME: should use the bounding radius of the section
-			dist_sq < (RENDER_FADEOUT_FAR * RENDER_FADEOUT_FAR)
+			cam_dot > -s->radius &&
+			cam_dot < (RENDER_FADEOUT_FAR * RENDER_FADEOUT_FAR) + s->radius
 		) {
 			track_draw_section(s);
 		}
