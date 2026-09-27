@@ -270,46 +270,19 @@ void ship_init_exhaust_plume(ship_t *self) {
 	int16_t indices[64];
 	int16_t indices_len = 0;
 
-	Prm prm = {.primitive = self->model->primitives};
-
 	for (int i = 0; i < self->model->primitives_len; i++) {
-		if (flags_is(prm.primitive->flag, PRM_SHIP_ENGINE)) {
-			flags_add(prm.primitive->flag, PRM_TRANSLUCENT);
+		primitive_t *prm = &self->model->primitives[i];
+		if (flags_is(prm->flag, PRM_SHIP_ENGINE)) {
+			flags_add(prm->flag, PRM_TRANSLUCENT);
 
-			switch (prm.primitive->type) {
-			case PRM_TYPE_FT3:
-				indices[indices_len++] = prm.ft3->coords[0];
-				indices[indices_len++] = prm.ft3->coords[1];
-				indices[indices_len++] = prm.ft3->coords[2];
+			error_if(prm->type != PRM_TYPE_TRI, "Can't happen: Expected primitive type %x, got %x", PRM_TYPE_TRI, prm->type);
 
-				prm.ft3->color = exhaust_plume_color;
-				prm.ft3++;
-				break;
-			case PRM_TYPE_GT3:
-				indices[indices_len++] = prm.gt3->coords[0];
-				indices[indices_len++] = prm.gt3->coords[1];
-				indices[indices_len++] = prm.gt3->coords[2];
-
-				for (int j = 0; j < 3; j++) {
-					prm.gt3->color[j] = exhaust_plume_color;
-				}
-				prm.gt3++;
-				break;
-			default:
-				die("Primitive type %x is marked as an engine primitive but is not ft3 or gt3\n", prm.primitive->type);
-			}
-		} else {
-			switch (prm.primitive->type) {
-			case PRM_TYPE_F3: prm.f3++; break;
-			case PRM_TYPE_F4: prm.f4++; break;
-			case PRM_TYPE_FT3: prm.ft3++; break;
-			case PRM_TYPE_FT4: prm.ft4++; break;
-			case PRM_TYPE_G3: prm.g3++; break;
-			case PRM_TYPE_G4: prm.g4++; break;
-			case PRM_TYPE_GT3: prm.gt3++; break;
-			case PRM_TYPE_GT4: prm.gt4++; break;
-			default:
-				die("Bad primitive type %x\n", prm.primitive->type);
+			primitive_vertex_t *v = prm->u.tri.v;
+			indices[indices_len++] = v[0].coord;
+			indices[indices_len++] = v[1].coord;
+			indices[indices_len++] = v[2].coord;
+			for (int j = 0; j < 3; j++) {
+				v[j].color = exhaust_plume_color;
 			}
 		}
 	}
@@ -814,28 +787,18 @@ bool ship_intersects_ship(ship_t *self, ship_t *other) {
 	};
 
 
-	Prm poly = {.primitive = other->collision_model->primitives};
-	int primitives_len = other->collision_model->primitives_len;
 
 	vec3_t p1, p2, p3;
 
 	// for all 4 planes of the enemy ship
-	for (int pi = 0; pi < primitives_len; pi++) {
-		int16_t *indices;
-		switch (poly.primitive->type) {
-			case PRM_TYPE_F3:
-				indices = poly.f3++->coords;  break;
-			case PRM_TYPE_G3:
-				indices = poly.g3++->coords;  break;
-			case PRM_TYPE_FT3:
-				indices = poly.ft3++->coords; break;
-			case PRM_TYPE_GT3:
-				indices = poly.gt3++->coords; break;
-			default: die("Can't happen?");
-		}
-		p1 =  vec3_transform(self->collision_model->vertices[indices[0]], &self->mat);
-		p2 =  vec3_transform(self->collision_model->vertices[indices[1]], &self->mat);
-		p3 =  vec3_transform(self->collision_model->vertices[indices[2]], &self->mat);
+	for (int i = 0; i < other->collision_model->primitives_len; i++) {
+		primitive_t *prm = &other->collision_model->primitives[i];
+
+		error_if(prm->type != PRM_TYPE_TRI, "Can't happen: Expected primitive type %x, got %x", PRM_TYPE_TRI, prm->type);
+
+		p1 = vec3_transform(self->collision_model->vertices[prm->u.tri.v[0].coord], &self->mat);
+		p2 = vec3_transform(self->collision_model->vertices[prm->u.tri.v[1].coord], &self->mat);
+		p3 = vec3_transform(self->collision_model->vertices[prm->u.tri.v[2].coord], &self->mat);
 
 		// Find polyGon line vectors
 		vec3_t p1p2 = vec3_sub(p2, p1);

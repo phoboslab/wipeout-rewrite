@@ -21,22 +21,9 @@ void *mem_mark(void) {
 }
 
 // mem_bump is guaranteed to return a pointer aligned to 8 bytes.
-// It is not guaranteed to return a pointer that immediately follows the
-// previous one it handed out; use mem_bump_unaligned for that. 
 
 void *mem_bump(uint32_t size) {
-	// In addition to aligning the size itself, we must also align 
-	// bump_len since a previous direct call to mem_bump_unaligned may 
-	// have destroyed its alignment.
-	bump_len = round_up_to_word(bump_len);
 	size = round_up_to_word(size);
-	return mem_bump_unaligned(size);
-}
-
-// The only time this ever gets called is for loading primitives and objects.
-// Ideally we would never call it at all, given the risk of bus errors.
-
-void *mem_bump_unaligned(uint32_t size) {
 	error_if(bump_len + temp_len + size >= MEM_HUNK_BYTES, "Failed to allocate %d bytes in hunk mem", size);
 	uint8_t *p = &hunk[bump_len];
 	bump_len += size;
