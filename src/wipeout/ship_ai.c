@@ -70,8 +70,6 @@ vec3_t ship_ai_strat_avoid(ship_t *self, track_face_t *face) {
 	}
 }
 
-
-
 vec3_t ship_ai_strat_avoid_other(ship_t *self, track_face_t *face) {
 	int min_section_num = 100;
 	ship_t *avoid_ship;
@@ -97,8 +95,6 @@ vec3_t ship_ai_strat_avoid_other(ship_t *self, track_face_t *face) {
 	return vec3(0, 0, 0);
 }
 
-
-
 vec3_t ship_ai_strat_zig_zag(ship_t *self, track_face_t *face) {
 	int update_count = (self->update_timer * 30)/50;
 	if (update_count % 2) {
@@ -109,6 +105,208 @@ vec3_t ship_ai_strat_zig_zag(ship_t *self, track_face_t *face) {
 	}
 }
 
+// Accelerate remote ships away at start
+static void ship_ai_case_start(ship_t *self) {
+	self->start_accelerate_timer -= system_tick();
+	self->update_timer = 0;
+	self->update_strat_func = ship_ai_strat_avoid;
+	if ((self->remote_thrust_max + 1200) > self->speed) {
+		self->speed += (self->remote_thrust_mag + 150) * 30 * system_tick();
+	}
+}
+
+// Ship is JUST BEHIND; we must decided if and how many times it 'should have a go back'
+static void ship_ai_case_behind_near(ship_t *self) {
+	int behind_speed = def.circuits[g.circuit].settings[g.race_class].behind_speed;
+
+	if (self->update_timer <= 0) { // Make New Decision
+		self->update_timer = UPDATE_TIME_JUST_BEHIND;
+
+		if (self->fight_back) { // Ship wants you to say "Outside Now!"
+			if (self->weapon_type == WEAPON_TYPE_NONE) {
+				self->update_strat_func = ship_ai_strat_avoid;
+				flags_add(self->flags, SHIP_OVERTAKEN);
+			}
+			else {
+				int chance = rand_int(0, 64);
+
+				if (chance < 48) {
+					self->update_strat_func = ship_ai_strat_block;
+				}
+				else {
+					self->update_strat_func = ship_ai_strat_avoid;
+					flags_rm(self->flags, SHIP_OVERTAKEN);
+
+					if (flags_not(self->flags, SHIP_SHIELDED) && flags_is(self->flags, SHIP_RACING)) {
+						if (chance < 54) {
+							sfx_play(SFX_VOICE_ROCKETS);
+							self->weapon_type = WEAPON_TYPE_ROCKET;
+						}
+						else if (chance < 60) {
+							sfx_play(SFX_VOICE_MISSILE);
+							self->weapon_type = WEAPON_TYPE_MISSILE;
+							self->weapon_target = &g.ships[g.pilot];
+						}
+						else {
+							sfx_play(SFX_VOICE_SHOCKWAVE);
+							self->weapon_type = WEAPON_TYPE_EBOLT;
+							self->weapon_target = &g.ships[g.pilot];
+						}
+						weapons_fire_delayed(self, self->weapon_type);
+					}
+				}
+			}
+		}
+		else { // If ship destined to be tail-ender then slow down
+			self->remote_thrust_max = 2100 ;
+			self->remote_thrust_mag = 25;
+			self->speed = 2100 ;
+			self->update_strat_func = ship_ai_strat_avoid;
+			flags_rm(self->flags, SHIP_OVERTAKEN);
+		}
+	}
+
+	for (int i = 0; i < NUM_PILOTS; i++) { // If another ship is just in front pass fight on
+		if (flags_is(g.ships[i].flags, SHIP_JUST_IN_FRONT)) {
+			self->update_strat_func = ship_ai_strat_avoid;
+			flags_rm(self->flags, SHIP_OVERTAKEN);
+		}
+	}
+
+	self->update_timer -= system_tick();
+
+
+	if (flags_is(self->flags, SHIP_OVERTAKEN)) {
+		if ((self->remote_thrust_max + 700) > self->speed) {
+			self->speed += self->remote_thrust_mag * 2 * 30 * system_tick();
+		}
+	}
+	else {
+		if (((self->remote_thrust_max + behind_speed) > self->speed)) {
+			self->speed += self->remote_thrust_mag * 30 * system_tick();
+		}
+	}
+}
+
+// Ship has been left WELL BEHIND; set it to avoid
+// other ships and update its speed as normal
+static void ship_ai_case_behind_far(ship_t *self) {
+	int behind_speed = def.circuits[g.circuit].settings[g.race_class].behind_speed;
+
+	self->update_timer = 0;
+	self->update_strat_func = ship_ai_strat_avoid;
+
+	// If ship has been well passed, increase its speed to allow
+	// it to make a challenge when the player fouls up
+
+	if (((self->remote_thrust_max + behind_speed) > self->speed)) {
+		self->speed += self->remote_thrust_mag * 30 * system_tick();
+	}
+}
+
+// Ship is JUST AHEAD
+static void ship_ai_case_ahead_near(ship_t *self) {
+	int behind_speed = def.circuits[g.circuit].settings[g.race_class].behind_speed;
+
+	flags_add(self->flags, SHIP_JUST_IN_FRONT);
+
+	if (self->update_timer <= 0) { // Make New Decision
+		int chance = rand_int(0, 64); // 12
+
+		self->update_timer = UPDATE_TIME_JUST_FRONT;
+		if (self->fight_back) { // Ship wants to make life difficult
+			if ((chance < 40) || (self->weapon_type == WEAPON_TYPE_NONE)) { // Ship will try to block you
+				self->update_strat_func = ship_ai_strat_block;
+			}
+			else if ((chance >= 40) && (chance < 52)) {	// Ship will attempt to drop mines in your path
+				self->update_strat_func = ship_ai_strat_block;
+				if (flags_not(self->flags, SHIP_SHIELDED) && flags_is(self->flags, SHIP_RACING)) {
+					sfx_play(SFX_VOICE_MINES);
+					self->weapon_type = WEAPON_TYPE_MINE;
+					weapons_fire_delayed(self, self->weapon_type);
+				}
+			}
+			else if ((chance >= 52) && (chance < 64)) {	// Ship will raise its shield
+				self->update_strat_func = ship_ai_strat_block;
+				if (flags_not(self->flags, SHIP_SHIELDED)) {
+					self->weapon_type = WEAPON_TYPE_SHIELD;
+					weapons_fire(self, self->weapon_type);
+				}
+			}
+		}
+		else { // Let the first ships be easy to pass
+			self->update_strat_func = ship_ai_strat_avoid;
+		}
+	}
+
+	self->update_timer -= system_tick();
+
+	if (flags_is(self->flags, SHIP_OVERTAKEN)) {
+		// If ship has just overtaken, slow it down to a reasonable speed
+		if ((self->remote_thrust_max + behind_speed) > self->speed) {
+			self->speed += self->remote_thrust_mag * 30 * system_tick();
+		}
+	}
+	else {
+		// Increase the speed of any craft just in front slightly
+		if (((self->remote_thrust_max + (behind_speed >> 1)) > self->speed)) {
+			self->speed += self->remote_thrust_mag * 30 * system_tick();
+		}
+	}
+}
+
+// Ship is WELL AHEAD; we must slow the opponent to
+// give the weaker player a chance to catch up
+static void ship_ai_case_ahead_far(ship_t *self) {
+	self->speed += self->remote_thrust_mag * 0.5 * 30 * system_tick();
+	if (self->speed > self->remote_thrust_max * 0.5) {
+		self->speed = self->remote_thrust_max * 0.5;
+	}
+
+	self->update_timer = 0;
+	self->update_strat_func = ship_ai_strat_hold_center;
+}
+
+// Ship is TOO FAR AHEAD
+static void ship_ai_case_ahead_excessively(ship_t *self) {
+	self->update_timer = 0;
+	self->update_strat_func = ship_ai_strat_avoid;
+
+	if ((self->remote_thrust_max > self->speed)) {
+		self->speed += self->remote_thrust_mag * 30 * system_tick();
+	}
+}
+
+// Ship is IN SIGHT
+static void ship_ai_case_in_sight(ship_t *self) {
+	if (self->update_timer <= 0) { // Make New Decision
+		vec3_t (* const options[])(ship_t *, track_face_t *) = {
+			ship_ai_strat_hold_center,
+			ship_ai_strat_hold_left,
+			ship_ai_strat_hold_right,
+			ship_ai_strat_block,
+			ship_ai_strat_zig_zag
+		};
+		self->update_strat_func = options[rand_int(0, len(options))];
+
+		self->update_timer = UPDATE_TIME_IN_SIGHT;
+	}
+
+	self->update_timer -= system_tick();
+
+	if ((self->remote_thrust_max > self->speed)) {
+		self->speed += self->remote_thrust_mag * 30 * system_tick();
+	}
+}
+
+// Ship is JUST OUT OF SIGHT
+static void ship_ai_case_just_out_of_sight(ship_t *self) {
+	self->update_timer = 0;
+	self->update_strat_func = ship_ai_strat_hold_center;
+	if ((self->remote_thrust_max > self->speed)) {
+		self->speed += self->remote_thrust_mag * 30 * system_tick();
+	}
+}
 
 void ship_ai_update_race(ship_t *self) {
 	vec3_t offset_vector = vec3(0, 0, 0);
@@ -121,9 +319,6 @@ void ship_ai_update_race(ship_t *self) {
 	else {
 		flags_rm(self->flags, SHIP_ELECTROED);
 	}
-
-	int behind_speed = def.circuits[g.circuit].settings[g.race_class].behind_speed;
-
 
 	if (flags_not(self->flags, SHIP_FLYING)) {
 		// Find First track base section
@@ -140,221 +335,30 @@ void ship_ai_update_race(ship_t *self) {
 			}
 		}
 		else {
-			// Make global DPA decisions , these will effect the craft in
-			// relation to your race position
-
-			// Accelerate remote ships away at start, start_accelerate_count set in
-			// InitShipData and is an exponential progression
-
+			// Rubberband AI
 			if (self->start_accelerate_timer > 0) {
-				self->start_accelerate_timer -= system_tick();
-				self->update_timer = 0;
-				self->update_strat_func = ship_ai_strat_avoid;
-				if ((self->remote_thrust_max + 1200) > self->speed) {
-					self->speed += (self->remote_thrust_mag + 150) * 30 * system_tick();
-				}
+				ship_ai_case_start(self);
 			}
-
-
-			// Ship has been left WELL BEHIND; set it to avoid
-			// other ships and update its speed as normal
-
-			else if (section_diff < -10) { // Ship behind, AVOID
-				self->update_timer = 0;
-				self->update_strat_func = ship_ai_strat_avoid;
-
-				// If ship has been well passed, increase its speed to allow
-				// it to make a challenge when the player fouls up
-
-				if (((self->remote_thrust_max + behind_speed) > self->speed)) {
-					self->speed += self->remote_thrust_mag * 30 * system_tick();
-				}
+			else if (section_diff < -10) {
+				ship_ai_case_behind_far(self);
 			}
-
-
-			// Ship is JUST AHEAD
-
-			else if ((section_diff <= 4) && (section_diff > 0)) { // Ship close by, beware does not account for lapped opponents yet
-				flags_add(self->flags, SHIP_JUST_IN_FRONT);
-
-				if (self->update_timer <= 0) { // Make New Decision
-					int chance = rand_int(0, 64); // 12
-
-					self->update_timer = UPDATE_TIME_JUST_FRONT;
-					if (self->fight_back) { // Ship wants to make life difficult
-						if ((chance < 40) || (self->weapon_type == WEAPON_TYPE_NONE)) { // Ship will try to block you
-							self->update_strat_func = ship_ai_strat_block;
-						}
-						else if ((chance >= 40) && (chance < 52)) {	// Ship will attempt to drop mines in your path
-							self->update_strat_func = ship_ai_strat_block;
-							if (flags_not(self->flags, SHIP_SHIELDED) && flags_is(self->flags, SHIP_RACING)) {
-								sfx_play(SFX_VOICE_MINES);
-								self->weapon_type = WEAPON_TYPE_MINE;
-								weapons_fire_delayed(self, self->weapon_type);
-							}
-						}
-						else if ((chance >= 52) && (chance < 64)) {	// Ship will raise its shield
-							self->update_strat_func = ship_ai_strat_block;
-							if (flags_not(self->flags, SHIP_SHIELDED)) {
-								self->weapon_type = WEAPON_TYPE_SHIELD;
-								weapons_fire(self, self->weapon_type);
-							}
-						}
-					}
-					else { // Let the first ships be easy to pass
-						self->update_strat_func = ship_ai_strat_avoid;
-					}
-				}
-
-				self->update_timer -= system_tick();
-
-				if (flags_is(self->flags, SHIP_OVERTAKEN)) {
-					// If ship has just overtaken, slow it down to a reasonable speed
-					if ((self->remote_thrust_max + behind_speed) > self->speed) {
-						self->speed += self->remote_thrust_mag * 30 * system_tick();
-					}
-				}
-				else {
-					// Increase the speed of any craft just in front slightly
-					if (((self->remote_thrust_max + (behind_speed >> 1)) > self->speed)) {
-						self->speed += self->remote_thrust_mag * 30 * system_tick();
-					}
-				}
-
+			else if ((section_diff <= 4) && (section_diff > 0)) {
+				ship_ai_case_ahead_near(self);
 			}
-
-			
-			// Ship is JUST BEHIND; we must decided if and how many times it 'should have a go back'
-
-			else if ((section_diff >= -10) && (section_diff <= 0)) { // Ship just behind, MAKE DECISION
-				if (self->update_timer <= 0) { // Make New Decision
-					self->update_timer = UPDATE_TIME_JUST_BEHIND;
-
-					if (self->fight_back) { // Ship wants you to say "Outside Now!"
-						if (self->weapon_type == WEAPON_TYPE_NONE) {
-							self->update_strat_func = ship_ai_strat_avoid;
-							flags_add(self->flags, SHIP_OVERTAKEN);
-						}
-						else {
-							int chance = rand_int(0, 64);
-
-							if (chance < 48) {
-								self->update_strat_func = ship_ai_strat_block;
-							}
-							else {
-								self->update_strat_func = ship_ai_strat_avoid;
-								flags_rm(self->flags, SHIP_OVERTAKEN);
-								
-								if (flags_not(self->flags, SHIP_SHIELDED) && flags_is(self->flags, SHIP_RACING)) {
-									if (chance < 54) {
-										sfx_play(SFX_VOICE_ROCKETS);
-										self->weapon_type = WEAPON_TYPE_ROCKET;
-									}
-									else if (chance < 60) {
-										sfx_play(SFX_VOICE_MISSILE);
-										self->weapon_type = WEAPON_TYPE_MISSILE;
-										self->weapon_target = &g.ships[g.pilot];
-									}
-									else {
-										sfx_play(SFX_VOICE_SHOCKWAVE);
-										self->weapon_type = WEAPON_TYPE_EBOLT;
-										self->weapon_target = &g.ships[g.pilot];
-									}
-									weapons_fire_delayed(self, self->weapon_type);
-								}
-							}
-						}
-					}
-					else { // If ship destined to be tail-ender then slow down
-						self->remote_thrust_max = 2100 ;
-						self->remote_thrust_mag = 25;
-						self->speed = 2100 ;
-						self->update_strat_func = ship_ai_strat_avoid;
-						flags_rm(self->flags, SHIP_OVERTAKEN);
-					}
-				}
-
-				for (int i = 0; i < NUM_PILOTS; i++) { // If another ship is just in front pass fight on
-					if (flags_is(g.ships[i].flags, SHIP_JUST_IN_FRONT)) {
-						self->update_strat_func = ship_ai_strat_avoid;
-						flags_rm(self->flags, SHIP_OVERTAKEN);
-					}
-				}
-
-				self->update_timer -= system_tick();
-
-
-				if (flags_is(self->flags, SHIP_OVERTAKEN)) {
-					if ((self->remote_thrust_max + 700) > self->speed) {
-						self->speed += self->remote_thrust_mag * 2 * 30 * system_tick();
-					}
-				}
-				else {
-					if (((self->remote_thrust_max + behind_speed) > self->speed)) {
-						self->speed += self->remote_thrust_mag * 30 * system_tick();
-					}
-				}
+			else if ((section_diff >= -10) && (section_diff <= 0)) {
+				ship_ai_case_behind_near(self);
 			}
-
-
-			// Ship is WELL AHEAD; we must slow the opponent to
-			// give the weaker player a chance to catch up
-			
 			else if (section_diff > (NUM_PILOTS - self->position_rank) * 15 && section_diff < 150) {
-				self->speed += self->remote_thrust_mag * 0.5 * 30 * system_tick();
-				if (self->speed > self->remote_thrust_max * 0.5) {
-					self->speed = self->remote_thrust_max * 0.5;
-				}
-
-				self->update_timer = 0;
-				self->update_strat_func = ship_ai_strat_hold_center;
+				ship_ai_case_ahead_far(self);
 			}
-
-
-			// Ship is TOO FAR AHEAD
-
-			else if (section_diff >= 150) { // Ship too far ahead, let it continue
-				self->update_timer = 0;
-				self->update_strat_func = ship_ai_strat_avoid;
-
-				if ((self->remote_thrust_max > self->speed)) {
-					self->speed += self->remote_thrust_mag * 30 * system_tick();
-				}
+			else if (section_diff >= 150) {
+				ship_ai_case_ahead_excessively(self);
 			}
-
-
-			// Ship is IN SIGHT
-
-			else if ((section_diff <= 10) && (section_diff > 4)) { // Ship close by, beware does not account for lapped opponents yet
-				if (self->update_timer <= 0) { // Make New Decision
-					int chance = rand_int(0, 5);
-
-					self->update_timer = UPDATE_TIME_IN_SIGHT;
-					switch (chance) {
-						case 0: self->update_strat_func = ship_ai_strat_hold_center; break;
-						case 1: self->update_strat_func = ship_ai_strat_hold_left; break;
-						case 2: self->update_strat_func = ship_ai_strat_hold_right; break;
-						case 3:	self->update_strat_func = ship_ai_strat_block; break;
-						case 4:	self->update_strat_func = ship_ai_strat_zig_zag; break;
-					}
-				}
-
-				self->update_timer -= system_tick();
-
-				if ((self->remote_thrust_max > self->speed)) {
-					self->speed += self->remote_thrust_mag * 30 * system_tick();
-				}
-			} // End of DPA control options
-
-
-			// Ship is JUST OUT OF SIGHT
-
+			else if ((section_diff <= 10) && (section_diff > 4)) {
+				ship_ai_case_in_sight(self);
+			}
 			else {
-				self->update_timer = 0;
-				self->update_strat_func = ship_ai_strat_hold_center;
-				if ((self->remote_thrust_max > self->speed)) {
-					self->speed += self->remote_thrust_mag * 30 * system_tick();
-				}
+				ship_ai_case_just_out_of_sight(self);
 			}
 		}
 
@@ -472,11 +476,8 @@ void ship_ai_update_race(ship_t *self) {
 
 		self->speed -= fabsf(self->speed * self->angular_velocity.y) * (4 * M_PI * 2) * system_tick();
 		vec3_t track_target = vec3_sub(next->center, section->center);
-		float gap_length = vec3_len(track_target);
 
-		track_target.x = (track_target.x * self->speed) / gap_length;
-		track_target.z = (track_target.z * self->speed) / gap_length;
-
+		track_target = vec3_mulf(vec3_normalize(track_target), self->speed);
 		track_target.y = 500;
 
 		vec3_t best_path = vec3_project_to_ray(self->position, next->center, self->section->center);
@@ -511,7 +512,7 @@ void ship_ai_update_race(ship_t *self) {
 			self->position = vec3_add(self->position, vec3_rand(20));
 
 			if (rand_int(0, 10) == 0) {
-				self->speed -= self->speed * 0.5;
+				self->speed *= 0.5;
 			}
 		}
 	}
