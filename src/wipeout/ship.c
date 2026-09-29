@@ -416,7 +416,7 @@ void ship_update(ship_t *self) {
 			}
 		}
 		else {
-			self->weapon_type = 1;
+			self->weapon_type = WEAPON_TYPE_MINE;
 		}
 	}
 
