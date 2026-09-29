@@ -1,0 +1,104 @@
+name: CMake on multiple platforms
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+
+      # The build matric ensures that the project can build with different compiler/renderer options on multiple systems
+      # todo: once the project builds without warnings it would be good to treat warnings as errors
+      matrix:
+        os: [ubuntu-latest]
+        renderer: [GL,GLES2,SOFTWARE]
+        c_compiler: [gcc]
+        cpp_compiler: [g++]
+        include:
+## Will either need vcpkg to work with clang-cl or for project to build using cl (see #117)          
+##          - os: windows-latest
+##            c_compiler: clang-cl # Cannot use cl
+##            cpp_compiler: clang-cl # Cannot use cl
+##            renderer: GL
+##          - os: windows-latest
+##            c_compiler: clang-cl # Cannot use cl
+##            cpp_compiler: clang-cl # Cannot use cl
+##            renderer: GLES2
+          # Ubuntu builds with clang
+          - os: ubuntu-latest
+            c_compiler: clang
+            cpp_compiler: clang++
+            renderer: GL
+          - os: ubuntu-latest
+            c_compiler: clang
+            cpp_compiler: clang++
+            renderer: GLES2
+          # OSX builds with gcc
+          - os: macos-latest
+            c_compiler: gcc
+            cpp_compiler: g++
+            renderer: GL
+          - os: macos-latest
+            c_compiler: gcc
+            cpp_compiler: g++
+            renderer: GLES2
+          # OSX builds with clang
+          - os: macos-latest
+            c_compiler: clang
+            cpp_compiler: clang++
+            renderer: GL
+          - os: macos-latest
+            c_compiler: clang
+            cpp_compiler: clang++
+            renderer: GLES2
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Show CMake Version
+      run: cmake --version
+
+    - name: Apt Install deps (Ubuntu)
+      if: startsWith(matrix.os, 'ubuntu')
+      run: |
+        sudo apt update
+        sudo apt install libsdl2-dev libglew-dev
+
+    - name: Vcpkg Install deps (Windows)
+      # there is a vcpkg.json in project root
+      if: startsWith(matrix.os, 'windows')
+      run: vcpkg install
+
+    - name: Brew Install deps (MacOS)
+      if: startsWith(matrix.os, 'macos')
+      run: |
+        brew update
+        brew install sdl2 glew
+
+    - name: Show SDL2 config (unix only)
+      if: ${{ ! startsWith(matrix.os, 'windows') }}
+      run: |
+        sdl2-config --cflags
+        sdl2-config --libs
+
+    - name: Configure CMake for ${{ matrix.renderer }} renderer (${{ matrix.c_compiler }})
+      run: >
+        cmake -S ${{ github.workspace }}
+        -B ${{ github.workspace }}/build
+        -DPLATFORM=SDL2
+        -DRENDERER=${{ matrix.renderer }}
+        -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
+        -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
+        -DCMAKE_BUILD_TYPE=Release
+        ${{ startsWith(matrix.os, 'macos') && '-DCMAKE_PREFIX_PATH="$(brew --prefix sdl2)"' || '' }}
+        ${{ startsWith(matrix.os, 'windows') && '-DCMAKE_PREFIX_PATH="C:/vcpkg/packages/glew_x64-windows;C:/vcpkg/packages/sdl2_x64-windows"' || '' }}
+
+    - name: CMake Build
+      # Build your program with the given configuration. Note that "--config Release" may be needed on Windows.
+      run: cmake --build ${{ github.workspace }}/build
