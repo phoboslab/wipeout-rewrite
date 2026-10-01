@@ -478,7 +478,7 @@ void ship_player_update_rescue(ship_t *self) {
 		self->update_func = ship_player_update_race;
 		self->update_timer = 0;
 		flags_rm(self->flags, SHIP_IN_RESCUE);
-		flags_rm(self->flags, SHIP_VIEW_REMOTE);
+		flags_rm(self->flags, SHIP_VIEW_AI);
 
 		if (flags_is(self->flags, SHIP_VIEW_INTERNAL)) {
 			g.camera.update_func = camera_update_race_internal;

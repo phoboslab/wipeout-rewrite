@@ -177,7 +177,7 @@ void droid_update_idle(droid_t *droid, ship_t *ship) {
 		droid->update_timer = DROID_UPDATE_TIME_INITIAL;
 
 		g.camera.update_func = camera_update_rescue;
-		flags_add(ship->flags, SHIP_VIEW_REMOTE);
+		flags_add(ship->flags, SHIP_VIEW_AI);
 		if (flags_is(ship->section->flags, SECTION_JUMP)) {
 			g.camera.section = ship->section->next;
 		}

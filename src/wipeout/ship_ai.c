@@ -19,7 +19,7 @@ void ship_ai_update_intro(ship_t *self) {
 	self->temp_target = self->position;
 	self->update_func = ship_ai_update_intro_await_go;
 
-	self->sfx_engine_thrust = sfx_reserve_loop(SFX_ENGINE_REMOTE);
+	self->sfx_engine_thrust = sfx_reserve_loop(SFX_ENGINE_AI);
 	sfx_set_position(self->sfx_engine_thrust, self->position, self->velocity, 0.1);
 }
 
@@ -105,13 +105,13 @@ vec3_t ship_ai_strat_zig_zag(ship_t *self, track_face_t *face) {
 	}
 }
 
-// Accelerate remote ships away at start
+// Accelerate ai ships away at start
 static void ship_ai_case_start(ship_t *self) {
 	self->start_accelerate_timer -= system_tick();
 	self->update_timer = 0;
 	self->update_strat_func = ship_ai_strat_avoid;
-	if ((self->remote_thrust_max + 1200) > self->speed) {
-		self->speed += (self->remote_thrust_mag + 150) * 30 * system_tick();
+	if ((self->ai_thrust_max + 1200) > self->speed) {
+		self->speed += (self->ai_thrust_mag + 150) * 30 * system_tick();
 	}
 }
 
@@ -158,8 +158,8 @@ static void ship_ai_case_behind_near(ship_t *self) {
 			}
 		}
 		else { // If ship destined to be tail-ender then slow down
-			self->remote_thrust_max = 2100 ;
-			self->remote_thrust_mag = 25;
+			self->ai_thrust_max = 2100 ;
+			self->ai_thrust_mag = 25;
 			self->speed = 2100 ;
 			self->update_strat_func = ship_ai_strat_avoid;
 			flags_rm(self->flags, SHIP_OVERTAKEN);
@@ -177,13 +177,13 @@ static void ship_ai_case_behind_near(ship_t *self) {
 
 
 	if (flags_is(self->flags, SHIP_OVERTAKEN)) {
-		if ((self->remote_thrust_max + 700) > self->speed) {
-			self->speed += self->remote_thrust_mag * 2 * 30 * system_tick();
+		if ((self->ai_thrust_max + 700) > self->speed) {
+			self->speed += self->ai_thrust_mag * 2 * 30 * system_tick();
 		}
 	}
 	else {
-		if (((self->remote_thrust_max + behind_speed) > self->speed)) {
-			self->speed += self->remote_thrust_mag * 30 * system_tick();
+		if (((self->ai_thrust_max + behind_speed) > self->speed)) {
+			self->speed += self->ai_thrust_mag * 30 * system_tick();
 		}
 	}
 }
@@ -199,8 +199,8 @@ static void ship_ai_case_behind_far(ship_t *self) {
 	// If ship has been well passed, increase its speed to allow
 	// it to make a challenge when the player fouls up
 
-	if (((self->remote_thrust_max + behind_speed) > self->speed)) {
-		self->speed += self->remote_thrust_mag * 30 * system_tick();
+	if (((self->ai_thrust_max + behind_speed) > self->speed)) {
+		self->speed += self->ai_thrust_mag * 30 * system_tick();
 	}
 }
 
@@ -243,14 +243,14 @@ static void ship_ai_case_ahead_near(ship_t *self) {
 
 	if (flags_is(self->flags, SHIP_OVERTAKEN)) {
 		// If ship has just overtaken, slow it down to a reasonable speed
-		if ((self->remote_thrust_max + behind_speed) > self->speed) {
-			self->speed += self->remote_thrust_mag * 30 * system_tick();
+		if ((self->ai_thrust_max + behind_speed) > self->speed) {
+			self->speed += self->ai_thrust_mag * 30 * system_tick();
 		}
 	}
 	else {
 		// Increase the speed of any craft just in front slightly
-		if (((self->remote_thrust_max + (behind_speed >> 1)) > self->speed)) {
-			self->speed += self->remote_thrust_mag * 30 * system_tick();
+		if (((self->ai_thrust_max + (behind_speed >> 1)) > self->speed)) {
+			self->speed += self->ai_thrust_mag * 30 * system_tick();
 		}
 	}
 }
@@ -258,9 +258,9 @@ static void ship_ai_case_ahead_near(ship_t *self) {
 // Ship is WELL AHEAD; we must slow the opponent to
 // give the weaker player a chance to catch up
 static void ship_ai_case_ahead_far(ship_t *self) {
-	self->speed += self->remote_thrust_mag * 0.5 * 30 * system_tick();
-	if (self->speed > self->remote_thrust_max * 0.5) {
-		self->speed = self->remote_thrust_max * 0.5;
+	self->speed += self->ai_thrust_mag * 0.5 * 30 * system_tick();
+	if (self->speed > self->ai_thrust_max * 0.5) {
+		self->speed = self->ai_thrust_max * 0.5;
 	}
 
 	self->update_timer = 0;
@@ -272,8 +272,8 @@ static void ship_ai_case_ahead_excessively(ship_t *self) {
 	self->update_timer = 0;
 	self->update_strat_func = ship_ai_strat_avoid;
 
-	if ((self->remote_thrust_max > self->speed)) {
-		self->speed += self->remote_thrust_mag * 30 * system_tick();
+	if ((self->ai_thrust_max > self->speed)) {
+		self->speed += self->ai_thrust_mag * 30 * system_tick();
 	}
 }
 
@@ -294,8 +294,8 @@ static void ship_ai_case_in_sight(ship_t *self) {
 
 	self->update_timer -= system_tick();
 
-	if ((self->remote_thrust_max > self->speed)) {
-		self->speed += self->remote_thrust_mag * 30 * system_tick();
+	if ((self->ai_thrust_max > self->speed)) {
+		self->speed += self->ai_thrust_mag * 30 * system_tick();
 	}
 }
 
@@ -303,8 +303,8 @@ static void ship_ai_case_in_sight(ship_t *self) {
 static void ship_ai_case_just_out_of_sight(ship_t *self) {
 	self->update_timer = 0;
 	self->update_strat_func = ship_ai_strat_hold_center;
-	if ((self->remote_thrust_max > self->speed)) {
-		self->speed += self->remote_thrust_mag * 30 * system_tick();
+	if ((self->ai_thrust_max > self->speed)) {
+		self->speed += self->ai_thrust_mag * 30 * system_tick();
 	}
 }
 
@@ -330,8 +330,8 @@ void ship_ai_update_race(ship_t *self) {
 
 		if (self == player) {
 			self->update_strat_func = ship_ai_strat_avoid_other;
-			if (self->remote_thrust_max > self->speed) {
-				self->speed += self->remote_thrust_mag * 30 * system_tick();
+			if (self->ai_thrust_max > self->speed) {
+				self->speed += self->ai_thrust_mag * 30 * system_tick();
 			}
 		}
 		else {
@@ -415,7 +415,7 @@ void ship_ai_update_race(ship_t *self) {
 		self->speed -= fabsf(self->speed * self->angular_velocity.y) * 4 / (M_PI * 2) * system_tick(); // >> 14
 		self->speed -= fabsf(self->speed * self->angular_velocity.x) * 4 / (M_PI * 2) * system_tick(); // >> 14
 
-		// If remote has gone over boost
+		// If ship has gone over boost
 		if (flags_is(face->flags, FACE_BOOST) && (self->update_strat_func == ship_ai_strat_hold_left || self->update_strat_func == ship_ai_strat_hold_center)) {
 			self->speed += 200 * 30 * system_tick();
 		}
@@ -470,8 +470,8 @@ void ship_ai_update_race(ship_t *self) {
 		self->update_strat_func = ship_ai_strat_hold_center;
 		offset_vector = (self->update_strat_func)(self, NULL);
 
-		if (self->remote_thrust_max > self->speed) {
-			self->speed += self->remote_thrust_mag ;
+		if (self->ai_thrust_max > self->speed) {
+			self->speed += self->ai_thrust_mag ;
 		}
 
 		self->speed -= fabsf(self->speed * self->angular_velocity.y) * (4 * M_PI * 2) * system_tick();

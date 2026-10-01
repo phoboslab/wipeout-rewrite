@@ -6,7 +6,7 @@
 #include "sfx.h"
 
 #define SHIP_IN_TOW			 	(1<< 0)
-#define SHIP_VIEW_REMOTE	 	(1<< 1)
+#define SHIP_VIEW_AI			(1<< 1)
 #define SHIP_VIEW_INTERNAL		(1<< 2)
 #define SHIP_DIRECTION_FORWARD	(1<< 3)
 #define SHIP_FLYING				(1<< 4)
@@ -92,10 +92,10 @@ typedef struct ship_t {
 	float resistance;
 	float skid;
 
-	float remote_thrust_mag;
-	float remote_thrust_max;
+	float ai_thrust_mag;
+	float ai_thrust_max;
 
-	// Remote Ship Attributes
+	// AI Ship Attributes
 	int16_t fight_back;
 	float start_accelerate_timer;
 
