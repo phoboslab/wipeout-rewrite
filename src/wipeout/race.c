@@ -262,8 +262,8 @@ void race_next(void) {
 
 void race_release_control(void) {
 	flags_rm(g.ships[g.pilot].flags, SHIP_RACING);
-	g.ships[g.pilot].remote_thrust_max = 3160;
-	g.ships[g.pilot].remote_thrust_mag = 32;
+	g.ships[g.pilot].ai_thrust_max = 3160;
+	g.ships[g.pilot].ai_thrust_mag = 32;
 	g.ships[g.pilot].speed = 3160;
 	g.camera.update_func = camera_update_attract_random;
 }

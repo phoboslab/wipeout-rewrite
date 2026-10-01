@@ -228,14 +228,14 @@ void ship_init(ship_t *self, section_t *section, int pilot, int inv_start_rank) 
 
 	if (pilot == g.pilot) {
 		self->update_func = ship_player_update_intro;
-		self->remote_thrust_max = 2900;
-		self->remote_thrust_mag = 46;
+		self->ai_thrust_max = 2900;
+		self->ai_thrust_mag = 46;
 		self->fight_back = 0;
 	}
 	else {
 		self->update_func = ship_ai_update_intro;
-		self->remote_thrust_max = def.ai_settings[g.race_class][inv_start_rank-1].thrust_max;
-		self->remote_thrust_mag = def.ai_settings[g.race_class][inv_start_rank-1].thrust_magnitude;
+		self->ai_thrust_max = def.ai_settings[g.race_class][inv_start_rank-1].thrust_max;
+		self->ai_thrust_mag = def.ai_settings[g.race_class][inv_start_rank-1].thrust_magnitude;
 		self->fight_back = def.ai_settings[g.race_class][inv_start_rank-1].fight_back;
 	}
 
@@ -436,7 +436,7 @@ void ship_update(ship_t *self) {
 		exhaust_len += self->speed * 0.00390625;
 	}
 	else {
-		// for remote ships the z exhaust_len is a constant
+		// for ai ships the z exhaust_len is a constant
 		exhaust_len = 150;
 	}
 
