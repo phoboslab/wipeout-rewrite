@@ -53,7 +53,7 @@ void particles_draw(void) {
 	render_set_blend_mode(RENDER_BLEND_NORMAL);
 }
 
-void particles_spawn(vec3_t position, uint16_t type, vec3_t velocity, int size) {
+void particles_spawn(vec3_t position, particle_type_t type, vec3_t velocity, int size) {
 	if (particles_active == PARTICLES_MAX) {
 		return;
 	}

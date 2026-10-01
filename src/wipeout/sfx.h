@@ -38,10 +38,10 @@ typedef enum {
 
 typedef enum {
 	SFX_NONE       = 0,
-	SFX_PLAY       = (1<<0),
-	SFX_RESERVE    = (1<<1),
-	SFX_LOOP       = (1<<2),
-	SFX_LOOP_PAUSE = (1<<3),
+	SFX_PLAY       = 1<<0,
+	SFX_RESERVE    = 1<<1,
+	SFX_LOOP       = 1<<2,
+	SFX_LOOP_PAUSE = 1<<3,
 } sfx_flags_t;
 
 typedef struct {

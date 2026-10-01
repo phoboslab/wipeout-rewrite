@@ -19,9 +19,9 @@ typedef struct weapon_t {
 	Object *model;
 	bool active;
 
-	int16_t trail_particle;
-	int16_t track_hit_particle;
-	int16_t ship_hit_particle;
+	particle_type_t trail_particle;
+	particle_type_t track_hit_particle;
+	particle_type_t ship_hit_particle;
 	float trail_spawn_timer;
 
 	int16_t type;

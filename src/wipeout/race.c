@@ -17,8 +17,6 @@
 #include "menu.h"
 #include "ingame_menus.h"
 
-#define ATTRACT_DURATION 60.0
-
 static bool is_paused = false;
 static bool menu_is_scroll_text = false;
 static bool has_show_credits = false;

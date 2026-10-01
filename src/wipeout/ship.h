@@ -5,25 +5,26 @@
 #include "track.h"
 #include "sfx.h"
 
-#define SHIP_IN_TOW			 	(1<< 0)
-#define SHIP_VIEW_REMOTE	 	(1<< 1)
-#define SHIP_VIEW_INTERNAL		(1<< 2)
-#define SHIP_DIRECTION_FORWARD	(1<< 3)
-#define SHIP_FLYING				(1<< 4)
-#define SHIP_LEFT_SIDE			(1<< 5)
-#define SHIP_RACING				(1<< 6)
-#define SHIP_COLL				(1<< 7)
-#define SHIP_ON_JUNCTION		(1<< 8)
-#define SHIP_VISIBLE			(1<< 9)
-#define SHIP_IN_RESCUE 			(1<<10)
-#define SHIP_OVERTAKEN 			(1<<11)
-#define SHIP_JUST_IN_FRONT	    (1<<12)
-#define SHIP_JUNCTION_LEFT		(1<<13)
-#define SHIP_SHIELDED			(1<<14)
-#define SHIP_ELECTROED			(1<<15)
-#define SHIP_REVCONNED			(1<<16)
-#define SHIP_SPECIALED			(1<<17)
-
+enum {
+	SHIP_IN_TOW	=		 	 1<< 0,
+	SHIP_VIEW_REMOTE =	 	 1<< 1,
+	SHIP_VIEW_INTERNAL =	 1<< 2,
+	SHIP_DIRECTION_FORWARD = 1<< 3,
+	SHIP_FLYING =			 1<< 4,
+	SHIP_LEFT_SIDE =		 1<< 5,
+	SHIP_RACING	=			 1<< 6,
+	SHIP_COLL =				 1<< 7,
+	SHIP_ON_JUNCTION =		 1<< 8,
+	SHIP_VISIBLE =			 1<< 9,
+	SHIP_IN_RESCUE =		 1<<10,
+	SHIP_OVERTAKEN =		 1<<11,
+	SHIP_JUST_IN_FRONT =     1<<12,
+	SHIP_JUNCTION_LEFT =	 1<<13,
+	SHIP_SHIELDED =			 1<<14,
+	SHIP_ELECTROED =		 1<<15,
+	SHIP_REVCONNED =		 1<<16,
+	SHIP_SPECIALED =		 1<<17,
+};
 
 // Timings
 
