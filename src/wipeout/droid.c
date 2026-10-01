@@ -36,7 +36,7 @@ void droid_init(droid_t *droid, ship_t *ship) {
 	droid->acceleration = vec3(0, 0, 0);
 	droid->angle = vec3(0, 0, 0);
 	droid->angular_velocity = vec3(0, 0, 0);
-	droid->update_timer = DROID_UPDATE_TIME_INITIAL;
+	droid->intro_timer = DROID_UPDATE_TIME_INITIAL;
 	droid->mat = mat4_identity();
 
 	droid->cycle_timer = 0;
@@ -49,22 +49,26 @@ void droid_init(droid_t *droid, ship_t *ship) {
 void droid_draw(droid_t *droid) {
 	droid->cycle_timer += system_tick() * M_PI * 2;
 
-	int rf = sinf(droid->cycle_timer) * 127 + 128;
-	int gf = sinf(droid->cycle_timer + 0.2) * 127 + 128;
+	int rf = sinf(droid->cycle_timer            ) * 127 + 128;
+	int gf = sinf(droid->cycle_timer + 0.2      ) * 127 + 128;
 	int bf = sinf(droid->cycle_timer * 0.5 + 0.1) * 127 + 128;
+
+	rgba_t headlight_color = rgba(40,gf,40,0xFF);
+	rgba_t taillight_color = rgba(rf, 40, 40, 0xFF);
+	rgba_t belly_color = rgba(bf >> 1, bf, bf >> 1, 0xFF);
 
 	for (int i = 0; i < 11; i++) {
 		primitive_t *prm = &droid_model->primitives[i];
 		rgba_t color;
 
 		if (i < 2) {
-			color = rgba(40,gf,40,0xFF);
+			color = headlight_color;
 		}
 		else if (i < 6) {
-			color = rgba(bf >> 1, bf, bf >> 1, 0xFF);
+			color = belly_color;
 		}
 		else {
-			color = rgba(rf, 40, 40, 0xFF);
+			color = taillight_color;
 		}
 
 		switch (prm->type) {
@@ -103,78 +107,57 @@ void droid_update(droid_t *droid, ship_t *ship) {
 }
 
 void droid_update_intro(droid_t *droid, ship_t *ship) {
-	droid->update_timer -= system_tick();
+	droid->intro_timer -= system_tick();
 
-	if (droid->update_timer < DROID_UPDATE_TIME_INTRO_3) {
+	if (droid->intro_timer < DROID_UPDATE_TIME_INTRO_3) {
 		droid->acceleration = vec3_mulf(droid->mat.basis.forward.vec3, 0.25 * 4096.0);
 		droid->acceleration.y = 0;
 		droid->angular_velocity.y = 0;
 	}
 
-	else if (droid->update_timer < DROID_UPDATE_TIME_INTRO_2) {
+	else if (droid->intro_timer < DROID_UPDATE_TIME_INTRO_2) {
 		droid->acceleration = vec3_mulf(droid->mat.basis.forward.vec3, 0.125 * 4096.0);
 		droid->acceleration.y = -140;
 		droid->angular_velocity.y = (-8.0 / 4096.0) * M_PI * 2 * 30;
 	}
 
-	else if (droid->update_timer < DROID_UPDATE_TIME_INTRO_1) {
+	else if (droid->intro_timer < DROID_UPDATE_TIME_INTRO_1) {
 		droid->acceleration.y -= 90 * system_tick();
 		droid->angular_velocity.y = (8.0 / 4096.0) * M_PI * 2 * 30;
 	}
 
-	if (droid->update_timer <= 0) {
-		// When there are no jumps in the level, the droid stops updating
-		// as soon as the intro completes.
-		if (!droid->section) {
-			// Zeroing these is not strictly needed but seems like a good idea
+	if (droid->intro_timer <= 0) {
+		if (droid->section) {
+			// State transition to "Idle"
+			droid->update_func = droid_update_idle;
+			droid->position = droid->section->center;
+			droid->position.y = droid->section->center.y - 3000;
+		}
+		else { // No jumps
+			// State transition to "Nothing"
 			droid->velocity = droid->acceleration = droid->angular_velocity = vec3(0,0,0);
 			droid->update_func = droid_update_nothing;
-			return;
 		}
-		droid->update_timer = DROID_UPDATE_TIME_INITIAL;
-		droid->update_func = droid_update_idle;
-		droid->position.x = droid->section->center.x;
-		droid->position.y = -3000;
-		droid->position.z = droid->section->center.z;
 	}
 }
 
 void droid_update_idle(droid_t *droid, ship_t *ship) {
-	section_t *next = droid->section->next;
-
-	vec3_t target = vec3(
-		(droid->section->center.x + next->center.x) * 0.5,
-		droid->section->center.y - 3000,
-		(droid->section->center.z + next->center.z) * 0.5
-	);
+	vec3_t target = vec3_lerp(droid->section->center, droid->section->next->center, 0.5);
+	target.y = droid->section->center.y - 3000;
 
 	vec3_t target_vector = vec3_sub(target, droid->position);
-
 	float target_heading = -atan2(target_vector.x, target_vector.z);
-	float quickest_turn = target_heading - droid->angle.y;
-	float turn;
-	if (droid->angle.y < 0) {
-		turn = target_heading - (droid->angle.y + M_PI*2);
-	}
-	else {
-		turn = target_heading - (droid->angle.y - M_PI*2);
-	}
+	float turn = wrap_angle(target_heading - droid->angle.y);
 
-	if (fabsf(turn) < fabsf(quickest_turn)) {
-		droid->angular_velocity.y = turn * 30 / 64.0;
-	}
-	else {
-		droid->angular_velocity.y = quickest_turn * 30.0 / 64.0;
-	}
-
+	droid->angular_velocity.y = turn * 30.0 / 64.0;
 	droid->acceleration = vec3_mulf(droid->mat.basis.forward.vec3, 0.125 * 4096.0);
 	droid->acceleration.y = target_vector.y / 64.0;
 
 	if (flags_is(ship->flags, SHIP_IN_RESCUE)) {
+		// State transition to "Rescue"
 		flags_add(droid->sfx_tractor->flags, SFX_PLAY);
 
 		droid->update_func = droid_update_rescue;
-		droid->update_timer = DROID_UPDATE_TIME_INITIAL;
 
 		g.camera.update_func = camera_update_rescue;
 		flags_add(ship->flags, SHIP_VIEW_REMOTE);
@@ -188,50 +171,39 @@ void droid_update_idle(droid_t *droid, ship_t *ship) {
 		// If droid is not nearby the rescue position teleport it in!
 		if (droid->section != ship->section && droid->section != ship->section->prev) {
 			droid->section = ship->section;
-			section_t *next = droid->section->next;
-
-			droid->position.x = (droid->section->center.x + next->center.x) * 0.5;
-			droid->position.y = droid->section->center.y - 3000;
-			droid->position.z = (droid->section->center.z + next->center.z) * 0.5;
+			droid->position = target;
 		}
 		flags_rm(ship->flags, SHIP_IN_TOW);
 		droid->velocity = vec3(0,0,0);
 		droid->acceleration = vec3(0,0,0);
 	}
-
-	// AdjustDirectionalNote(START_SIREN, 0, 0, (VECTOR){droid->position.x, droid->position.y, droid->position.z});
 }
 
 void droid_update_rescue(droid_t *droid, ship_t *ship) {
 	droid->angular_velocity.y = 0;
 	droid->angle.y = ship->angle.y;
 
-	vec3_t target = vec3(ship->position.x, ship->position.y - 350, ship->position.z);
+	vec3_t target = vec3_add(ship->position, vec3(0,-350,0));
 	vec3_t distance = vec3_sub(target, droid->position);
 
+	if (vec3_len(distance) < 8)
+		flags_add(ship->flags, SHIP_IN_TOW);
 
 	if (flags_is(ship->flags, SHIP_IN_TOW)) {
 		droid->velocity = vec3(0,0,0);
 		droid->acceleration = vec3(0,0,0);
 		droid->position = target;
 	}
-	else if (vec3_len(distance) < 8) {
-		flags_add(ship->flags, SHIP_IN_TOW);
-		droid->velocity = vec3(0,0,0);
-		droid->acceleration = vec3(0,0,0);
-		droid->position = target;
-	}
 	else {
-		droid->velocity = vec3_mulf(distance, 16);	
+		droid->velocity = vec3_mulf(distance, 16);
 	}
 
 
 	// Are we done rescuing?
 	if (flags_not(ship->flags, SHIP_IN_RESCUE)) {
+		// State transition to "Idle"
 		flags_rm(droid->sfx_tractor->flags, SFX_PLAY);
-		droid->siren_started = false;
 		droid->update_func = droid_update_idle;
-		droid->update_timer = DROID_UPDATE_TIME_INITIAL;
 
 		while (flags_not(droid->section->flags, SECTION_JUMP)) {
 			droid->section = droid->section->prev;
