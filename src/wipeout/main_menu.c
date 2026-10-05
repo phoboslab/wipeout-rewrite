@@ -27,16 +27,16 @@ static texture_list_t track_images;
 static menu_t *main_menu;
 
 static struct {
-	Object *race_classes[2];
-	Object *teams[4];
-	Object *pilots[8];
-	struct { Object *stopwatch, *save, *load, *headphones, *cd; } options;
-	struct { Object *championship, *msdos, *single_race, *options; } misc;
-	Object *rescue;
-	Object *controller;
+	object_t *race_classes[2];
+	object_t *teams[4];
+	object_t *pilots[8];
+	struct { object_t *stopwatch, *save, *load, *headphones, *cd; } options;
+	struct { object_t *championship, *msdos, *single_race, *options; } misc;
+	object_t *rescue;
+	object_t *controller;
 } models;
 
-static void draw_model(Object *model, vec2_t offset, vec3_t pos, float rotation) {
+static void draw_model(object_t *model, vec2_t offset, vec3_t pos, float rotation) {
 	render_set_view(vec3(0,0,0), vec3(0, -M_PI, -M_PI));
 	render_set_screen_position(offset);
 	mat4_t mat = mat4_identity();
@@ -649,9 +649,9 @@ static void page_circuit_init(menu_t *menu) {
 }
 
 #define objects_unpack(DEST, SRC) \
-	objects_unpack_imp((Object **)&DEST, sizeof(DEST)/sizeof(Object*), SRC)
+	objects_unpack_imp((object_t **)&DEST, sizeof(DEST)/sizeof(object_t*), SRC)
 
-static void objects_unpack_imp(Object **dest_array, int len, Object *src) {
+static void objects_unpack_imp(object_t **dest_array, int len, object_t *src) {
 	int i;
 	for (i = 0; src && i < len; i++) {
 		dest_array[i] = src;

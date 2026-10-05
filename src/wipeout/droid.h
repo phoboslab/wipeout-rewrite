@@ -23,7 +23,7 @@ typedef struct droid_t {
 	float update_timer;
 	void (*update_func)(struct droid_t *, ship_t *);
 	mat4_t mat;
-	Object *model;
+	object_t *model;
 	sfx_t *sfx_tractor;
 } droid_t;
 

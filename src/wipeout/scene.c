@@ -12,17 +12,17 @@
 #define SCENE_RED_LIGHTS_MAX 4
 #define SCENE_STANDS_MAX 20
 
-static Object *scene_objects;
-static Object *sky_object;
+static object_t *scene_objects;
+static object_t *sky_object;
 static vec3_t sky_offset;
 
-static Object *start_booms[SCENE_START_BOOMS_MAX];
+static object_t *start_booms[SCENE_START_BOOMS_MAX];
 static int start_booms_len;
 
-static Object *oil_pumps[SCENE_OIL_PUMPS_MAX];
+static object_t *oil_pumps[SCENE_OIL_PUMPS_MAX];
 static int oil_pumps_len;
 
-static Object *red_lights[SCENE_RED_LIGHTS_MAX];
+static object_t *red_lights[SCENE_RED_LIGHTS_MAX];
 static int red_lights_len;
 
 typedef struct {
@@ -34,8 +34,8 @@ static int stands_len;
 
 static bool aurora_borealis_enabled;
 
-void scene_pulsate_red_light(Object *obj);
-void scene_move_oil_pump(Object *obj);
+void scene_pulsate_red_light(object_t *obj);
+void scene_move_oil_pump(object_t *obj);
 void scene_update_aurora_borealis(void);
 
 void scene_load(const char *base_path, float sky_y_offset) {
@@ -56,7 +56,7 @@ void scene_load(const char *base_path, float sky_y_offset) {
 		texture_list_t scene_textures = image_get_compressed_textures(get_path(base_path, "sceneCom.cmp"));
 		scene_objects = objects_load(get_path(base_path, "sceneCom.prm"), scene_textures);
 
-		Object *obj = scene_objects;
+		object_t *obj = scene_objects;
 		while (obj->next) obj = obj->next;
 
 		texture_list_t scene_extra_textures = image_get_compressed_textures(get_path(base_path, multiplayer ? "sceneMul.cmp" : "sceneSin.cmp"));
@@ -77,7 +77,7 @@ void scene_load(const char *base_path, float sky_y_offset) {
 	red_lights_len = 0;
 	stands_len = 0;
 
-	Object *obj = scene_objects;
+	object_t *obj = scene_objects;
 	while (obj) {
 		mat4_set_translation(&obj->mat, obj->origin);
 
@@ -142,7 +142,7 @@ void scene_draw(camera_t *camera) {
 	// Calculate the camera forward vector, so we can cull everything that's
 	// behind. Ideally we'd want to do a full frustum culling here. FIXME.
 	vec3_t cam_dir = camera_forward(camera);
-	Object *object = scene_objects;
+	object_t *object = scene_objects;
 	
 	while (object) {
 		vec3_t diff = vec3_sub(camera->position, object->origin);
@@ -187,7 +187,7 @@ void scene_set_start_booms(int light_index) {
 }
 
 
-void scene_pulsate_red_light(Object *obj) {
+void scene_pulsate_red_light(object_t *obj) {
 	uint8_t r = clamp(sinf(system_cycle_time() * M_PI * 2) * 128 + 128, 0, 255);
 	primitive_t *prm = obj->primitives;
 
@@ -198,7 +198,7 @@ void scene_pulsate_red_light(Object *obj) {
 	}
 }
 
-void scene_move_oil_pump(Object *pump) {
+void scene_move_oil_pump(object_t *pump) {
 	mat4_set_yaw_pitch_roll(&pump->mat, vec3(sinf(system_cycle_time() * 0.125 * M_PI * 2), 0, 0));
 }
 

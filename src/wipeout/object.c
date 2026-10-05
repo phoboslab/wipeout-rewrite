@@ -32,7 +32,7 @@ enum {
 	PSX_PRM_FLAG_GOURAUD  = 1 << 2,
 };
 
-Object *objects_load(char *name, texture_list_t tl) {
+object_t *objects_load(char *name, texture_list_t tl) {
 	uint32_t length = 0;
 	uint8_t *bytes = platform_load_asset(name, &length);
 	if (!bytes) {
@@ -41,12 +41,12 @@ Object *objects_load(char *name, texture_list_t tl) {
 #ifdef VERBOSE_PRINTING
 	printf("load: %s\n", name);
 #endif
-	Object *objectList = mem_mark();
-	Object *prevObject = NULL;
+	object_t *objectList = mem_mark();
+	object_t *prevObject = NULL;
 	uint32_t p = 0;
 
 	while (p < length) {
-		Object *object = mem_bump(sizeof(Object));
+		object_t *object = mem_bump(sizeof(object_t));
 		if (prevObject) {
 			prevObject->next = object;
 		}
@@ -214,7 +214,7 @@ Object *objects_load(char *name, texture_list_t tl) {
 }
 
 
-void object_draw(Object *object, mat4_t *mat) {
+void object_draw(object_t *object, mat4_t *mat) {
 	vec3_t *vertex = object->vertices;
 	render_set_model_mat(mat);
 

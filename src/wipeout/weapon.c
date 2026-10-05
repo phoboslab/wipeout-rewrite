@@ -16,7 +16,7 @@ typedef struct weapon_t {
 	ship_t *owner;
 	ship_t *target;
 	section_t *section;
-	Object *model;
+	object_t *model;
 	bool active;
 
 	int16_t trail_particle;
@@ -40,12 +40,12 @@ int weapons_active = 0;
 
 struct {
 	uint16_t reticle;
-	Object *rocket;
-	Object *mine;
-	Object *missile;
-	Object *shield;
-	Object *shield_internal;
-	Object *ebolt;
+	object_t *rocket;
+	object_t *mine;
+	object_t *missile;
+	object_t *shield;
+	object_t *shield_internal;
+	object_t *ebolt;
 } weapon_assets;
 
 void weapon_update_wait_for_delay(weapon_t *self);
@@ -69,7 +69,7 @@ void weapon_update_shield(weapon_t *self);
 
 void weapon_fire_turbo(ship_t *ship);
 
-void invert_shield_polys(Object *shield);
+void invert_shield_polys(object_t *shield);
 
 void weapons_load(void) {
 	weapons = mem_bump(sizeof(weapon_t) * WEAPONS_MAX);

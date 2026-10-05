@@ -14,14 +14,14 @@
 
 void ships_load(void) {
 	texture_list_t ship_textures = image_get_compressed_textures("wipeout/common/allsh.cmp");
-	Object *ship_models = objects_load("wipeout/common/allsh.prm", ship_textures);
+	object_t *ship_models = objects_load("wipeout/common/allsh.prm", ship_textures);
 
 	texture_list_t collision_textures = image_get_compressed_textures("wipeout/common/alcol.cmp");
-	Object *collision_models = objects_load("wipeout/common/alcol.prm", collision_textures);
+	object_t *collision_models = objects_load("wipeout/common/alcol.prm", collision_textures);
 
 	int object_index;
-	Object *ship_model = ship_models;
-	Object *collision_model = collision_models;
+	object_t *ship_model = ship_models;
+	object_t *collision_model = collision_models;
 
 	for (object_index = 0; object_index < len(g.ships) && ship_model && collision_model; object_index++) {
 		int ship_index = def.ship_model_to_pilot[object_index];

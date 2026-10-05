@@ -122,8 +122,8 @@ typedef struct ship_t {
 	float last_impact_time;
 
 	mat4_t mat;
-	Object *model;
-	Object *collision_model;
+	object_t *model;
+	object_t *collision_model;
 	uint16_t shadow_texture;
 
 	struct {

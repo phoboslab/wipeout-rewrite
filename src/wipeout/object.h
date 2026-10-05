@@ -62,7 +62,7 @@ typedef struct Primitive {
 	} u;
 } primitive_t;
 
-typedef struct Object {
+typedef struct object_t {
 	char name[16];
 
 	mat4_t mat;
@@ -74,10 +74,10 @@ typedef struct Object {
 
 	vec3_t origin;
 	float radius;
-	struct Object *next;
-} Object;
+	struct object_t *next;
+} object_t;
 
-Object *objects_load(char *name, texture_list_t tl);
-void object_draw(Object *object, mat4_t *mat);
+object_t *objects_load(char *name, texture_list_t tl);
+void object_draw(object_t *object, mat4_t *mat);
 
 #endif

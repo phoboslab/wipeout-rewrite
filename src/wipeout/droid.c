@@ -10,7 +10,7 @@
 #include "image.h"
 #include "game.h"
 
-static Object *droid_model;
+static object_t *droid_model;
 
 void droid_load(void) {
 	texture_list_t droid_textures = image_get_compressed_textures("wipeout/common/rescu.cmp");
