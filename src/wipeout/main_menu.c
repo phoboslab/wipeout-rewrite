@@ -332,8 +332,10 @@ static void page_options_video_init(menu_t *menu) {
 	menu_page_add_toggle(page, save.screen_shake * 2, "SCREEN SHAKE", opts_screen_shake, len(opts_screen_shake), toggle_screen_shake);
 	menu_page_add_toggle(page, save.ui_scale, "UI SCALE", opts_ui_sizes, len(opts_ui_sizes), toggle_ui_scale);
 	menu_page_add_toggle(page, save.draw_stats, "DRAW STATS", opts_draw_stats, len(opts_draw_stats), toggle_draw_stats);
-	menu_page_add_toggle(page, save.screen_res, "SCREEN RESOLUTION", opts_res, len(opts_res), toggle_res);
-	menu_page_add_toggle(page, save.post_effect, "POST PROCESSING", opts_post, len(opts_post), toggle_post);
+	#ifndef RENDERER_SOFTWARE
+		menu_page_add_toggle(page, save.screen_res, "SCREEN RESOLUTION", opts_res, len(opts_res), toggle_res);
+		menu_page_add_toggle(page, save.post_effect, "POST PROCESSING", opts_post, len(opts_post), toggle_post);
+	#endif
 }
 
 // -----------------------------------------------------------------------------
