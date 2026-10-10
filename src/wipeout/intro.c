@@ -78,7 +78,12 @@ void intro_update(void) {
 	}
 	plm_decode(plm, system_tick());
 	render_set_view_2d();
-	render_push_2d(vec2i(0,0), render_size(), rgba(128, 128, 128, 255), texture);
+
+	// The intro is in the frankly bizarre ratio of 5:3 and this must
+	// be taken into account to avoid distorting it.
+	screen_rect_t bounds = letterbox_pillarbox((5.0/3.0), render_size());
+	render_push_2d(bounds.tl, vec2i_sub(bounds.br, bounds.tl), rgba(128, 128, 128, 255), texture);
+
 	if (plm_has_ended(plm) || input_pressed(A_MENU_SELECT) || input_pressed(A_MENU_START)) {
 		intro_end();
 	}

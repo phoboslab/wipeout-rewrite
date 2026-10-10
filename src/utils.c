@@ -75,3 +75,24 @@ int wrap_around(int val, int min, int max) {
 	}
 	return val;
 }
+
+// Given screen dimensions and a ratio, return the bounds of the biggest rectangle with that ratio
+// that will fit within those dimensions (it will be centered.)
+// This function is used to avoid stretching of the intro FMV - it can be used for other purposes, however.
+screen_rect_t letterbox_pillarbox(float ratio, vec2i_t dimensions) {
+	// With the application of cleverness perhaps the if statement could be avoided?
+	vec2i_t box_size = vec2i(0,0);
+	if (dimensions.x / ratio > dimensions.y) {
+		box_size.y = dimensions.y;
+		box_size.x = dimensions.y * ratio;
+	} else { // Portrait mode
+		box_size.x = dimensions.x;
+		box_size.y = dimensions.x / ratio;
+	}
+
+	vec2i_t screen_center = vec2i_mulf(dimensions, 0.5f);
+	return (screen_rect_t){
+		.tl = vec2i_add(screen_center, vec2i_mulf(box_size, -0.5f)),
+		.br = vec2i_add(screen_center, vec2i_mulf(box_size,  0.5f)),
+	};
+}

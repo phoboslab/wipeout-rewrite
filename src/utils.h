@@ -79,6 +79,9 @@ float rand_float(float min, float max);
 int32_t rand_int(int32_t min, int32_t max); 
 int wrap_around(int val, int min, int max);
 
+typedef struct {vec2i_t tl, br;} screen_rect_t;
+screen_rect_t letterbox_pillarbox(float ratio, vec2i_t dimensions);
+
 bool file_exists(const char *path);
 uint8_t *file_load(const char *path, uint32_t *bytes_read);
 uint32_t file_store(const char *path, void *bytes, int32_t len);

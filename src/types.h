@@ -106,6 +106,20 @@ static inline vec2i_t vec2i_mulf(vec2i_t a, float f) {
 	);
 }
 
+static inline vec2i_t vec2i_add(vec2i_t a, vec2i_t b) {
+	return vec2i(
+		a.x + b.x,
+		a.y + b.y
+	);
+}
+
+static inline vec2i_t vec2i_sub(vec2i_t a, vec2i_t b) {
+	return vec2i(
+		a.x - b.x,
+		a.y - b.y
+	);
+}
+
 static inline vec2_t vec2_lerp(vec2_t a, vec2_t b, float t) {
 	return vec2(
 		a.x + t * (b.x - a.x),
