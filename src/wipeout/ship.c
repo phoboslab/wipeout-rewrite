@@ -276,6 +276,7 @@ void ship_init_exhaust_plume(ship_t *self) {
 			flags_add(prm->flag, PRM_TRANSLUCENT);
 
 			error_if(prm->type != PRM_TYPE_TRI, "Can't happen: Expected primitive type %x, got %x", PRM_TYPE_TRI, prm->type);
+			error_if(indices_len > len(indices) - 3, "Can't happen: Exhausted indices?");
 
 			primitive_vertex_t *v = prm->u.tri.v;
 			indices[indices_len++] = v[0].coord;
