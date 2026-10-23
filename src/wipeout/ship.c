@@ -12,6 +12,13 @@
 #include "race.h"
 #include "sfx.h"
 
+int engine_flag_compare(const void *a, const void *b) {
+	primitive_t prm1 = *(primitive_t *)a;
+	primitive_t prm2 = *(primitive_t *)b;
+
+	return (prm1.flag & PRM_SHIP_ENGINE) > (prm2.flag & PRM_SHIP_ENGINE);
+};
+
 void ships_load(void) {
 	texture_list_t ship_textures = image_get_compressed_textures("wipeout/common/allsh.cmp");
 	Object *ship_models = objects_load("wipeout/common/allsh.prm", ship_textures);
@@ -24,6 +31,9 @@ void ships_load(void) {
 	Object *collision_model = collision_models;
 
 	for (object_index = 0; object_index < len(g.ships) && ship_model && collision_model; object_index++) {
+		// HACK: sort engine primitives to the end to force them to blend correctly.
+		qsort(ship_model->primitives, ship_model->primitives_len, sizeof(primitive_t), engine_flag_compare);
+
 		int ship_index = def.ship_model_to_pilot[object_index];
 		g.ships[ship_index].model = ship_model;
 		g.ships[ship_index].collision_model = collision_model;
