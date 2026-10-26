@@ -346,14 +346,22 @@ void weapon_update_mine_wait_for_release(weapon_t *self) {
 
 void weapon_update_mine_lights(weapon_t *self, int index) {
 	uint8_t r = sinf(system_cycle_time() * M_PI * 2 + index * 0.66) * 128 + 128;
+
 	for (int i = 0; i < 8; i++) {
 		primitive_t *prm = &self->model->primitives[i];
 
 		error_if(prm->type != PRM_TYPE_TRI, "Can't happen: Expected primitive type %x, got %x", PRM_TYPE_TRI, prm->type);
 
-		prm->u.tri.v[0].color = rgba(230, 0,    0, 0xFF);
-		prm->u.tri.v[1].color = rgba(r,   0x40, 0, 0xFF);
-		prm->u.tri.v[2].color = rgba(r,   0x40, 0, 0xFF);
+		for (int o = 0; o < 3; o++) {
+			prm->u.tri.v[o].color = rgba(r, 0x40, 0, 0xFF);
+
+			// Pinnacles of the mine lights are always lit
+			if (prm->u.tri.v[o].coord == 8 ||
+				prm->u.tri.v[o].coord == 9
+			) {
+				prm->u.tri.v[o].color = rgba(230, 0, 0, 0xFF);
+			}
+		}
 	}
 }
 
