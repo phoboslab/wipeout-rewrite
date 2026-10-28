@@ -54,6 +54,7 @@ void *mem_temp_alloc(uint32_t size) {
 	temp_len += size;
 	void *p = &hunk[MEM_HUNK_BYTES - temp_len];
 	temp_objects[temp_objects_len++] = temp_len;
+	memset(p, 0, size);
 	return p;
 }
 
