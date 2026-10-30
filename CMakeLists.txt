@@ -45,7 +45,12 @@ endif()
 
 find_package(OpenGL)
 find_package(GLEW)
-find_package(SDL2)
+# Prefer vcpkg's find scripts if libraries are provided by it.
+if(VCPKG_TOOLCHAIN)
+	find_package(SDL2 CONFIG)
+else()
+	find_package(SDL2)
+endif()
 
 set(common_src
 	src/wipeout/camera.c
@@ -223,7 +228,11 @@ endif()
 
 if("${PLATFORM}" STREQUAL SDL2)
 	target_sources(wipeout PRIVATE src/platform_sdl.c)
-	target_link_libraries(wipeout PUBLIC SDL2::Main)
+	if(VCPKG_TOOLCHAIN)
+		target_link_libraries(wipeout PUBLIC SDL2::SDL2main SDL2::SDL2)
+	else()
+		target_link_libraries(wipeout PUBLIC SDL2::Main)
+	endif()
 elseif("${PLATFORM}" STREQUAL SOKOL)
 	target_sources(wipeout PRIVATE src/platform_sokol.c)
 elseif("${PLATFORM}" STREQUAL NULL)
