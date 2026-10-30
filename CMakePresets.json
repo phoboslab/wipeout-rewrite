@@ -1,0 +1,118 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 21,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "windows-clang-base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "installDir": "${sourceDir}/install/${presetName}",
+      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "clang-cl",
+        "CMAKE_CXX_COMPILER": "clang-cl"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "hostOS": [ "Windows" ],
+          "intelliSenseMode": "windows-clang-x64"
+        }
+      }
+    },
+    {
+      "name": "x64-base",
+      "hidden": true,
+      "architecture": { "value": "x64", "strategy": "external" },
+      "toolset": { "value": "host=x64", "strategy": "external" },
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "x64-windows"
+      }
+    },
+    {
+      "name": "x86-base",
+      "hidden": true,
+      "architecture": { "value": "x86", "strategy": "external" },
+      "toolset": { "value": "host=x64", "strategy": "external" },
+      "cacheVariables": {
+        "CMAKE_C_COMPILER_TARGET": "i686-pc-windows-msvc",
+        "CMAKE_CXX_COMPILER_TARGET": "i686-pc-windows-msvc",
+        "VCPKG_TARGET_TRIPLET": "x86-windows"
+      },
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "intelliSenseMode": "windows-clang-x86"
+        }
+      }
+    },
+    {
+      "name": "arm64-base",
+      "hidden": true,
+      "architecture": { "value": "arm64", "strategy": "external" },
+      "toolset": { "value": "host=x64", "strategy": "external" },
+      "cacheVariables": {
+        "CMAKE_C_COMPILER_TARGET": "aarch64-pc-windows-msvc",
+        "CMAKE_CXX_COMPILER_TARGET": "aarch64-pc-windows-msvc",
+        "VCPKG_TARGET_TRIPLET": "arm64-windows"
+      },
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "intelliSenseMode": "windows-clang-arm64"
+        }
+      }
+    },
+    {
+      "name": "x64-Clang-Debug",
+      "displayName": "x64 Clang Debug",
+      "inherits": [ "windows-clang-base", "x64-base" ],
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+    },
+    {
+      "name": "x64-Clang-Release",
+      "displayName": "x64 Clang Release",
+      "inherits": [ "windows-clang-base", "x64-base" ],
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "RelWithDebInfo" }
+    },
+    {
+      "name": "x86-Clang-Debug",
+      "displayName": "x86 Clang Debug",
+      "inherits": [ "windows-clang-base", "x86-base" ],
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+    },
+    {
+      "name": "x86-Clang-Release",
+      "displayName": "x86 Clang Release",
+      "inherits": [ "windows-clang-base", "x86-base" ],
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "RelWithDebInfo" }
+    },
+    {
+      "name": "arm64-Clang-Debug",
+      "displayName": "arm64 Clang Debug",
+      "inherits": [ "windows-clang-base", "arm64-base" ],
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+    },
+    {
+      "name": "arm64-Clang-Release",
+      "displayName": "arm64 Clang Release",
+      "inherits": [ "windows-clang-base", "arm64-base" ],
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "RelWithDebInfo" }
+    }
+  ],
+  "buildPresets": [
+    { "name": "x64-Clang-Debug", "configurePreset": "x64-Clang-Debug" },
+    { "name": "x64-Clang-Release", "configurePreset": "x64-Clang-Release" },
+    { "name": "x86-Clang-Debug", "configurePreset": "x86-Clang-Debug" },
+    { "name": "x86-Clang-Release", "configurePreset": "x86-Clang-Release" },
+    { "name": "arm64-Clang-Debug", "configurePreset": "arm64-Clang-Debug" },
+    { "name": "arm64-Clang-Release", "configurePreset": "arm64-Clang-Release" }
+  ]
+}
