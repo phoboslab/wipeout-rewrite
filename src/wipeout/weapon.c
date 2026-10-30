@@ -84,20 +84,9 @@ void weapons_load(void) {
 	weapon_assets.ebolt           = objects_load("wipeout/common/ebolt.prm", weapon_textures);
 
 	// Invert shield polys for internal view
-	int primitives_len = weapon_assets.shield_internal->primitives_len;
-	for (int k = 0; k < primitives_len; k++) {
-		primitive_t *prm = &weapon_assets.shield_internal->primitives[k];
-
-		switch (prm->type) {
-			case PRM_TYPE_TRI:
-				swap(prm->u.tri.v[0].coord, prm->u.tri.v[0].coord);
-				break;
-			case PRM_TYPE_QUAD:
-				swap(prm->u.quad.v[0].coord, prm->u.quad.v[3].coord);
-				break;
-			default:
-				die("Can't happen: Expected primitive type %x or %x, got %x", PRM_TYPE_TRI, PRM_TYPE_QUAD, prm->type);
-		}
+	for (int k = 0; k < weapon_assets.shield_internal->tris_len; k++) {
+		triangle_t *tri = &weapon_assets.shield_internal->tris[k];
+		swap(tri->v[0].coord, tri->v[1].coord);
 	}
 
 	weapons_init();
@@ -347,13 +336,11 @@ void weapon_update_mine_wait_for_release(weapon_t *self) {
 void weapon_update_mine_lights(weapon_t *self, int index) {
 	uint8_t r = sinf(system_cycle_time() * M_PI * 2 + index * 0.66) * 128 + 128;
 	for (int i = 0; i < 8; i++) {
-		primitive_t *prm = &self->model->primitives[i];
+		triangle_t *tri = &self->model->tris[i];
 
-		error_if(prm->type != PRM_TYPE_TRI, "Can't happen: Expected primitive type %x, got %x", PRM_TYPE_TRI, prm->type);
-
-		prm->u.tri.v[0].color = rgba(230, 0,    0, 0xFF);
-		prm->u.tri.v[1].color = rgba(r,   0x40, 0, 0xFF);
-		prm->u.tri.v[2].color = rgba(r,   0x40, 0, 0xFF);
+		tri->v[0].color = rgba(230, 0,    0, 0xFF);
+		tri->v[1].color = rgba(r,   0x40, 0, 0xFF);
+		tri->v[2].color = rgba(r,   0x40, 0, 0xFF);
 	}
 }
 
@@ -557,29 +544,17 @@ void weapon_update_shield(weapon_t *self) {
 	self->angle = self->owner->angle;
 
 	// Animated colors.
-	int primitives_len = self->model->primitives_len;
+
 	uint8_t col;
 	const uint8_t shield_alpha = 48;
 
 	float color_timer = self->timer * 0.05;
-	for (int k = 0; k < primitives_len; k++) {
-		primitive_t *prm = &self->model->primitives[k];
+	for (int k = 0; k < self->model->tris_len; k++) {
+		triangle_t *tri = &self->model->tris[k];
 
-		switch (prm->type) {
-			case PRM_TYPE_TRI :
-				for (int v = 0; v < 3; v++) {
-					col = sinf(color_timer * prm->u.tri.v[v].coord) * 127 + 128;
-					prm->u.tri.v[v].color = rgba(col, col, 255, shield_alpha);
-				}
-				break;
-			case PRM_TYPE_QUAD :
-				for (int v = 0; v < 4; v++) {
-					col = sinf(color_timer * prm->u.quad.v[v].coord) * 127 + 128;
-					prm->u.quad.v[v].color = rgba(col, col, 255, shield_alpha);
-				}
-				break;
-			default:
-				die("Can't happen: Expected primitive type %x or %x, got %x", PRM_TYPE_TRI, PRM_TYPE_QUAD, prm->type);
+		for (int v = 0; v < 3; v++) {
+			col = sinf(color_timer * tri->v[v].coord) * 127 + 128;
+			tri->v[v].color = rgba(col, col, 255, shield_alpha);
 		}
 	}
 }

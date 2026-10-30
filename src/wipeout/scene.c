@@ -167,20 +167,17 @@ rgba_t start_boom_lights[] = {
 
 void scene_set_start_booms(int light_index) {
 	for (int i = 0; i < start_booms_len; i++) {
-		for (int j = 0; j < len(start_boom_lights); j++) {
-			primitive_t *prm = &start_booms[i]->primitives[j];
-
-			error_if(prm->type != PRM_TYPE_QUAD, "Can't happen: Expected primitive type %x, got %x", PRM_TYPE_QUAD, prm->type);
-
+		for (int j = 0; j < 6; j++) {
 			rgba_t color;
-			if (j == light_index) {
+			if (j/2 == light_index) { // two tris per light
 				color = start_boom_lights[light_index];
 			} else {
 				color = start_boom_color_off;
 			}
 
-			for (int v = 0; v < 4; v++) {
-				prm->u.quad.v[v].color = color;
+			triangle_t *tri = &start_booms[i]->tris[j];
+			for (int v = 0; v < 3; v++) {
+				tri->v[v].color = color;
 			}
 		}
 	}
@@ -189,12 +186,9 @@ void scene_set_start_booms(int light_index) {
 
 void scene_pulsate_red_light(Object *obj) {
 	uint8_t r = clamp(sinf(system_cycle_time() * M_PI * 2) * 128 + 128, 0, 255);
-	primitive_t *prm = obj->primitives;
 
-	error_if(prm->type != PRM_TYPE_QUAD, "Can't happen: Expected primitive type %x, got %x", PRM_TYPE_QUAD, prm->type);
-
-	for (int v = 0; v < 4; v++) {
-		prm->u.quad.v[v].color = rgba(r,0,0,0xFF);
+	for (int v = 0; v < 3; v++) {
+		obj->tris[0].v[v].color = rgba(r,0,0,0xFF);
 	}
 }
 
@@ -221,15 +215,11 @@ void scene_init_aurora_borealis() {
 void scene_update_aurora_borealis(void) {
 	float phase = system_time() / 30.0;
 
-	for (int i = 0; i < sky_object->primitives_len; i++) {
-		primitive_t *prm = &sky_object->primitives[i];
+	for (int i = 0; i < sky_object->tris_len; i++) {
+		triangle_t *tris = &sky_object->tris[i];
 
-		// The skybox contains triangles but none of them are of interest to us.
-		if (prm->type == PRM_TYPE_TRI) continue;
-		error_if(prm->type != PRM_TYPE_QUAD, "Can't happen: Expected primitive type %x, got %x", PRM_TYPE_QUAD, prm->type);
-
-		for (int j = 0; j < len(prm->u.quad.v); j++) {
-			scene_aurora_set_vertex_color(&prm->u.quad.v[j], phase);
+		for (int j = 0; j < len(tris->v); j++) {
+			scene_aurora_set_vertex_color(&tris->v[j], phase);
 		}
 	}
 }

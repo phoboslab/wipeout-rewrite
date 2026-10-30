@@ -270,19 +270,15 @@ void ship_init_exhaust_plume(ship_t *self) {
 	int16_t indices[64];
 	int16_t indices_len = 0;
 
-	for (int i = 0; i < self->model->primitives_len; i++) {
-		primitive_t *prm = &self->model->primitives[i];
-		if (flags_is(prm->flag, PRM_SHIP_ENGINE)) {
-			flags_add(prm->flag, PRM_TRANSLUCENT);
+	for (int i = 0; i < self->model->tris_len; i++) {
+		triangle_t *tri = &self->model->tris[i];
+		if (flags_is(tri->flag, PRM_SHIP_ENGINE)) {
 
-			error_if(prm->type != PRM_TYPE_TRI, "Can't happen: Expected primitive type %x, got %x", PRM_TYPE_TRI, prm->type);
-
-			primitive_vertex_t *v = prm->u.tri.v;
-			indices[indices_len++] = v[0].coord;
-			indices[indices_len++] = v[1].coord;
-			indices[indices_len++] = v[2].coord;
+			indices[indices_len++] = tri->v[0].coord;
+			indices[indices_len++] = tri->v[1].coord;
+			indices[indices_len++] = tri->v[2].coord;
 			for (int j = 0; j < 3; j++) {
-				v[j].color = exhaust_plume_color;
+				tri->v[j].color = exhaust_plume_color;
 			}
 		}
 	}
@@ -791,14 +787,12 @@ bool ship_intersects_ship(ship_t *self, ship_t *other) {
 	vec3_t p1, p2, p3;
 
 	// for all 4 planes of the enemy ship
-	for (int i = 0; i < other->collision_model->primitives_len; i++) {
-		primitive_t *prm = &other->collision_model->primitives[i];
+	for (int i = 0; i < other->collision_model->tris_len; i++) {
+		triangle_t *tri = &other->collision_model->tris[i];
 
-		error_if(prm->type != PRM_TYPE_TRI, "Can't happen: Expected primitive type %x, got %x", PRM_TYPE_TRI, prm->type);
-
-		p1 = vec3_transform(self->collision_model->vertices[prm->u.tri.v[0].coord], &self->mat);
-		p2 = vec3_transform(self->collision_model->vertices[prm->u.tri.v[1].coord], &self->mat);
-		p3 = vec3_transform(self->collision_model->vertices[prm->u.tri.v[2].coord], &self->mat);
+		p1 = vec3_transform(self->collision_model->vertices[tri->v[0].coord], &self->mat);
+		p2 = vec3_transform(self->collision_model->vertices[tri->v[1].coord], &self->mat);
+		p3 = vec3_transform(self->collision_model->vertices[tri->v[2].coord], &self->mat);
 
 		// Find polyGon line vectors
 		vec3_t p1p2 = vec3_sub(p2, p1);

@@ -53,33 +53,24 @@ void droid_draw(droid_t *droid) {
 	int gf = sinf(droid->cycle_timer + 0.2) * 127 + 128;
 	int bf = sinf(droid->cycle_timer * 0.5 + 0.1) * 127 + 128;
 
-	for (int i = 0; i < 11; i++) {
-		primitive_t *prm = &droid_model->primitives[i];
+	for (int i = 0; i < droid_model->tris_len; i++) {
+		triangle_t *tri = &droid_model->tris[i];
 		rgba_t color;
 
-		if (i < 2) {
+		if (i < 3) {
 			color = rgba(40,gf,40,0xFF);
 		}
-		else if (i < 6) {
+		else if (i < 9) {
 			color = rgba(bf >> 1, bf, bf >> 1, 0xFF);
 		}
-		else {
+		else if (i < 19) {
 			color = rgba(rf, 40, 40, 0xFF);
+		} else {
+			continue;
 		}
 
-		switch (prm->type) {
-			case PRM_TYPE_TRI:
-				for (int j = 0; j < 3; j++) {
-					prm->u.tri.v[j].color = color;
-				}
-				break;
-			case PRM_TYPE_QUAD:
-				for (int j = 0; j < 4; j++) {
-					prm->u.quad.v[j].color = color;
-				}
-				break;
-			default:
-				die("Can't happen: Expected primitive type %x or %x, got %x", PRM_TYPE_TRI, PRM_TYPE_QUAD, prm->type);
+		for (int j = 0; j < 3; j++) {
+			tri->v[j].color = color;
 		}
 	}
 
