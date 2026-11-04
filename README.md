@@ -148,16 +148,17 @@ Building natively on Windows requires a more complicated setup. The source code
 relies on GCC extensions that are not supported by `msvc`, which requires the
 use of `clang-cl`.
 The simplest way to get a build environment with `clang-cl` is to download and
-install [Visual Studio](https://visualstudio.microsoft.com/downloads/) (2022 at
+install [Visual Studio](https://visualstudio.microsoft.com/downloads/) (2026 at
 the time of writing) with the "Desktop development with C++" option selected.
 Also make sure to select "Clang C++ compiler for Windows" in "Individual
 Components" if it hasn't been already.
 
 The next step is to acquire development versions of SDL2 and GLEW.
-The easiest way is to install [vcpkg](https://vcpkg.io) and let Visual Studio's
-integration build and install it for you.
-Follow the [vcpkg "Getting Started" guide](https://vcpkg.io/en/getting-started)
-and integrate it with Visual Studio.
+[vcpkg](https://vcpkg.io) has been added as a submodule of this repo. Make sure to run
+`git clone --recursive` when you clone this repo, or `git submodule update --init` if you've
+already cloned it.
+
+If you're using Visual Studio:
 
 Finally, open Visual Studio, select "Open a local folder", and navigate to the
 directory where you have cloned this repo.
@@ -168,6 +169,9 @@ be CMake configurations listed in the menubar dropdown.
 When adding a new configuration, make sure to use the `clang_cl` toolsets.
 Select the config you want from the list and build using `F7`, the build
 artifacts should be under `path\to\wipeout-rewrite\build`.
+
+Other IDEs (like VS Code):
+You'll probably have to run the `vcpkg\bootstrap_vcpkg.bat` script on your own to bring down the vcpkg binary.
 
 ### MSYS2
 
