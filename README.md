@@ -163,7 +163,7 @@ Finally, open Visual Studio, select "Open a local folder", and navigate to the
 directory where you have cloned this repo.
 Visual Studio should automatically configure itself to build with CMake, and
 build the necessary libraries using vcpkg.
-Since this repository contains a `CMakeSettings.json` file, there should already
+Since this repository contains a `CMakePresets.json` file, there should already
 be CMake configurations listed in the menubar dropdown.
 When adding a new configuration, make sure to use the `clang_cl` toolsets.
 Select the config you want from the list and build using `F7`, the build
