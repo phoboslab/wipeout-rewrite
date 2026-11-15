@@ -1,7 +1,7 @@
 {
   "name": "wipeout-rewrite",
   "version-string": "1.0.0",
-  "builtin-baseline": "0fa8459cf3a7caca7adc58f992bc32ff13630684",
+  "builtin-baseline": "9eec002df1cd109f8f104cd966a763daf9751489",
   "dependencies": [
     {
       "name": "sdl2",

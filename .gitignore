@@ -1,5 +1,12 @@
+
+# IDE
+.vs
+.vscode
 /wipeout.sublime-project
 /wipeout.sublime-workspace
+
+# clangd
+.cache
 
 /wipeout/
 /wipeout2/
