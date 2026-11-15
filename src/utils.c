@@ -66,3 +66,12 @@ float rand_float(float min, float max) {
 int32_t rand_int(int32_t min, int32_t max) {
 	return min + rand() % (max - min);
 }
+
+int wrap_around(int val, int min, int max) {
+	if (val >= max) {
+		return min;
+	} else if (val < min) {
+		return max - 1;
+	}
+	return val;
+}

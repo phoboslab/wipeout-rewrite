@@ -1,30 +1,19 @@
 #include <stdint.h>
 #include <math.h>
 
-#include <stdio.h>
-#include <stdint.h>
-#include <stdlib.h>
-
-#include "../mem.h"
-#include "object.h"
-#include "track.h"
-#include "ship.h"
-#include "weapon.h"
-#include "hud.h"
-#include "droid.h"
-#include "camera.h"
 #include "../utils.h"
-#include "scene.h"
-
-
 #include "../input.h"
 #include "../system.h"
 
+#include "track.h"
+#include "ship.h"
+#include "weapon.h"
+#include "camera.h"
+#include "scene.h"
 #include "sfx.h"
 #include "ship_player.h"
 #include "ship_ai.h"
 #include "game.h"
-#include "particle.h"
 
 void ship_player_update_sfx(ship_t *self) {
 	float speedf = self->speed * 0.000015;
@@ -355,7 +344,7 @@ void ship_player_update_race(ship_t *self) {
 				sfx_play_at(SFX_IMPACT, self->position, vec3(0,0,0), 1);
 			}
 			self->velocity = vec3_reflect(self->velocity, face->normal, 2);
-			self->velocity = vec3_sub(self->velocity, vec3_mulf(self->velocity, 0.125));
+			self->velocity = vec3_mulf(self->velocity, 0.875);
 			self->velocity = vec3_sub(self->velocity, vec3_mulf(face->normal, 64.0 * 30 * system_tick()));
 		}
 		else if (height < 30) {
@@ -367,10 +356,10 @@ void ship_player_update_race(ship_t *self) {
 		// Calculate acceleration
 		float brake = (self->brake_left + self->brake_right);
 		float resistance = (self->resistance * (SHIP_MAX_RESISTANCE - (brake * 0.125))) * 0.0078125;
+		float track_repulsion = 4096 * (SHIP_TRACK_MAGNET * SHIP_TRACK_FLOAT / height - SHIP_TRACK_MAGNET);
 
-		vec3_t force = vec3(0, SHIP_ON_TRACK_GRAVITY, 0);
-		force = vec3_add(force, vec3_mulf(vec3_mulf(face->normal, 4096), (SHIP_TRACK_MAGNET * SHIP_TRACK_FLOAT) / height));
-		force = vec3_sub(force, vec3_mulf(vec3_mulf(face->normal, 4096), SHIP_TRACK_MAGNET));
+		vec3_t force = SHIP_ON_TRACK_GRAVITY;
+		force = vec3_add(force, vec3_mulf(face->normal, track_repulsion));
 		force = vec3_add(force, self->thrust);
 
 		self->acceleration = vec3_divf(vec3_sub(forward_velocity, self->velocity), self->skid + brake * 0.25);
@@ -410,13 +399,12 @@ void ship_player_update_race(ship_t *self) {
 			section_t *landing = self->section->prev;
 			ship_player_begin_rescue_to_section(self, landing);
 		}
-		//	Everything is normal, manouver through the air
+		//	Everything is normal, maneuver through the air
 		else {
 			float brake = (self->brake_left + self->brake_right);
 			float resistance = (self->resistance * (SHIP_MAX_RESISTANCE - (brake * 0.125))) * 0.0078125;
 	
-			vec3_t force = vec3(0, SHIP_FLYING_GRAVITY, 0);
-			force = vec3_add(force, self->thrust);
+			vec3_t force = vec3_add(SHIP_FLYING_GRAVITY, self->thrust);
 	
 			self->acceleration = vec3_divf(vec3_sub(forward_velocity, self->velocity), SHIP_MIN_RESISTANCE + brake * 4);
 			self->acceleration = vec3_add(self->acceleration, vec3_divf(force, self->mass));
@@ -479,6 +467,7 @@ void ship_player_update_rescue(ship_t *self) {
 	self->angle.x -= self->angle.x * 0.125 * 30 * system_tick(); // >> 3
 	self->angle.z -= self->angle.z * 0.03125 * 30 * system_tick(); // >> 5
 
+	// BUG: Lerp smoothing does *not* work with variable timesteps.
 	self->velocity = vec3_sub(self->velocity, vec3_mulf(self->velocity, 0.0625 * 30 * system_tick()));
 	self->position = vec3_add(self->position, vec3_mulf(self->velocity, 0.03125 * 30 * system_tick()));
 

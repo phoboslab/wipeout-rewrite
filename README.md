@@ -39,7 +39,7 @@ Sokol platform requires the library/headers for:
 - `ALSA`
 
 The following snippets list the specific package manager invocations for
-popluar \*nix OSs:
+popular \*nix OSs:
 
 ### Debian/Ubuntu
 
@@ -250,7 +250,7 @@ The directory structure is assumed to be as follows
 
 Note that the blog post announcing this project may or may not provide a link to a ZIP containing all files needed. Who knows!
 
-Optionally, if you want to use a game controller that may not be supported by SDL directly, you can place the [gamecontrollerdb.txt](https://github.com/gabomdq/SDL_GameControllerDB) in the root directory of this project (along the compiled `wipegame`). Note that if you want to use the analog sticks of your gamecontroller in the game you have to configure it in the Options menu; the analog sticks are not bound by default.
+Optionally, if you want to use a game controller that may not be supported by SDL directly, you can place the [gamecontrollerdb.txt](https://github.com/gabomdq/SDL_GameControllerDB) in the root directory of this project (along the compiled `wipegame`). Note that if you want to use the analog sticks of your game controller in the game you have to configure it in the Options menu; the analog sticks are not bound by default.
 
 # Porting
 
@@ -278,7 +278,6 @@ Some things from the original game are not yet implemented in this rewrite. This
 - the scene geometry could use some touch-ups to make an infinite draw distance option less awkward
 - increase FOV when going over a boost
 - better menu models for game exit and video options
-- gamepad analog input feels like balancing an egg
 - fix collision issues on junctions (also present in the original)
 
 ## Technical

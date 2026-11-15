@@ -2,17 +2,8 @@
 #include "../mem.h"
 #include "../utils.h"
 #include "../platform.h"
+#include "../render.h"
 
-#include "object.h"
-#include "track.h"
-#include "ship.h"
-#include "weapon.h"
-#include "droid.h"
-#include "camera.h"
-#include "object.h"
-#include "scene.h"
-#include "game.h"
-#include "hud.h"
 #include "image.h"
 
 
@@ -229,7 +220,9 @@ void lzss_decompress(uint8_t *in_data, uint8_t *out_data) {
 }
 
 cmp_t *image_load_compressed(char *name) {
-	printf("load cmp %s\n", name);
+#ifdef VERBOSE_PRINTING
+	printf("load: %s\n", name);
+#endif
 	uint32_t compressed_size;
 	uint8_t *compressed_bytes = platform_load_asset(name, &compressed_size);
 
@@ -263,7 +256,9 @@ cmp_t *image_load_compressed(char *name) {
 }
 
 uint16_t image_get_texture(char *name) {
+#ifdef VERBOSE_PRINTING
 	printf("load: %s\n", name);
+#endif
 	uint32_t size;
 	uint8_t *bytes = platform_load_asset(name, &size);
 	image_t *image = image_load_from_bytes(bytes, false);
@@ -275,7 +270,9 @@ uint16_t image_get_texture(char *name) {
 }
 
 uint16_t image_get_texture_semi_trans(char *name) {
+#ifdef VERBOSE_PRINTING
 	printf("load: %s\n", name);
+#endif
 	uint32_t size;
 	uint8_t *bytes = platform_load_asset(name, &size);
 	image_t *image = image_load_from_bytes(bytes, true);

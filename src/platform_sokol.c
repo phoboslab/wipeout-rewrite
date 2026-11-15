@@ -19,7 +19,7 @@
 #include <sokol_app.h>
 #include "input.h"
 
-// FIXME: we should figure out the actual path where the executabe resides,
+// FIXME: we should figure out the actual path where the executable resides,
 // instead of just assuming it's in the pwd
 #ifdef PATH_ASSETS
 	static const char *path_assets = TOSTRING(PATH_ASSETS);
@@ -262,6 +262,11 @@ void platform_audio_callback(float* buffer, int num_frames, int num_channels) {
 
 void platform_set_audio_mix_cb(void (*cb)(float *buffer, uint32_t len)) {
 	audio_callback = cb;
+}
+
+bool platform_asset_exists(const char *name) {
+	char *path = strcat(strcpy(temp_path, path_assets), name);
+	return file_exists(path);
 }
 
 FILE *platform_open_asset(const char *name, const char *mode) {

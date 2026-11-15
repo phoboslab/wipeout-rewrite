@@ -77,6 +77,7 @@ char *get_path(const char *dir, const char *file);
 bool str_starts_with(const char *haystack, const char *needle);
 float rand_float(float min, float max);
 int32_t rand_int(int32_t min, int32_t max); 
+int wrap_around(int val, int min, int max);
 
 bool file_exists(const char *path);
 uint8_t *file_load(const char *path, uint32_t *bytes_read);

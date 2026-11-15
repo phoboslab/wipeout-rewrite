@@ -38,8 +38,8 @@ void title_update(void) {
 		g.is_attract_mode = true;
 		g.pilot = rand_int(0, len(def.pilots));
 		do {
-			g.circut = rand_int(0, NUM_CIRCUTS);
-		} while (!g.installed_circuts[g.circut] || def.circuts[g.circut].is_bonus_circut);
+			g.circuit = rand_int(0, NUM_CIRCUITS);
+		} while (!g.installed_circuits[g.circuit] || def.circuits[g.circuit].is_bonus_circuit);
 
 		g.race_class = rand_int(0, NUM_RACE_CLASSES);
 		g.race_type = RACE_TYPE_SINGLE;

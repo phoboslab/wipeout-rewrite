@@ -1,6 +1,8 @@
 #ifndef WEAPON_H
 #define WEAPON_H
 
+#include "ship.h"
+
 #define WEAPONS_MAX 64
 
 #define WEAPON_MINE_DURATION (450 * (1.0/30.0))

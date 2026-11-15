@@ -10,13 +10,13 @@ L_FLAGS ?= -lm
 C_FLAGS ?= -Isrc/libs/ -std=gnu99 -Wall -Wno-unused-variable $(USER_CFLAGS)
 
 ifeq ($(DEBUG), true)
-	C_FLAGS := $(C_FLAGS) -g
+	C_FLAGS := $(C_FLAGS) -g -DVERBOSE_PRINTING
 else
 	C_FLAGS := $(C_FLAGS) -O3
 endif
 
 
-# Rendeder ---------------------------------------------------------------------
+# Renderer ---------------------------------------------------------------------
 
 ifeq ($(RENDERER), GL)
 	RENDERER_SRC = src/render_gl.c

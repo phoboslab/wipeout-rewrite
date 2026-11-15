@@ -16,7 +16,7 @@ static void page_race_class_init(menu_t *menu);
 static void page_race_type_init(menu_t *menu);
 static void page_team_init(menu_t *menu);
 static void page_pilot_init(menu_t *menu);
-static void page_circut_init(menu_t *menu);
+static void page_circuit_init(menu_t *menu);
 static void page_options_controls_init(menu_t *menu);
 static void page_options_video_init(menu_t *menu);
 static void page_options_audio_init(menu_t *menu);
@@ -369,12 +369,12 @@ static void page_options_audio_init(menu_t *menu) {
 // Options Best Times
 
 static int options_highscores_race_class;
-static int options_highscores_circut;
+static int options_highscores_circuit;
 static int options_highscores_tab;
 
 static void page_options_highscores_viewer_input_handler() {
 	int last_race_class_index = options_highscores_race_class;
-	int last_circut_index = options_highscores_circut;
+	int last_circuit_index = options_highscores_circuit;
 
 	if (input_pressed(A_MENU_UP)) {
 		options_highscores_race_class--;
@@ -382,32 +382,21 @@ static void page_options_highscores_viewer_input_handler() {
 	else if (input_pressed(A_MENU_DOWN)) {
 		options_highscores_race_class++;
 	}
+	options_highscores_race_class = wrap_around(options_highscores_race_class, 0, NUM_RACE_CLASSES);
+
 	if (input_pressed(A_MENU_LEFT)) {
 		do {
-			options_highscores_circut--;
-			if (options_highscores_circut < 0) {
-				options_highscores_circut = NUM_CIRCUTS - 1;
-			}
-		} while (!g.installed_circuts[options_highscores_circut]);
+			options_highscores_circuit = wrap_around(options_highscores_circuit - 1, 0, NUM_CIRCUITS);
+		} while (!g.installed_circuits[options_highscores_circuit]);
 	}
 	else if (input_pressed(A_MENU_RIGHT)) {
 		do {
-			options_highscores_circut++;
-			if (options_highscores_circut >= NUM_CIRCUTS) {
-				options_highscores_circut = 0;
-			}
-		} while (!g.installed_circuts[options_highscores_circut]);
-	}
-
-	if (options_highscores_race_class >= NUM_RACE_CLASSES) {
-		options_highscores_race_class = 0;
-	}
-	if (options_highscores_race_class < 0) {
-		options_highscores_race_class = NUM_RACE_CLASSES - 1;
+			options_highscores_circuit = wrap_around(options_highscores_circuit + 1, 0, NUM_CIRCUITS);
+		} while (!g.installed_circuits[options_highscores_circuit]);
 	}
 
 	if ((last_race_class_index != options_highscores_race_class) ||
-		(last_circut_index != options_highscores_circut)) {
+		(last_circuit_index != options_highscores_circuit)) {
 		sfx_play(SFX_MENU_MOVE);
 	}
 }
@@ -418,10 +407,10 @@ static void page_options_highscores_viewer_draw(menu_t *menu, int data) {
 	vec2i_t pos = vec2i(0, -70);
 	ui_draw_text_centered(def.race_classes[options_highscores_race_class].name, ui_scaled_pos(anchor, pos), UI_SIZE_12, UI_COLOR_DEFAULT);
 	pos.y += 16;
-	ui_draw_text_centered(def.circuts[options_highscores_circut].name, ui_scaled_pos(anchor, pos), UI_SIZE_12, UI_COLOR_ACCENT);
+	ui_draw_text_centered(def.circuits[options_highscores_circuit].name, ui_scaled_pos(anchor, pos), UI_SIZE_12, UI_COLOR_ACCENT);
 	
 	vec2i_t entry_pos = vec2i(pos.x - 110, pos.y + 24);
-	highscores_t *hs = &save.highscores[options_highscores_race_class][options_highscores_circut][options_highscores_tab];
+	highscores_t *hs = &save.highscores[options_highscores_race_class][options_highscores_circuit][options_highscores_tab];
 	for (int i = 0; i < NUM_HIGHSCORES; i++) {
 		ui_draw_text(hs->entries[i].name, ui_scaled_pos(anchor, entry_pos), UI_SIZE_16, UI_COLOR_DEFAULT);
 		ui_draw_time(hs->entries[i].time, ui_scaled_pos(anchor, vec2i(entry_pos.x + 110, entry_pos.y)), UI_SIZE_16, UI_COLOR_DEFAULT);
@@ -468,7 +457,7 @@ static void page_options_highscores_init(menu_t *menu) {
 	page->items_anchor = UI_POS_BOTTOM | UI_POS_CENTER;
 
 	options_highscores_race_class = RACE_CLASS_VENOM;
-	options_highscores_circut = CIRCUT_ALTIMA_VII;
+	options_highscores_circuit = CIRCUIT_ALTIMA_VII;
 
 	menu_page_add_button(page, HIGHSCORE_TAB_TIME_TRIAL, "TIME TRIAL TIMES", button_highscores_viewer);
 	menu_page_add_button(page, HIGHSCORE_TAB_RACE, "RACE TIMES", button_highscores_viewer);
@@ -578,10 +567,10 @@ static void page_team_init(menu_t *menu) {
 static void button_pilot_select(menu_t *menu, int data) {
 	g.pilot = data;
 	if (g.race_type != RACE_TYPE_CHAMPIONSHIP) {
-		page_circut_init(menu);
+		page_circuit_init(menu);
 	}
 	else {
-		g.circut = 0;
+		g.circuit = 0;
 		game_reset_championship();
 		game_set_scene(GAME_SCENE_RACE);
 	}
@@ -605,36 +594,36 @@ static void page_pilot_init(menu_t *menu) {
 
 
 // -----------------------------------------------------------------------------
-// Circut
+// Circuit
 
-static void button_circut_select(menu_t *menu, int data) {
-	g.circut = data;
+static void button_circuit_select(menu_t *menu, int data) {
+	g.circuit = data;
 	game_set_scene(GAME_SCENE_RACE);
 }
 
-static void page_circut_additional_draw(menu_t *menu, int data) {}
+static void page_circuit_additional_draw(menu_t *menu, int data) {}
 
-static void page_circut_additional_init(menu_t *menu) {
-	menu_page_t *page = menu_push(menu, "ADDITIONAL CIRCUTS", page_circut_additional_draw);
+static void page_circuit_additional_init(menu_t *menu) {
+	menu_page_t *page = menu_push(menu, "ADDITIONAL CIRCUITS", page_circuit_additional_draw);
 	flags_add(page->layout_flags, MENU_FIXED);
 	page->title_pos = vec2i(0, 30);
 	page->title_anchor = UI_POS_TOP | UI_POS_CENTER;
 	page->items_pos = vec2i(0, 50);
 	page->items_anchor = UI_POS_TOP | UI_POS_CENTER;
 
-	for (int i = CIRCUT_TALONS_REACH; i < len(def.circuts); i++) {
-		if (g.installed_circuts[i] &&
-			(!def.circuts[i].is_bonus_circut || save.has_bonus_circuts)) {
-			menu_page_add_button(page, i, def.circuts[i].name, button_circut_select);
+	for (int i = CIRCUIT_TALONS_REACH; i < len(def.circuits); i++) {
+		if (g.installed_circuits[i] &&
+			(!def.circuits[i].is_bonus_circuit || save.has_bonus_circuits)) {
+			menu_page_add_button(page, i, def.circuits[i].name, button_circuit_select);
 		}
 	}
 }
 
-static void button_circut_additional_select(menu_t *menu, int data) {
-	page_circut_additional_init(menu);
+static void button_circuit_additional_select(menu_t *menu, int data) {
+	page_circuit_additional_init(menu);
 }
 
-static void page_circut_draw(menu_t *menu, int data) {
+static void page_circuit_draw(menu_t *menu, int data) {
 	vec2i_t pos = vec2i(0, -25);
 	vec2i_t size = vec2i(128, 74);
 	vec2i_t scaled_size = ui_scaled(size);
@@ -642,20 +631,20 @@ static void page_circut_draw(menu_t *menu, int data) {
 	render_push_2d(scaled_pos, scaled_size, rgba(128, 128, 128, 255), texture_from_list(track_images, data));
 }
 
-static void page_circut_init(menu_t *menu) {
-	menu_page_t *page = menu_push(menu, "SELECT RACING CIRCUT", page_circut_draw);
+static void page_circuit_init(menu_t *menu) {
+	menu_page_t *page = menu_push(menu, "SELECT RACING CIRCUIT", page_circuit_draw);
 	flags_add(page->layout_flags, MENU_FIXED);
 	page->title_pos = vec2i(0, 30);
 	page->title_anchor = UI_POS_TOP | UI_POS_CENTER;
 	page->items_pos = vec2i(0, -100);
 	page->items_anchor = UI_POS_BOTTOM | UI_POS_CENTER;
-	for (int i = 0; i < CIRCUT_TALONS_REACH; i++) {
-		if (!def.circuts[i].is_bonus_circut || save.has_bonus_circuts) {
-			menu_page_add_button(page, i, def.circuts[i].name, button_circut_select);
+	for (int i = 0; i < CIRCUIT_TALONS_REACH; i++) {
+		if (!def.circuits[i].is_bonus_circuit || save.has_bonus_circuits) {
+			menu_page_add_button(page, i, def.circuits[i].name, button_circuit_select);
 		}
 	}
-	if (g.additional_circuts) {
-		menu_page_add_button(page, 0, "ADDITIONAL CIRCUTS", button_circut_additional_select); 
+	if (g.additional_circuits) {
+		menu_page_add_button(page, 0, "ADDITIONAL CIRCUITS", button_circuit_additional_select); 
 	}
 }
 

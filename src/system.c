@@ -37,7 +37,7 @@ void system_update(void) {
 	time_scaled += tick_last;
 
 	// FIXME: come up with a better way to wrap the cycle_time, so that it
-	// doesn't lose precission, but also doesn't jump upon reset.
+	// doesn't lose precision, but also doesn't jump upon reset.
 	cycle_time = time_scaled;
 	if (cycle_time > 3600 * M_PI) {
 		cycle_time -= 3600 * M_PI;

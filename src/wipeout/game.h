@@ -10,7 +10,7 @@
 
 #define NUM_AI_OPPONENTS 7
 #define NUM_PILOTS_PER_TEAM 2
-#define NUM_NON_BONUS_CIRCUTS 6
+#define NUM_NON_BONUS_CIRCUITS 6
 #define NUM_MUSIC_TRACKS 11
 #define NUM_HIGHSCORES 5
 
@@ -97,34 +97,34 @@ enum team {
 	NUM_TEAMS
 };
 
-enum circut {
-	CIRCUT_ALTIMA_VII,
-	CIRCUT_KARBONIS_V,
-	CIRCUT_TERRAMAX,
-	CIRCUT_KORODERA,
-	CIRCUT_ARRIDOS_IV,
-	CIRCUT_SILVERSTREAM,
-	CIRCUT_FIRESTAR,
-	NUM_WIPEOUT_CIRCUTS,
+enum circuit {
+	CIRCUIT_ALTIMA_VII,
+	CIRCUIT_KARBONIS_V,
+	CIRCUIT_TERRAMAX,
+	CIRCUIT_KORODERA,
+	CIRCUIT_ARRIDOS_IV,
+	CIRCUIT_SILVERSTREAM,
+	CIRCUIT_FIRESTAR,
+	NUM_WIPEOUT_CIRCUITS,
 	//wipeout2
-	CIRCUT_TALONS_REACH = NUM_WIPEOUT_CIRCUTS,
-	CIRCUT_SAGARMATHA,
-	CIRCUT_VALPARAISO,
-	CIRCUT_PHENITIA_PARK,
-	CIRCUT_GARE_DEUROPA,
-	CIRCUT_ODESSA_KEYS,
-	CIRCUT_VOSTOK_ISLAND,
-	CIRCUT_SPILSKINANKE,
-	CIRCUT_UNFINISHED_TRACK,
+	CIRCUIT_TALONS_REACH = NUM_WIPEOUT_CIRCUITS,
+	CIRCUIT_SAGARMATHA,
+	CIRCUIT_VALPARAISO,
+	CIRCUIT_PHENITIA_PARK,
+	CIRCUIT_GARE_DEUROPA,
+	CIRCUIT_ODESSA_KEYS,
+	CIRCUIT_VOSTOK_ISLAND,
+	CIRCUIT_SPILSKINANKE,
+	CIRCUIT_UNFINISHED_TRACK,
 	//wipeout64
-	CIRCUT_KLIES_BRIDGE,
-	CIRCUT_QORON_IV,
-	CIRCUT_SOKANA,
-	CIRCUT_DYRONESS,
-	CIRCUT_MACHAON_II,
-	CIRCUT_TERAFUMOS,
-	CIRCUT_VELOCITAR,
-	NUM_CIRCUTS
+	CIRCUIT_KLIES_BRIDGE,
+	CIRCUIT_QORON_IV,
+	CIRCUIT_SOKANA,
+	CIRCUIT_DYRONESS,
+	CIRCUIT_MACHAON_II,
+	CIRCUIT_TERAFUMOS,
+	CIRCUIT_VELOCITAR,
+	NUM_CIRCUITS
 };
 // How detailed are the stats? Just the FPS or draw internals
 typedef enum {
@@ -180,14 +180,14 @@ typedef struct {
 	float spread_base;
 	float spread_factor;
 	float sky_y_offset;
-} circut_settings_t;
+} circuit_settings_t;
 
 typedef struct {
 	char *name;
-	bool is_bonus_circut;
+	bool is_bonus_circuit;
 	game_release_t release;
-	circut_settings_t settings[NUM_RACE_CLASSES];
-} circut_t;
+	circuit_settings_t settings[NUM_RACE_CLASSES];
+} circuit_t;
 
 typedef struct {
 	char *path;
@@ -200,16 +200,16 @@ typedef struct {
 	pilot_t pilots[NUM_PILOTS];
 	team_t teams[NUM_TEAMS];
 	ai_setting_t ai_settings[NUM_RACE_CLASSES][NUM_AI_OPPONENTS];
-	circut_t circuts[NUM_CIRCUTS];
+	circuit_t circuits[NUM_CIRCUITS];
 	int ship_model_to_pilot[NUM_PILOTS];
 	int race_points_for_rank[NUM_PILOTS];
 	music_track_t music[NUM_MUSIC_TRACKS];
 	char *credits[104];
 	struct {
 		char *venom[15];
-		char *venom_all_circuts[19];
+		char *venom_all_circuits[19];
 		char *rapier[26];
-		char *rapier_all_circuts[24];
+		char *rapier_all_circuits[24];
 	} congratulations;
 } game_def_t;
 
@@ -231,7 +231,7 @@ typedef struct {
 	int highscore_tab;
 	int team;
 	int pilot;
-	int circut;
+	int circuit;
 	bool is_attract_mode;
 	bool show_credits;
 
@@ -251,8 +251,8 @@ typedef struct {
 	ship_t ships[NUM_PILOTS];
 	track_t track;
 
-	bool additional_circuts;
-	bool installed_circuts[NUM_CIRCUTS];
+	bool additional_circuits;
+	bool installed_circuits[NUM_CIRCUITS];
 } game_t;
 
 
@@ -284,13 +284,13 @@ typedef struct {
 	float screen_shake;
 
 	uint32_t has_rapier_class;
-	uint32_t has_bonus_circuts;
+	uint32_t has_bonus_circuits;
 	
 	uint8_t buttons[NUM_GAME_ACTIONS][2];
 	float analog_response;
 
 	char highscores_name[4];
-	highscores_t highscores[NUM_RACE_CLASSES][NUM_CIRCUTS][NUM_HIGHSCORE_TABS];
+	highscores_t highscores[NUM_RACE_CLASSES][NUM_CIRCUITS][NUM_HIGHSCORE_TABS];
 } save_t;
 
 

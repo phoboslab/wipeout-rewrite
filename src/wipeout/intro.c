@@ -6,20 +6,18 @@
 #include "../platform.h"
 
 #include "intro.h"
-#include "ui.h"
-#include "image.h"
 #include "game.h"
 
-void free_dummmy(void *p) {}
-void *realloc_dummmy(void *p, size_t sz) {
+void free_dummy(void *p) {}
+void *realloc_dummy(void *p, size_t sz) {
 	die("pl_mpeg needed to realloc. Not implemented. Maybe increase PLM_BUFFER_DEFAULT_SIZE");
 	return NULL;
 }
 
 #define PL_MPEG_IMPLEMENTATION
 #define PLM_MALLOC mem_bump
-#define PLM_FREE free_dummmy
-#define PLM_REALLOC realloc_dummmy
+#define PLM_FREE free_dummy
+#define PLM_REALLOC realloc_dummy
 #include <pl_mpeg.h>
 
 #define INTRO_AUDIO_BUFFER_LEN (64 * 1024)

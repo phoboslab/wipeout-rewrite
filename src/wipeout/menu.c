@@ -101,13 +101,7 @@ void menu_update(menu_t *menu) {
 				page->index++;
 			}
 		}
-
-		if (page->index >= page->entries_len) {
-			page->index = 0;
-		}
-		if (page->index < 0) {
-			page->index = page->entries_len - 1;
-		}
+		page->index = wrap_around(page->index, 0, page->entries_len);
 
 		if (last_index != page->index) {
 			sfx_play(SFX_MENU_MOVE);
@@ -213,17 +207,16 @@ void menu_update(menu_t *menu) {
 	if (entry->type == MENU_ENTRY_TOGGLE) {
 		if (input_pressed(A_MENU_LEFT)) {
 			sfx_play(SFX_MENU_SELECT);
-			entry->data--;
-			if (entry->data < 0) {
-				entry->data = entry->options_len-1;
-			}
+			entry->data = wrap_around(entry->data - 1, 0, entry->options_len);
+
 			if (entry->select_func) {
 				entry->select_func(menu, entry->data);
 			}
 		}
 		else if (input_pressed(A_MENU_RIGHT) || input_pressed(A_MENU_SELECT) || input_pressed(A_MENU_START)) {
 			sfx_play(SFX_MENU_SELECT);
-			entry->data = (entry->data + 1) % entry->options_len;
+			entry->data = wrap_around(entry->data + 1, 0, entry->options_len);
+
 			if (entry->select_func) {
 				entry->select_func(menu, entry->data);
 			}
@@ -236,7 +229,7 @@ void menu_update(menu_t *menu) {
 			if (entry->select_func) {
 				sfx_play(SFX_MENU_SELECT);
 				if (entry->type == MENU_ENTRY_TOGGLE) {
-					entry->data = (entry->data + 1) % entry->options_len;
+					entry->data = wrap_around(entry->data + 1, 0, entry->options_len);
 				}
 				entry->select_func(menu, entry->data);
 			}

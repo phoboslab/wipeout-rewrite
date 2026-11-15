@@ -1,14 +1,10 @@
-#include "../mem.h"
 #include "../utils.h"
 #include "../system.h"
 
 #include "object.h"
-#include "scene.h"
 #include "track.h"
 #include "weapon.h"
-#include "camera.h"
 #include "image.h"
-#include "object.h"
 #include "ship.h"
 #include "ship_ai.h"
 #include "ship_player.h"
@@ -63,7 +59,7 @@ void ships_init(section_t *section) {
 	}
 
 	// Randomize order for single race or new championship
-	if (g.race_type != RACE_TYPE_CHAMPIONSHIP || g.circut == CIRCUT_ALTIMA_VII) {
+	if (g.race_type != RACE_TYPE_CHAMPIONSHIP || g.circuit == CIRCUIT_ALTIMA_VII) {
 		shuffle(ranks_to_pilots, len(ranks_to_pilots));
 	}
 
@@ -85,7 +81,7 @@ void ships_init(section_t *section) {
 	}
 
 
-	int start_line_pos = def.circuts[g.circut].settings[g.race_class].start_line_pos;
+	int start_line_pos = def.circuits[g.circuit].settings[g.race_class].start_line_pos;
 	for (int i = 0; i < start_line_pos - 15; i++) {
 		section = section->next;
 	}
@@ -245,8 +241,8 @@ void ship_init(ship_t *self, section_t *section, int pilot, int inv_start_rank) 
 
 	self->section = section;
 	self->prev_section = section;
-	float spread_base = def.circuts[g.circut].settings[g.race_class].spread_base;
-	float spread_factor = def.circuts[g.circut].settings[g.race_class].spread_factor;
+	float spread_base = def.circuits[g.circuit].settings[g.race_class].spread_base;
+	float spread_factor = def.circuits[g.circuit].settings[g.race_class].spread_factor;
 	int p = inv_start_rank - 1;
 	self->start_accelerate_timer = p * (spread_base + (p * spread_factor)) * (1.0/30.0);
 
@@ -268,85 +264,26 @@ void ship_init(ship_t *self, section_t *section, int pilot, int inv_start_rank) 
 	self->angle.y = -atan2(direction.x, direction.z);
 }
 
+const rgba_t exhaust_plume_color = rgba(180,97,120,140);
+
 void ship_init_exhaust_plume(ship_t *self) {
 	int16_t indices[64];
 	int16_t indices_len = 0;
 
-	Prm prm = {.primitive = self->model->primitives};
-
 	for (int i = 0; i < self->model->primitives_len; i++) {
-		switch (prm.f3->type) {
-		case PRM_TYPE_F3 :
-			if (flags_is(prm.f3->flag, PRM_SHIP_ENGINE)) {
-				die("F3 ::SE marked polys should be ft3's");
+		primitive_t *prm = &self->model->primitives[i];
+		if (flags_is(prm->flag, PRM_SHIP_ENGINE)) {
+			flags_add(prm->flag, PRM_TRANSLUCENT);
+
+			error_if(prm->type != PRM_TYPE_TRI, "Can't happen: Expected primitive type %x, got %x", PRM_TYPE_TRI, prm->type);
+
+			primitive_vertex_t *v = prm->u.tri.v;
+			indices[indices_len++] = v[0].coord;
+			indices[indices_len++] = v[1].coord;
+			indices[indices_len++] = v[2].coord;
+			for (int j = 0; j < 3; j++) {
+				v[j].color = exhaust_plume_color;
 			}
-			prm.f3 += 1;
-			break;
-
-		case PRM_TYPE_F4 :
-			if (flags_is(prm.f4->flag, PRM_SHIP_ENGINE)) {
-				die("F4 ::SE marked polys should be ft3's");
-			}
-			prm.f4 += 1;
-			break;
-
-		case PRM_TYPE_FT3 :
-			if (flags_is(prm.ft3->flag, PRM_SHIP_ENGINE)) {
-				indices[indices_len++] = prm.ft3->coords[0];
-				indices[indices_len++] = prm.ft3->coords[1];
-				indices[indices_len++] = prm.ft3->coords[2];
-
-				flags_add(prm.ft3->flag, PRM_TRANSLUCENT);
-				prm.ft3->color = rgba(180,97,120,140);
-			}
-			prm.ft3 += 1;
-			break;
-
-		case PRM_TYPE_FT4 :
-			if (flags_is(prm.ft4->flag, PRM_SHIP_ENGINE)) {
-				die("FT4 ::SE marked polys should be ft3's");
-			}
-			prm.ft4 += 1;
-			break;
-
-		case PRM_TYPE_G3 :
-			if (flags_is(prm.g3->flag, PRM_SHIP_ENGINE)) {
-				die("G3 ::SE marked polys should be ft3's");
-			}
-			prm.g3 += 1;
-			break;
-
-		case PRM_TYPE_G4 :
-			if (flags_is(prm.g4->flag, PRM_SHIP_ENGINE)) {
-				die("G4 ::SE marked polys should be ft3's");
-			}
-			prm.g4 += 1;
-			break;
-
-		case PRM_TYPE_GT3 :
-			if (flags_is(prm.gt3->flag, PRM_SHIP_ENGINE)) {
-				indices[indices_len++] = prm.gt3->coords[0];
-				indices[indices_len++] = prm.gt3->coords[1];
-				indices[indices_len++] = prm.gt3->coords[2];
-
-				flags_add(prm.gt3->flag, PRM_TRANSLUCENT);
-				for (int j = 0; j < 3; j++) {
-					prm.gt3->color[j] = rgba(180,97,120,140);
-				}
-			}
-			prm.gt3 += 1;
-			break;
-
-		case PRM_TYPE_GT4 :
-			if (flags_is(prm.gt4->flag, PRM_SHIP_ENGINE)) {
-				die("GT4 ::SE marked polys should be ft3's");
-			}
-			prm.gt4 += 1;
-			break;
-
-		default :
-			die("cone.c::InitCone:Bad primitive type %x\n", prm.f3->type);
-			break;
 		}
 	}
 
@@ -365,16 +302,15 @@ void ship_init_exhaust_plume(ship_t *self) {
 			if (indices[i] == indices[j]) {
 				similar++;
 				if (similar > 3) {
-					int found = 0;
+					bool found = false;
 					for (int k = 0; k < 3; k++) {
 						if (shared[k] == indices[i]) {
-							found = 1;
+							found = true;
 						}
 					}
 
 					if (!found) {
-						shared[booster] = indices[i];
-						booster++;
+						shared[booster++] = indices[i];
 					}
 				}
 			}
@@ -416,21 +352,9 @@ void ship_draw_shadow(ship_t *self) {
 	rgba_t color = rgba(0 , 0 , 0, 128);
 	render_push_tris((tris_t) {
 		.vertices = {
-			{
-				.pos = {wngl.x, wngl.y, wngl.z},
-				.uv = {0, 256},
-				.color = color,
-			},
-			{
-				.pos = {wngr.x, wngr.y, wngr.z},
-				.uv = {128, 256},
-				.color = color
-			},
-			{
-				.pos = {nose.x, nose.y, nose.z},
-				.uv = {64, 0},
-				.color = color
-			},
+			{.pos = wngl, .uv = {0, 256},   .color = color},
+			{.pos = wngr, .uv = {128, 256}, .color = color},
+			{.pos = nose, .uv = {64, 0},    .color = color},
 		}
 	}, self->shadow_texture);
 }
@@ -517,10 +441,11 @@ void ship_update(ship_t *self) {
 	}
 
 	for (int i = 0; i < 3; i++) {
-		if (self->exhaust_plume[i].v != NULL) {
-			self->exhaust_plume[i].v->z = self->exhaust_plume[i].initial.z - exhaust_len + (rand_int(-16383, 16383) >> 9);
-			self->exhaust_plume[i].v->x = self->exhaust_plume[i].initial.x + (rand_int(-16383, 16383) >> 11);
-			self->exhaust_plume[i].v->y = self->exhaust_plume[i].initial.y + (rand_int(-16383, 16383) >> 11);
+		if (self->exhaust_plume[i].v) {
+			vec3_t jitter = vec3_rand(7);
+			jitter.z *= 4;
+			*self->exhaust_plume[i].v = vec3_add(self->exhaust_plume[i].initial, jitter);
+			self->exhaust_plume[i].v->z -= exhaust_len;
 		}
 	}
 
@@ -533,7 +458,7 @@ void ship_update(ship_t *self) {
 	
 	self->lap_time += system_tick();
 
-	int start_line_pos = def.circuts[g.circut].settings[g.race_class].start_line_pos;
+	int start_line_pos = def.circuits[g.circuit].settings[g.race_class].start_line_pos;
 
 	// Crossed line backwards
 	if (self->prev_section_num == start_line_pos + 1 && self->section_num <= start_line_pos) {
@@ -862,28 +787,18 @@ bool ship_intersects_ship(ship_t *self, ship_t *other) {
 	};
 
 
-	Prm poly = {.primitive = other->collision_model->primitives};
-	int primitives_len = other->collision_model->primitives_len;
 
 	vec3_t p1, p2, p3;
 
 	// for all 4 planes of the enemy ship
-	for (int pi = 0; pi < primitives_len; pi++) {
-		int16_t *indices;
-		switch (poly.primitive->type) {
-			case PRM_TYPE_F3:
-				indices = poly.f3++->coords;  break;
-			case PRM_TYPE_G3:
-				indices = poly.g3++->coords;  break;
-			case PRM_TYPE_FT3:
-				indices = poly.ft3++->coords; break;
-			case PRM_TYPE_GT3:
-				indices = poly.gt3++->coords; break;
-			default: die("Can't happen?");
-		}
-		p1 =  vec3_transform(self->collision_model->vertices[indices[0]], &self->mat);
-		p2 =  vec3_transform(self->collision_model->vertices[indices[1]], &self->mat);
-		p3 =  vec3_transform(self->collision_model->vertices[indices[2]], &self->mat);
+	for (int i = 0; i < other->collision_model->primitives_len; i++) {
+		primitive_t *prm = &other->collision_model->primitives[i];
+
+		error_if(prm->type != PRM_TYPE_TRI, "Can't happen: Expected primitive type %x, got %x", PRM_TYPE_TRI, prm->type);
+
+		p1 = vec3_transform(self->collision_model->vertices[prm->u.tri.v[0].coord], &self->mat);
+		p2 = vec3_transform(self->collision_model->vertices[prm->u.tri.v[1].coord], &self->mat);
+		p3 = vec3_transform(self->collision_model->vertices[prm->u.tri.v[2].coord], &self->mat);
 
 		// Find polyGon line vectors
 		vec3_t p1p2 = vec3_sub(p2, p1);

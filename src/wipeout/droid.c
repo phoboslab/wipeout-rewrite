@@ -1,18 +1,13 @@
 #include "../types.h"
-#include "../mem.h"
 #include "../system.h"
 #include "../utils.h"
 
 #include "object.h"
 #include "track.h"
 #include "ship.h"
-#include "weapon.h"
-#include "hud.h"
 #include "droid.h"
 #include "camera.h"
 #include "image.h"
-#include "scene.h"
-#include "object.h"
 #include "game.h"
 
 static Object *droid_model;
@@ -54,12 +49,12 @@ void droid_init(droid_t *droid, ship_t *ship) {
 void droid_draw(droid_t *droid) {
 	droid->cycle_timer += system_tick() * M_PI * 2;
 
-	Prm prm = {.primitive = droid_model->primitives};
 	int rf = sinf(droid->cycle_timer) * 127 + 128;
 	int gf = sinf(droid->cycle_timer + 0.2) * 127 + 128;
 	int bf = sinf(droid->cycle_timer * 0.5 + 0.1) * 127 + 128;
 
 	for (int i = 0; i < 11; i++) {
+		primitive_t *prm = &droid_model->primitives[i];
 		rgba_t color;
 
 		if (i < 2) {
@@ -72,21 +67,19 @@ void droid_draw(droid_t *droid) {
 			color = rgba(rf, 40, 40, 0xFF);
 		}
 
-		switch (prm.f3->type) {
-			case PRM_TYPE_GT3:
-				prm.gt3->color[0] =
-				prm.gt3->color[1] =
-				prm.gt3->color[2] = color;
-				prm.gt3++;
+		switch (prm->type) {
+			case PRM_TYPE_TRI:
+				for (int j = 0; j < 3; j++) {
+					prm->u.tri.v[j].color = color;
+				}
 				break;
-
-			case PRM_TYPE_GT4:
-				prm.gt4->color[0] =
-				prm.gt4->color[1] =
-				prm.gt4->color[2] = color;
-				prm.gt4->color[3] = rgba(40,40,40,0xFF);
-				prm.gt4++;
+			case PRM_TYPE_QUAD:
+				for (int j = 0; j < 4; j++) {
+					prm->u.quad.v[j].color = color;
+				}
 				break;
+			default:
+				die("Can't happen: Expected primitive type %x or %x, got %x", PRM_TYPE_TRI, PRM_TYPE_QUAD, prm->type);
 		}
 	}
 

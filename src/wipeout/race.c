@@ -1,17 +1,13 @@
-#include "../mem.h"
 #include "../input.h"
-#include "../platform.h"
 #include "../system.h"
 #include "../utils.h"
 #include "../render.h"
 
-#include "object.h"
 #include "track.h"
 #include "ship.h"
 #include "weapon.h"
 #include "droid.h"
 #include "camera.h"
-#include "object.h"
 #include "scene.h"
 #include "game.h"
 #include "hud.h"
@@ -19,7 +15,6 @@
 #include "race.h"
 #include "particle.h"
 #include "menu.h"
-#include "ship_ai.h"
 #include "ingame_menus.h"
 
 #define ATTRACT_DURATION 60.0
@@ -34,11 +29,11 @@ void race_init(void) {
 	ingame_menus_load();
 	menu_is_scroll_text = false;
 
-	const circut_settings_t *cs = &def.circuts[g.circut].settings[g.race_class];
+	const circuit_settings_t *cs = &def.circuits[g.circuit].settings[g.race_class];
 	track_load(cs->path);
 	scene_load(cs->path, cs->sky_y_offset);
 	
-	if (g.circut == CIRCUT_SILVERSTREAM && g.race_class == RACE_CLASS_RAPIER) {
+	if (g.circuit == CIRCUIT_SILVERSTREAM && g.race_class == RACE_CLASS_RAPIER) {
 		scene_init_aurora_borealis();	
 	} 
 
@@ -106,8 +101,8 @@ void race_update(void) {
 	render_set_view(g.camera.position, g.camera.angle);
 	render_set_screen_position(g.camera.shake);
 
-	render_set_cull_backface(false);
 	scene_draw(&g.camera);
+	render_set_cull_backface(false);
 	track_draw(&g.camera);
 	render_set_cull_backface(true);
 
@@ -196,7 +191,7 @@ void race_end(void) {
 		}
 	}
 
-	highscores_t *hs = &save.highscores[g.race_class][g.circut][g.highscore_tab];
+	highscores_t *hs = &save.highscores[g.race_class][g.circuit][g.highscore_tab];
 	if (g.best_lap < hs->lap_record) {
 		hs->lap_record = g.best_lap;
 		g.is_new_lap_record = true;
@@ -229,26 +224,26 @@ void race_end(void) {
 }
 
 void race_next(void) {
-	int next_circut = g.circut + 1;
+	int next_circuit = g.circuit + 1;
 
 	// Championship complete
 	if (
-		(save.has_bonus_circuts && next_circut >= NUM_WIPEOUT_CIRCUTS) ||
-		(!save.has_bonus_circuts && next_circut >= NUM_NON_BONUS_CIRCUTS)
+		(save.has_bonus_circuits && next_circuit >= NUM_WIPEOUT_CIRCUITS) ||
+		(!save.has_bonus_circuits && next_circuit >= NUM_NON_BONUS_CIRCUITS)
 	) {
 		if (g.race_class == RACE_CLASS_RAPIER) {
-			if (save.has_bonus_circuts) {
-				active_menu = text_scroll_menu_init(def.congratulations.rapier_all_circuts, len(def.congratulations.rapier_all_circuts));
+			if (save.has_bonus_circuits) {
+				active_menu = text_scroll_menu_init(def.congratulations.rapier_all_circuits, len(def.congratulations.rapier_all_circuits));
 			}
 			else {
-				save.has_bonus_circuts = true;
+				save.has_bonus_circuits = true;
 				active_menu = text_scroll_menu_init(def.congratulations.rapier, len(def.congratulations.rapier));
 			}
 		}
 		else {
 			save.has_rapier_class = true;
-			if (save.has_bonus_circuts) {
-				active_menu = text_scroll_menu_init(def.congratulations.venom_all_circuts, len(def.congratulations.venom_all_circuts));
+			if (save.has_bonus_circuits) {
+				active_menu = text_scroll_menu_init(def.congratulations.venom_all_circuits, len(def.congratulations.venom_all_circuits));
 			}
 			else {
 				active_menu = text_scroll_menu_init(def.congratulations.venom, len(def.congratulations.venom));
@@ -260,7 +255,7 @@ void race_next(void) {
 
 	// Next track
 	else {
-		g.circut = next_circut;
+		g.circuit = next_circuit;
 		game_set_scene(GAME_SCENE_RACE);
 	}
 }

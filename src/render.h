@@ -17,7 +17,7 @@ typedef enum {
 typedef enum {
 	RENDER_POST_NONE,
 	RENDER_POST_CRT,
-	NUM_RENDER_POST_EFFCTS,
+	NUM_RENDER_POST_EFFECTS,
 } render_post_effect_t;
 
 typedef struct {

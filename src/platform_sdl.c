@@ -16,6 +16,13 @@ static char *path_assets = "";
 static char *path_userdata = "";
 static char *temp_path = NULL;
 
+#ifdef __APPLE__
+	// macOS behaves best with desktop fullscreen (Space-based, non-exclusive).
+	#define USE_FULLSCREEN_DESKTOP 1
+#else
+	#define USE_FULLSCREEN_DESKTOP 0
+#endif
+
 
 uint8_t platform_sdl_gamepad_map[] = {
 	[SDL_CONTROLLER_BUTTON_A] = INPUT_GAMEPAD_A,
@@ -199,12 +206,14 @@ bool platform_get_fullscreen(void) {
 
 void platform_set_fullscreen(bool fullscreen) {
 	if (fullscreen) {
-		int32_t display = SDL_GetWindowDisplayIndex(window);
-		
-		SDL_DisplayMode mode;
-		SDL_GetDesktopDisplayMode(display, &mode);
-		SDL_SetWindowDisplayMode(window, &mode);
-		SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
+		#if !USE_FULLSCREEN_DESKTOP
+			int32_t display = SDL_GetWindowDisplayIndex(window);
+
+			SDL_DisplayMode mode;
+			SDL_GetDesktopDisplayMode(display, &mode);
+			SDL_SetWindowDisplayMode(window, &mode);
+		#endif
+		SDL_SetWindowFullscreen(window, USE_FULLSCREEN_DESKTOP ? SDL_WINDOW_FULLSCREEN_DESKTOP : SDL_WINDOW_FULLSCREEN);
 		SDL_ShowCursor(SDL_DISABLE);
 	}
 	else {
@@ -227,6 +236,11 @@ void platform_set_audio_mix_cb(void (*cb)(float *buffer, uint32_t len)) {
 	SDL_PauseAudioDevice(audio_device, 0);
 }
 
+
+bool platform_asset_exists(const char *name) {
+	char *path = strcat(strcpy(temp_path, path_assets), name);
+	return file_exists(path);
+}
 
 FILE *platform_open_asset(const char *name, const char *mode) {
 	char *path = strcat(strcpy(temp_path, path_assets), name);

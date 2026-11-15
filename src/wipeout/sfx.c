@@ -9,6 +9,8 @@
 #define QOA_NO_STDIO
 #include <qoa.h>
 
+#define DOPPLER_SHIFT_INTENSITY (1.0/524288.0)
+
 typedef struct {
 	int16_t *samples;
 	uint32_t len;
@@ -115,7 +117,7 @@ void sfx_load(void) {
 	}
 
 	mem_temp_free(vb);
-	platform_set_audio_mix_cb(sfx_stero_mix);
+	platform_set_audio_mix_cb(sfx_stereo_mix);
 }
 
 void sfx_reset(void) {
@@ -219,7 +221,7 @@ void sfx_set_position(sfx_t *sfx, vec3_t pos, vec3_t vel, float volume) {
 
 	// Doppler effect
 	float away = vec3_dot(relative_velocity, relative_position) / distance;
-	sfx->pitch = (262144.0 - away) / 524288.0;
+	sfx->pitch = 0.5 - (away * DOPPLER_SHIFT_INTENSITY);
 }
 
 
@@ -291,7 +293,7 @@ void sfx_music_play(uint32_t index) {
 		return;
 	}
 
-	printf("open music track %d\n", index);
+	printf("open music track %s\n", def.music[index].name);
 
 	music->track_index = index;
 	sfx_music_open(def.music[index].path);
@@ -311,7 +313,7 @@ void sfx_set_external_mix_cb(void (*cb)(float *, uint32_t len)) {
 	external_mix_cb = cb;
 }
 
-void sfx_stero_mix(float *buffer, uint32_t len) {
+void sfx_stereo_mix(float *buffer, uint32_t len) {
 	if (external_mix_cb) {
 		external_mix_cb(buffer, len);
 		return;

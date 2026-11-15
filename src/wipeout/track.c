@@ -4,16 +4,14 @@
 #include "../system.h"
 #include "../platform.h"
 
-#include "object.h"
 #include "track.h"
 #include "camera.h"
-#include "object.h"
 #include "game.h"
 
 void track_load(const char *base_path) {
 	// Load and assemble high res track tiles
 
-	bool wipeout64_mode = def.circuts[g.circut].release == GAME_WIPEOUT_64;
+	bool wipeout64_mode = def.circuits[g.circuit].release == GAME_WIPEOUT_64;
 	g.track.textures.start = render_textures_len();
 	g.track.textures.len = 0;
 
@@ -56,7 +54,7 @@ void track_load(const char *base_path) {
 	section_t *s = g.track.sections;
 	section_t *j = NULL;
 
-	// Nummerate all sections; take care to give both stretches at a junction
+	// Enumerate all sections; take care to give both stretches at a junction
 	// the same numbers.
 	int num = 0;
 	do {
@@ -183,7 +181,7 @@ void track_load_faces(char *file_name, vec3_t *vertices) {
 
 		const vec2_t *uv;
 		rgba_t color = rgba_from_u32(get_u32(bytes, &p));
-		if (def.circuts[g.circut].release == GAME_WIPEOUT_64) {
+		if (def.circuits[g.circuit].release == GAME_WIPEOUT_64) {
 			uv = wipeout64_track_uv[flags_is(tf->flags, FACE_FLIP_TEXTURE) ? 1 : 0];
 		} else {
 			uv = track_uv[flags_is(tf->flags, FACE_FLIP_TEXTURE) ? 1 : 0];
@@ -259,11 +257,27 @@ void track_load_sections(char *file_name) {
 		ts->face_start = get_i16(bytes, &p);
 		ts->face_count = get_i16(bytes, &p);
 
-		p += 2 * 2; // global/local radius
+		// global/local radius
+		// Seems to consistently be larger than the section radius calculated below,
+		// but by a varying factor. Includes props?
+		p += 2 * 2;
 
 		ts->flags = get_i16(bytes, &p);
 		ts->num = get_i16(bytes, &p);
 		p += 2; // padding
+
+		// Get bounding sphere of section
+		track_face_t *face = g.track.faces + ts->face_start;
+		for (uint32_t j = 0; j < ts->face_count; j++) {
+			for (uint32_t k = 0; k < 2; k++) {
+				for (uint32_t o = 0; o < 3; o++) {
+					ts->radius = max(ts->radius, vec3_len_sq(vec3_sub(face->tris[k].vertices[o].pos, ts->center)));
+				}
+			}
+			face++;
+		}
+		ts->radius = sqrt(ts->radius);
+
 		ts++;
 	}
 
@@ -295,12 +309,11 @@ void track_draw(camera_t *camera) {
 	
 	for(int32_t i = 0; i < g.track.section_count; i++) {
 		section_t *s = &g.track.sections[i];
-		vec3_t diff = vec3_sub(cam_pos, s->center);
+		vec3_t diff = vec3_sub(s->center, cam_pos);
 		float cam_dot = vec3_dot(diff, cam_dir);
-		float dist_sq = vec3_dot(diff, diff);
 		if (
-			cam_dot < 2048 && // FIXME: should use the bounding radius of the section
-			dist_sq < (RENDER_FADEOUT_FAR * RENDER_FADEOUT_FAR)
+			cam_dot > -s->radius &&
+			cam_dot < (RENDER_FADEOUT_FAR * RENDER_FADEOUT_FAR) + s->radius
 		) {
 			track_draw_section(s);
 		}
@@ -365,7 +378,7 @@ section_t *track_nearest_section(vec3_t pos, vec3_t bias, section_t *section, fl
 			junction = section->junction;
 		}
 
-		// Some callers of this function want to de-emphazise the .y component
+		// Some callers of this function want to de-emphasize the .y component
 		// of the difference, hence the multiplication with the bias vector.
 		// For the real, exact difference bias should be vec3(1,1,1)
 		float d = vec3_len(vec3_mul(vec3_sub(pos, section->center), bias));

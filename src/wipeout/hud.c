@@ -1,17 +1,11 @@
 #include "../types.h"
-#include "../mem.h"
 #include "../utils.h"
-#include "../system.h"
 
-#include "object.h"
-#include "track.h"
 #include "ship.h"
 #include "weapon.h"
 #include "hud.h"
-#include "droid.h"
 #include "camera.h"
 #include "image.h"
-#include "ship_ai.h"
 #include "game.h"
 #include "ui.h"
 
@@ -228,7 +222,7 @@ void hud_draw(ship_t *ship) {
 
 	// Lap Record
 	ui_draw_text("LAP RECORD", ui_scaled(vec2i(15, 43)), UI_SIZE_8, UI_COLOR_ACCENT);
-	ui_draw_time(save.highscores[g.race_class][g.circut][g.highscore_tab].lap_record, ui_scaled(vec2i(15, 55)), UI_SIZE_8, UI_COLOR_DEFAULT);
+	ui_draw_time(save.highscores[g.race_class][g.circuit][g.highscore_tab].lap_record, ui_scaled(vec2i(15, 55)), UI_SIZE_8, UI_COLOR_DEFAULT);
 
 	// Wrong way
 	if (flags_not(ship->flags, SHIP_DIRECTION_FORWARD)) {

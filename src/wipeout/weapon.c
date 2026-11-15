@@ -76,27 +76,27 @@ void weapons_load(void) {
 	weapon_assets.reticle = image_get_texture("wipeout/textures/target2.tim");
 
 	texture_list_t weapon_textures = image_get_compressed_textures("wipeout/common/mine.cmp");
-	weapon_assets.rocket = objects_load("wipeout/common/rock.prm", weapon_textures);
-	weapon_assets.mine = objects_load("wipeout/common/mine.prm", weapon_textures);
-	weapon_assets.missile = objects_load("wipeout/common/miss.prm", weapon_textures);
-	weapon_assets.shield = objects_load("wipeout/common/shld.prm", weapon_textures);
+	weapon_assets.rocket          = objects_load("wipeout/common/rock.prm", weapon_textures);
+	weapon_assets.mine            = objects_load("wipeout/common/mine.prm", weapon_textures);
+	weapon_assets.missile         = objects_load("wipeout/common/miss.prm", weapon_textures);
+	weapon_assets.shield          = objects_load("wipeout/common/shld.prm", weapon_textures);
 	weapon_assets.shield_internal = objects_load("wipeout/common/shld.prm", weapon_textures);
-	weapon_assets.ebolt = objects_load("wipeout/common/ebolt.prm", weapon_textures);
+	weapon_assets.ebolt           = objects_load("wipeout/common/ebolt.prm", weapon_textures);
 
 	// Invert shield polys for internal view
-	Prm poly = {.primitive = weapon_assets.shield_internal->primitives};
 	int primitives_len = weapon_assets.shield_internal->primitives_len;
 	for (int k = 0; k < primitives_len; k++) {
-		switch (poly.primitive->type) {
-		case PRM_TYPE_G3 :
-			swap(poly.g3->coords[0], poly.g3->coords[2]);
-			poly.g3 += 1;
-			break;
+		primitive_t *prm = &weapon_assets.shield_internal->primitives[k];
 
-		case PRM_TYPE_G4 :
-			swap(poly.g4->coords[0], poly.g4->coords[3]);
-			poly.g4 += 1;
-			break;
+		switch (prm->type) {
+			case PRM_TYPE_TRI:
+				swap(prm->u.tri.v[0].coord, prm->u.tri.v[0].coord);
+				break;
+			case PRM_TYPE_QUAD:
+				swap(prm->u.quad.v[0].coord, prm->u.quad.v[3].coord);
+				break;
+			default:
+				die("Can't happen: Expected primitive type %x or %x, got %x", PRM_TYPE_TRI, PRM_TYPE_QUAD, prm->type);
 		}
 	}
 
@@ -272,9 +272,9 @@ ship_t *weapon_collides_with_ship(weapon_t *self) {
 
 		float distance = vec3_len(vec3_sub(ship->position, self->position));
 		if (distance < 512) {
+			vec3_t base_vel = vec3_mulf(ship->velocity, 0.25);
 			for (int p = 0; p < 32; p++) {
-				vec3_t velocity = vec3_rand(512);
-				velocity = vec3_add(velocity, vec3_mulf(ship->velocity, 0.25));
+				vec3_t velocity = vec3_add(base_vel, vec3_rand(512));
 				particles_spawn(self->position, self->ship_hit_particle, velocity, 256);
 			}
 			return ship;
@@ -345,18 +345,15 @@ void weapon_update_mine_wait_for_release(weapon_t *self) {
 }
 
 void weapon_update_mine_lights(weapon_t *self, int index) {
-	Prm prm = {.primitive = self->model->primitives};
-
 	uint8_t r = sinf(system_cycle_time() * M_PI * 2 + index * 0.66) * 128 + 128;
 	for (int i = 0; i < 8; i++) {
-		switch (prm.primitive->type) {
-		case PRM_TYPE_GT3:
-			prm.gt3->color[0] = rgba(230, 0,    0, 0xFF);
-			prm.gt3->color[1] = rgba(r,   0x40, 0, 0xFF);
-			prm.gt3->color[2] = rgba(r,   0x40, 0, 0xFF);
-			prm.gt3 += 1;
-			break;
-		}
+		primitive_t *prm = &self->model->primitives[i];
+
+		error_if(prm->type != PRM_TYPE_TRI, "Can't happen: Expected primitive type %x, got %x", PRM_TYPE_TRI, prm->type);
+
+		prm->u.tri.v[0].color = rgba(230, 0,    0, 0xFF);
+		prm->u.tri.v[1].color = rgba(r,   0x40, 0, 0xFF);
+		prm->u.tri.v[2].color = rgba(r,   0x40, 0, 0xFF);
 	}
 }
 
@@ -366,7 +363,7 @@ void weapon_update_mine(weapon_t *self) {
 		return;
 	}
 
-	// TODO: oscilate perpendicular to track!?
+	// TODO: oscillate perpendicular to track!?
 	self->angle.y += system_tick();
 
 	ship_t *ship = weapon_collides_with_ship(self);
@@ -471,7 +468,7 @@ void weapon_update_rocket(weapon_t *self) {
 
 		if (flags_not(ship->flags, SHIP_SHIELDED)) {
 			if (ship->pilot == g.pilot) {
-				ship->velocity = vec3_sub(ship->velocity, vec3_mulf(ship->velocity, 0.75));
+				ship->velocity = vec3_mulf(ship->velocity, 0.25);
 				ship->angular_velocity.z += rand_float(-0.1, 0.1);;
 				ship->turn_rate_from_hit = rand_float(-0.1, 0.1);;
 				camera_set_shake(&g.camera, CAMERA_SHAKE_LONG);
@@ -559,44 +556,30 @@ void weapon_update_shield(weapon_t *self) {
 	}
 	self->angle = self->owner->angle;
 
-
-	Prm poly = {.primitive = self->model->primitives};
+	// Animated colors.
 	int primitives_len = self->model->primitives_len;
-	uint8_t col0, col1, col2, col3;
-	int16_t *coords;
-	uint8_t shield_alpha = 48;
+	uint8_t col;
+	const uint8_t shield_alpha = 48;
 
-	// FIXME: this looks kinda close to the PSX original!?
 	float color_timer = self->timer * 0.05;
 	for (int k = 0; k < primitives_len; k++) {
-		switch (poly.primitive->type) {
-		case PRM_TYPE_G3 :
-			coords = poly.g3->coords;
+		primitive_t *prm = &self->model->primitives[k];
 
-			col0 = sinf(color_timer * coords[0]) * 127 + 128;
-			col1 = sinf(color_timer * coords[1]) * 127 + 128;
-			col2 = sinf(color_timer * coords[2]) * 127 + 128;
-
-			poly.g3->color[0] = rgba(col0, col0, 255, shield_alpha);
-			poly.g3->color[1] = rgba(col1, col1, 255, shield_alpha);
-			poly.g3->color[2] = rgba(col2, col2, 255, shield_alpha);
-			poly.g3 += 1;
-			break;
-
-		case PRM_TYPE_G4 :
-			coords = poly.g4->coords;
-
-			col0 = sinf(color_timer * coords[0]) * 127 + 128;
-			col1 = sinf(color_timer * coords[1]) * 127 + 128;
-			col2 = sinf(color_timer * coords[2]) * 127 + 128;
-			col3 = sinf(color_timer * coords[3]) * 127 + 128;
-
-			poly.g4->color[0] = rgba(col0, col0, 255, shield_alpha);
-			poly.g4->color[1] = rgba(col1, col1, 255, shield_alpha);
-			poly.g4->color[2] = rgba(col2, col2, 255, shield_alpha);
-			poly.g4->color[3] = rgba(col3, col3, 255, shield_alpha);
-			poly.g4 += 1;
-			break;
+		switch (prm->type) {
+			case PRM_TYPE_TRI :
+				for (int v = 0; v < 3; v++) {
+					col = sinf(color_timer * prm->u.tri.v[v].coord) * 127 + 128;
+					prm->u.tri.v[v].color = rgba(col, col, 255, shield_alpha);
+				}
+				break;
+			case PRM_TYPE_QUAD :
+				for (int v = 0; v < 4; v++) {
+					col = sinf(color_timer * prm->u.quad.v[v].coord) * 127 + 128;
+					prm->u.quad.v[v].color = rgba(col, col, 255, shield_alpha);
+				}
+				break;
+			default:
+				die("Can't happen: Expected primitive type %x or %x, got %x", PRM_TYPE_TRI, PRM_TYPE_QUAD, prm->type);
 		}
 	}
 }

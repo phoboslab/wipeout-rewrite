@@ -1,15 +1,9 @@
-#include "../mem.h"
 #include "../utils.h"
 #include "../system.h"
 
 #include "object.h"
-#include "track.h"
-#include "ship.h"
-#include "weapon.h"
 #include "scene.h"
-#include "droid.h"
 #include "camera.h"
-#include "object.h"
 #include "game.h"
 
 
@@ -38,12 +32,7 @@ typedef struct {
 static scene_stand_t stands[SCENE_STANDS_MAX];
 static int stands_len;
 
-static struct {
-	bool enabled;
-	GT4	*primitives[80];
-	int16_t *coords[80];
-	int16_t grey_coords[80];	
-} aurora_borealis;
+static bool aurora_borealis_enabled;
 
 void scene_pulsate_red_light(Object *obj);
 void scene_move_oil_pump(Object *obj);
@@ -51,7 +40,7 @@ void scene_update_aurora_borealis(void);
 
 void scene_load(const char *base_path, float sky_y_offset) {
 	bool multiplayer = false;
-	if (def.circuts[g.circut].release == GAME_WIPEOUT_64) {
+	if (def.circuits[g.circuit].release == GAME_WIPEOUT_64) {
 		// Wipeout 64's skies appear to be rendered in a way reminiscent of
 		// Mario 64, rather than using an actual model. There is a 'sky.prm'
 		// model present in the Wipeout files, but it is a red herring - it's
@@ -115,7 +104,7 @@ void scene_load(const char *base_path, float sky_y_offset) {
 		obj = obj->next;
 	}
 
-	aurora_borealis.enabled = false;
+	aurora_borealis_enabled = false;
 }
 
 void scene_init(void) {
@@ -136,7 +125,7 @@ void scene_update(void) {
 		sfx_set_position(stands[i].sfx, stands[i].pos, vec3(0, 0, 0), 0.4);
 	}
 
-	if (aurora_borealis.enabled) {
+	if (aurora_borealis_enabled) {
 		scene_update_aurora_borealis();
 	}
 }
@@ -152,12 +141,11 @@ void scene_draw(camera_t *camera) {
 
 	// Calculate the camera forward vector, so we can cull everything that's
 	// behind. Ideally we'd want to do a full frustum culling here. FIXME.
-	vec3_t cam_pos = camera->position;
 	vec3_t cam_dir = camera_forward(camera);
 	Object *object = scene_objects;
 	
 	while (object) {
-		vec3_t diff = vec3_sub(cam_pos, object->origin);
+		vec3_t diff = vec3_sub(camera->position, object->origin);
 		float cam_dot = vec3_dot(diff, cam_dir);
 		float dist_sq = vec3_dot(diff, diff);
 		if (
@@ -170,32 +158,30 @@ void scene_draw(camera_t *camera) {
 	}
 }
 
+rgba_t start_boom_color_off = rgba(0x20, 0x20, 0x20, 0xff);
+rgba_t start_boom_lights[] = {
+	rgba(0xff, 0x00, 0x00, 0xff), // Red
+	rgba(0xff, 0x80, 0x00, 0xff), // Yellow
+	rgba(0x00, 0xff, 0x00, 0xff), // Green
+};
+
 void scene_set_start_booms(int light_index) {
-	
-	int lights_len = 1;
-	rgba_t color = rgba(0, 0, 0, 0);
-	switch (light_index) {
-		case 0:
-			// reset all 3
-			lights_len = 3;
-			color = rgba(0x20, 0x20, 0x20, 0xff);
-			break;
-		case 1: color = rgba(0xff, 0x00, 0x00, 0xff); break;
-		case 2: color = rgba(0xff, 0x80, 0x00, 0xff); break;
-		case 3: color = rgba(0x00, 0xff, 0x00, 0xff); break;
-	}
 	for (int i = 0; i < start_booms_len; i++) {
-		Prm libPoly = {.primitive = start_booms[i]->primitives};
+		for (int j = 0; j < len(start_boom_lights); j++) {
+			primitive_t *prm = &start_booms[i]->primitives[j];
 
-		for (int j = 1; j < light_index; j++) {
-			libPoly.gt4 += 1;
-		}
+			error_if(prm->type != PRM_TYPE_QUAD, "Can't happen: Expected primitive type %x, got %x", PRM_TYPE_QUAD, prm->type);
 
-		for (int j = 0; j < lights_len; j++) {
-			for (int v = 0; v < 4; v++) {
-				libPoly.gt4->color[v] = color;
+			rgba_t color;
+			if (j == light_index) {
+				color = start_boom_lights[light_index];
+			} else {
+				color = start_boom_color_off;
 			}
-			libPoly.gt4 += 1;
+
+			for (int v = 0; v < 4; v++) {
+				prm->u.quad.v[v].color = color;
+			}
 		}
 	}
 }
@@ -203,10 +189,12 @@ void scene_set_start_booms(int light_index) {
 
 void scene_pulsate_red_light(Object *obj) {
 	uint8_t r = clamp(sinf(system_cycle_time() * M_PI * 2) * 128 + 128, 0, 255);
-	Prm libPoly = {.primitive = obj->primitives};
+	primitive_t *prm = obj->primitives;
+
+	error_if(prm->type != PRM_TYPE_QUAD, "Can't happen: Expected primitive type %x, got %x", PRM_TYPE_QUAD, prm->type);
 
 	for (int v = 0; v < 4; v++) {
-		libPoly.gt4->color[v] = rgba(r,0,0,0xFF);
+		prm->u.quad.v[v].color = rgba(r,0,0,0xFF);
 	}
 }
 
@@ -214,65 +202,34 @@ void scene_move_oil_pump(Object *pump) {
 	mat4_set_yaw_pitch_roll(&pump->mat, vec3(sinf(system_cycle_time() * 0.125 * M_PI * 2), 0, 0));
 }
 
-void scene_init_aurora_borealis(void) {
-	aurora_borealis.enabled = true;
-	clear(aurora_borealis.grey_coords);
+static void scene_aurora_set_vertex_color(primitive_vertex_t *v, float phase) {
+	float y = sky_object->vertices[v->coord].y;
+	if (y > -6800 || y < -11000) return;
 
-	int count = 0;
-	int16_t *coords;
-	float y;
-
-	Prm poly = {.primitive = sky_object->primitives};
-	for (int i = 0; i < sky_object->primitives_len; i++) {
-		switch (poly.primitive->type) {
-		case PRM_TYPE_GT3:
-			poly.gt3 += 1;
-			break;
-		case PRM_TYPE_GT4:
-			coords = poly.gt4->coords;
-			y = sky_object->vertices[coords[0]].y;
-			if (y < -6000) { // -8000
-				aurora_borealis.primitives[count] = poly.gt4;
-				if (y > -6800) {
-					aurora_borealis.coords[count] = poly.gt4->coords;
-					aurora_borealis.grey_coords[count] = -1;
-				}
-				else if (y < -11000) {
-					aurora_borealis.coords[count] = poly.gt4->coords;
-					aurora_borealis.grey_coords[count] = -2;
-				}
-				else {
-					aurora_borealis.coords[count] = poly.gt4->coords;
-				}
-				count++;
-			}
-			poly.gt4 += 1;
-			break;
-		}
-	}
-}
-
-rgba_t scene_aurora_color_from_coordinate(int16_t coord, float phase) {
-	return rgba(
-		 (sinf(coord * phase) * 64.0) + 190,
-		 (sinf(coord * (phase + 0.054)) * 64.0) + 190,
-		 (sinf(coord * (phase + 0.039)) * 64.0) + 190,
+	v->color = rgba(
+		 (sinf(v->coord * phase) * 64.0) + 190,
+		 (sinf(v->coord * (phase + 0.054)) * 64.0) + 190,
+		 (sinf(v->coord * (phase + 0.039)) * 64.0) + 190,
 		 0xFF
 	);
 }
 
+void scene_init_aurora_borealis() {
+	aurora_borealis_enabled = true;
+}
+
 void scene_update_aurora_borealis(void) {
 	float phase = system_time() / 30.0;
-	for (int i = 0; i < 80; i++) {
-		int16_t *coords = aurora_borealis.coords[i];
-		GT4  *primitive = aurora_borealis.primitives[i];
-		if (aurora_borealis.grey_coords[i] != -2) {
-			primitive->color[0] = scene_aurora_color_from_coordinate(coords[0], phase);
-			primitive->color[1] = scene_aurora_color_from_coordinate(coords[1], phase);
-		}
-		if (aurora_borealis.grey_coords[i] != -1) {
-			primitive->color[2] = scene_aurora_color_from_coordinate(coords[2], phase);
-			primitive->color[3] = scene_aurora_color_from_coordinate(coords[3], phase);
+
+	for (int i = 0; i < sky_object->primitives_len; i++) {
+		primitive_t *prm = &sky_object->primitives[i];
+
+		// The skybox contains triangles but none of them are of interest to us.
+		if (prm->type == PRM_TYPE_TRI) continue;
+		error_if(prm->type != PRM_TYPE_QUAD, "Can't happen: Expected primitive type %x, got %x", PRM_TYPE_QUAD, prm->type);
+
+		for (int j = 0; j < len(prm->u.quad.v); j++) {
+			scene_aurora_set_vertex_color(&prm->u.quad.v[j], phase);
 		}
 	}
 }
